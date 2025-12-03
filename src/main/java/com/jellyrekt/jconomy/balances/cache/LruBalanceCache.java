@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.jellyrekt.jconomy.balances.Balance;
 import com.jellyrekt.jconomy.config.CacheConfig;
 
 public class LruBalanceCache implements BalanceCache {
@@ -26,12 +25,9 @@ public class LruBalanceCache implements BalanceCache {
     }
 
     @Override
-    public Optional<Balance> get(UUID playerId, String currencyName) {
+    public Optional<Double> get(UUID playerId, String currencyName) {
         var amount = amounts.get(new BalanceCacheKey(playerId, currencyName));
-        if (amount == null) {
-            return Optional.empty();
-        }
-        return Optional.of(new Balance(playerId, currencyName, amount));
+        return Optional.ofNullable(amount);
     }
 
     @Override
