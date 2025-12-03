@@ -2,6 +2,8 @@ package com.jellyrekt.jconomy;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.jellyrekt.jconomy.balances.cache.BalanceCache;
+import com.jellyrekt.jconomy.balances.cache.LruBalanceCache;
 import com.jellyrekt.jconomy.config.CacheConfig;
 import com.jellyrekt.jconomy.config.DefaultCacheConfig;
 import com.jellyrekt.jconomy.storage.ConfigFileConfigurationProvider;
@@ -33,6 +35,7 @@ public class JConomy extends JavaPlugin {
 
         builder.addSingleton(ConfigFileConfigurationProvider.class, new ConfigFileConfigurationProvider(getDataFolder(), "config.yml"));
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
+        builder.addSingleton(BalanceCache.class, LruBalanceCache.class);
 
         services = builder.build();
     }
