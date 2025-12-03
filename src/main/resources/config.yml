@@ -1,0 +1,3 @@
+# Required for automatically migrating the config.
+# Don't change this value.
+config-version: 1
