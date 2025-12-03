@@ -23,6 +23,12 @@
             <id>codemc-creatorfromhell</id>
             <url>https://repo.codemc.io/repository/creatorfromhell/</url>
         </repository>
+
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/merenze/java-inject</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -39,5 +45,38 @@
             <version>2.17</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.merenze.dependencyinjection</groupId>
+            <artifactId>javainject</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.merenze.dependencyinjection</pattern>
+                                    <shadedPattern>me.jarton.jmcbank.dependencyinjection</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <createDependencyReducedPom>true</createDependencyReducedPom>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -1,3 +1,10 @@
 # Required for automatically migrating the config.
 # Don't change this value.
 config-version: 1
+
+# Player balance cache settings.
+cache:
+  # Configures how many of the most recently accessed players to cache.
+  # For fine-tuning performance on very large servers.
+  # Defaults to 10,000.
+  lru-limit: 10000
