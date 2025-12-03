@@ -24,9 +24,9 @@ public final class ConfigUtils {
     }
     
     private static void upgradeToVersion1(Configuration config) {
-        // TODO:
-        // For each value that SHOULD exist in version 1,
-        // if it does NOT exist, set its default value.
+        if (!config.contains("cache.lru-limit")) {
+            config.set("cache.lru-limit", 10000);
+        }
         
         setVersion(config, 1);
     }
