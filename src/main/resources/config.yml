@@ -24,7 +24,7 @@ default-number-formatter:
   
   # How the fractional part should be displayed.
   # Does not affect how it is stored.
-  decimal:
+  fractional:
     # Whether the displayed amount should round to the nearest place it can show.
     # If false, will always round down.
     # Default: true
@@ -85,7 +85,7 @@ currencies:
   #     
   #     # How the fractional part should be displayed.
   #     # Does not affect how it is stored.
-  #     decimal:
+  #     fractional:
   #       # Whether the displayed amount should round to the nearest place it can show.
   #       # If false, will always round down.
   #       # Default: true
@@ -104,7 +104,7 @@ currencies:
     symbol: '&6🪙ɢᴏʟᴅ'
     format-string: '%amount% %symbol%'
     number-formatter:
-      decimal:
+      fractional:
         places: 0
 
 # Player balance cache settings.
