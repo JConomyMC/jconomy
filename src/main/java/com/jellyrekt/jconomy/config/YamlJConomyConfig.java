@@ -2,12 +2,12 @@ package com.jellyrekt.jconomy.config;
 
 import com.jellyrekt.storage.configurationsection.ConfigurationSectionProvider;
 import com.jellyrekt.storage.configurationsection.ConfigurationSectionStorage;
+import com.jellyrekt.storage.fileconfiguration.FileConfigurationProvider;
 import com.jellyrekt.storage.fileconfiguration.FileConfigurationStorage;
-import com.jellyrekt.storage.fileconfiguration.javaplugin.JavaPluginConfigurationProvider;
 
 public class YamlJConomyConfig extends FileConfigurationStorage implements JConomyConfig {
 
-    public YamlJConomyConfig(JavaPluginConfigurationProvider configurationProvider) {
+    public YamlJConomyConfig(FileConfigurationProvider configurationProvider) {
         super(configurationProvider);
     }
 
