@@ -51,6 +51,18 @@
             <artifactId>javainject</artifactId>
             <version>1.0.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>26.0.2-1</version>
+        </dependency>
+
+        <dependency>
+          <groupId>com.jellyrekt.storage</groupId>
+          <artifactId>file-configuration-storage</artifactId>
+          <version>1.2.0-rc.2</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -68,8 +80,12 @@
                         <configuration>
                             <relocations>
                                 <relocation>
+                                    <pattern>com.jellyrekt.storage</pattern>
+                                    <shadedPattern>com.jellyrekt.jconomy.storage</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>com.merenze.dependencyinjection</pattern>
-                                    <shadedPattern>me.jarton.jmcbank.dependencyinjection</shadedPattern>
+                                    <shadedPattern>com.jellyrekt.jconomy.dependencyinjection</shadedPattern>
                                 </relocation>
                             </relocations>
                             <createDependencyReducedPom>true</createDependencyReducedPom>
