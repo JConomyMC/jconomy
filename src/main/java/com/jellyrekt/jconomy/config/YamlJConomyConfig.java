@@ -31,15 +31,27 @@ public class YamlJConomyConfig extends FileConfigurationStorage implements JCono
         var key = "currencies." + currencyName;
         var section = getFileConfiguration();
         if (section.isSet(key)) {
-            return new YamlCurrencyOptions(() -> section.getConfigurationSection(key));
+            return new YamlCurrencyOptions(
+                getDefaultNumberFormatterOptions(),
+                () -> section.getConfigurationSection(key)
+            );
         }
         return null;
     }
     
     public class YamlNumberFormatterOptions extends ConfigurationSectionStorage implements NumberFormatterOptions {
+        private final NumberFormatterOptions defaultNumberFormatterOptions;
 
         public YamlNumberFormatterOptions(ConfigurationSectionProvider configurationSectionProvider) {
+            this(null, configurationSectionProvider);
+        }
+
+        public YamlNumberFormatterOptions(
+            NumberFormatterOptions defaultNumberFormatterOptions,
+            ConfigurationSectionProvider configurationSectionProvider
+        ) {
             super(configurationSectionProvider);
+            this.defaultNumberFormatterOptions = defaultNumberFormatterOptions;
         }
 
         @Override
@@ -47,7 +59,16 @@ public class YamlJConomyConfig extends FileConfigurationStorage implements JCono
             var key = "grouping";
             var section = getConfigurationSection();
             if (section.isSet(key)) {
-                return new YamlGroupingOptions(() -> section.getConfigurationSection("key"));
+                if (defaultNumberFormatterOptions != null) {
+                    return new YamlGroupingOptions(
+                        defaultNumberFormatterOptions.getGroupingOptions(),
+                        () -> section.getConfigurationSection(key)
+                    );
+                }
+                return new YamlGroupingOptions(() -> section.getConfigurationSection(key));
+            }
+            if (defaultNumberFormatterOptions != null) {
+                return defaultNumberFormatterOptions.getGroupingOptions();
             }
             return null;
         }
@@ -57,15 +78,33 @@ public class YamlJConomyConfig extends FileConfigurationStorage implements JCono
             var key = "fractional";
             var section = getConfigurationSection();
             if (section.isSet(key)) {
+                if (defaultNumberFormatterOptions != null) {
+                    return new YamlFractionalOptions(
+                        defaultNumberFormatterOptions.getFractionalOptions(),
+                        () -> section.getConfigurationSection(key)
+                    );
+                }
                 return new YamlFractionalOptions(() -> section.getConfigurationSection(key));
+            }
+            if (defaultNumberFormatterOptions != null) {
+                return defaultNumberFormatterOptions.getFractionalOptions();
             }
             return null;
         }
 
         public class YamlGroupingOptions extends ConfigurationSectionStorage implements GroupingOptions {
+            private final GroupingOptions defaultGroupingOptions;
 
             public YamlGroupingOptions(ConfigurationSectionProvider configurationSectionProvider) {
+                this(null, configurationSectionProvider);
+            }
+
+            public YamlGroupingOptions(
+                GroupingOptions defaultGroupingOptions,
+                ConfigurationSectionProvider configurationSectionProvider
+            ) {
                 super(configurationSectionProvider);
+                this.defaultGroupingOptions = defaultGroupingOptions;
             }
 
             @Override
@@ -75,39 +114,77 @@ public class YamlJConomyConfig extends FileConfigurationStorage implements JCono
 
             @Override
             public String getGroupSeparator() {
-                return getConfigurationSection().getString("separator");
+                var section = getConfigurationSection();
+                var key = "separator";
+                if (defaultGroupingOptions != null) {
+                    return section.getString(key, defaultGroupingOptions.getGroupSeparator());
+                }
+                return section.getString("separator");
             }
 
         }
 
         public class YamlFractionalOptions extends ConfigurationSectionStorage implements FractionalOptions {
+            private final FractionalOptions defaultFractionalOptions;
 
             public YamlFractionalOptions(ConfigurationSectionProvider configurationSectionProvider) {
+                this(null, configurationSectionProvider);
+            }
+
+            public YamlFractionalOptions(
+                FractionalOptions defaultFractionalOptions,
+                ConfigurationSectionProvider configurationSectionProvider
+            ) {
                 super(configurationSectionProvider);
+                this.defaultFractionalOptions = defaultFractionalOptions;
             }
 
             @Override
             public boolean isRoundingEnabled() {
-                return getConfigurationSection().getBoolean("round");
+                var section = getConfigurationSection();
+                var key = "round";
+                if (defaultFractionalOptions != null) {
+                    return section.getBoolean(key, defaultFractionalOptions.isRoundingEnabled());
+                }
+                return section.getBoolean(key);
             }
 
             @Override
             public int getPlaces() {
-                return getConfigurationSection().getInt("places");
+                var section = getConfigurationSection();
+                var key = "places";
+                if (defaultFractionalOptions != null) {
+                    return section.getInt(key, defaultFractionalOptions.getPlaces());
+                }
+                return section.getInt(key);
             }
 
             @Override
             public String getSeparator() {
-                return getConfigurationSection().getString("separator");
+                var section = getConfigurationSection();
+                var key = "separator";
+                if (defaultFractionalOptions != null) {
+                    return section.getString(key, defaultFractionalOptions.getSeparator());
+                }
+                return section.getString(key);
             }
 
         }
     }
 
     public class YamlCurrencyOptions extends ConfigurationSectionStorage implements CurrencyOptions {
+        private final NumberFormatterOptions defaultNumberFormatterOptions;
 
         public YamlCurrencyOptions(ConfigurationSectionProvider configurationSectionProvider) {
+            this(null, configurationSectionProvider);
+        }
+
+        public YamlCurrencyOptions(
+            NumberFormatterOptions defaultNumberFormatterOptions,
+            ConfigurationSectionProvider configurationSectionProvider
+        ) {
             super(configurationSectionProvider);
+            this.defaultNumberFormatterOptions = defaultNumberFormatterOptions;
         }
 
         @Override
@@ -141,9 +218,9 @@ public class YamlJConomyConfig extends FileConfigurationStorage implements JCono
             var key = "number-formatter";
             var section = getConfigurationSection();
             if (section.isSet(key)) {
-                return new YamlNumberFormatterOptions(() -> section.getConfigurationSection(key));
+                return new YamlNumberFormatterOptions(defaultNumberFormatterOptions, () -> section.getConfigurationSection(key));
             }
-            return null;
+            return defaultNumberFormatterOptions;
         }
 
     }
