@@ -6,8 +6,9 @@ import com.jellyrekt.jconomy.balances.cache.BalanceCache;
 import com.jellyrekt.jconomy.balances.cache.LruBalanceCache;
 import com.jellyrekt.jconomy.config.CacheConfig;
 import com.jellyrekt.jconomy.config.DefaultCacheConfig;
+import com.jellyrekt.jconomy.config.JConomyConfig;
+import com.jellyrekt.jconomy.config.YamlJConomyConfig;
 import com.jellyrekt.jconomy.listeners.PlayerJoinListener;
-import com.jellyrekt.jconomy.storage.ConfigFileConfigurationProvider;
 import com.merenze.dependencyinjection.ServiceBuilder;
 import com.merenze.dependencyinjection.ServiceProvider;
 
@@ -40,11 +41,11 @@ public class JConomy extends JavaPlugin {
         var builder = new ServiceBuilder();
 
         builder.addSingleton(JavaPlugin.class, this);
-        builder.addSingleton(ConfigFileConfigurationProvider.class, new ConfigFileConfigurationProvider(getDataFolder(), "config.yml"));
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
         builder.addSingleton(BalanceCache.class, LruBalanceCache.class);
         // TODO add BalanceRepository
         builder.addSingleton(PlayerJoinListener.class);
+        builder.addSingleton(JConomyConfig.class, YamlJConomyConfig.class);
 
         services = builder.build();
     }
