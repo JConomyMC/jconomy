@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 
 import com.jellyrekt.jconomy.config.JConomyConfig;
+import com.jellyrekt.jconomy.config.JConomyConfig.CurrencyOptions;
 import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions;
 import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions.FractionalOptions;
 import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions.GroupingOptions;
@@ -16,26 +17,26 @@ import org.junit.jupiter.api.Test;
 public class DefaultNumberFormatterTest {
 
     private JConomyConfig mockConfig;
-    private NumberFormatterOptions mockOptions;
+    private NumberFormatterOptions mockNumberFormatterOptions;
     private GroupingOptions mockGrouping;
     private FractionalOptions mockFractional;
     private DefaultNumberFormatter formatter;
+    private CurrencyOptions mockCurrencyOptions;
 
     @BeforeEach
     void setup() {
         mockConfig = mock(JConomyConfig.class);
-        mockOptions = mock(NumberFormatterOptions.class);
+        mockNumberFormatterOptions = mock(NumberFormatterOptions.class);
         mockGrouping = mock(GroupingOptions.class);
         mockFractional = mock(FractionalOptions.class);
+        mockCurrencyOptions = mock(CurrencyOptions.class);
 
-        when(mockOptions.getGroupingOptions()).thenReturn(mockGrouping);
-        when(mockOptions.getFractionalOptions()).thenReturn(mockFractional);
+        when(mockNumberFormatterOptions.getGroupingOptions()).thenReturn(mockGrouping);
+        when(mockNumberFormatterOptions.getFractionalOptions()).thenReturn(mockFractional);
 
-        when(mockConfig.getCurrencyOptions(anyString())).thenReturn(new Object() {
-            NumberFormatterOptions getNumberFormatterOptions() {
-                return mockOptions;
-            }
-        });
+        when(mockCurrencyOptions.getNumberFormatterOptions()).thenReturn(mockNumberFormatterOptions);
+
+        when(mockConfig.getCurrencyOptions(anyString())).thenReturn(mockCurrencyOptions);
 
         formatter = new DefaultNumberFormatter(mockConfig);
     }
