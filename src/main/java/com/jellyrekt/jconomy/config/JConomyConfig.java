@@ -1,9 +1,13 @@
 package com.jellyrekt.jconomy.config;
 
+import java.util.Set;
+
 public interface JConomyConfig {
     String getDefaultCurrency();
 
     NumberFormatterOptions getDefaultNumberFormatterOptions();
+
+    Set<String> getAllCurrencyNames();
 
     CurrencyOptions getCurrencyOptions(String currencyName);
 

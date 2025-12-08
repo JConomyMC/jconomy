@@ -1,5 +1,7 @@
 package com.jellyrekt.jconomy.config;
 
+import java.util.Set;
+
 import com.jellyrekt.storage.configurationsection.ConfigurationSectionProvider;
 import com.jellyrekt.storage.configurationsection.ConfigurationSectionStorage;
 import com.jellyrekt.storage.fileconfiguration.FileConfigurationProvider;
@@ -24,6 +26,13 @@ public class YamlJConomyConfig extends FileConfigurationStorage implements JCono
             return new YamlNumberFormatterOptions(() -> section.getConfigurationSection(key));
         }
         return null;
+    }
+    
+    @Override
+    public Set<String> getAllCurrencyNames() {
+        return getFileConfiguration()
+            .getConfigurationSection("currencies")
+            .getKeys(false);
     }
 
     @Override

@@ -47,8 +47,7 @@ public class DefaultNumberFormatter implements NumberFormatter {
         for (int i = 0; i < fractionalOptions.getPlaces(); i++) {
             if (i < fractionalPart.length()) {
                 formattedNumberBuilder.append(fractionalPart.charAt(i));
-            }
-            else {
+            } else {
                 formattedNumberBuilder.append(0);
             }
         }
@@ -75,7 +74,7 @@ public class DefaultNumberFormatter implements NumberFormatter {
         if (charIndex == 0) {
             return false;
         }
-        return (length - charIndex - 1) % options.getGroupSize() == 0;
+        return (length - charIndex) % options.getGroupSize() == 0;
     }
 
 }
