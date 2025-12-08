@@ -9,6 +9,10 @@ import com.jellyrekt.jconomy.config.DefaultCacheConfig;
 import com.jellyrekt.jconomy.config.JConomyConfig;
 import com.jellyrekt.jconomy.config.YamlJConomyConfig;
 import com.jellyrekt.jconomy.listeners.PlayerJoinListener;
+import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
+import com.jellyrekt.jconomy.presentation.DefaultCurrencyFormatter;
+import com.jellyrekt.jconomy.presentation.DefaultNumberFormatter;
+import com.jellyrekt.jconomy.presentation.NumberFormatter;
 import com.merenze.dependencyinjection.ServiceBuilder;
 import com.merenze.dependencyinjection.ServiceProvider;
 
@@ -43,9 +47,11 @@ public class JConomy extends JavaPlugin {
         builder.addSingleton(JavaPlugin.class, this);
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
         builder.addSingleton(BalanceCache.class, LruBalanceCache.class);
-        // TODO add BalanceRepository
         builder.addSingleton(PlayerJoinListener.class);
         builder.addSingleton(JConomyConfig.class, YamlJConomyConfig.class);
+        builder.addSingleton(NumberFormatter.class, DefaultNumberFormatter.class);
+        builder.addSingleton(CurrencyFormatter.class, DefaultCurrencyFormatter.class);
+        // TODO add BalanceRepository
 
         services = builder.build();
     }
