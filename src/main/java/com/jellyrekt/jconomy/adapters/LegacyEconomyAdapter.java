@@ -9,12 +9,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import com.jellyrekt.jconomy.EconomyImp;
-import com.jellyrekt.jconomy.config.JConomyConfig;
 
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
+import net.milkbowl.vault.economy.EconomyResponse.ResponseType;
 
 public class LegacyEconomyAdapter implements Economy {
+    private static final EconomyResponse ResponseBanksNotSupported = new EconomyResponse(0, 0,
+            ResponseType.NOT_IMPLEMENTED, "JConomy does not support banking for Vault legacy");
+
     private final EconomyImp economy;
     private final EconomyResponseMapper responseMapper;
 
@@ -25,81 +28,67 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public EconomyResponse bankBalance(String name) {
-        var result = economy.getDefaultCurrency(name);
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'bankBalance'");
+        return ResponseBanksNotSupported;
     }
 
     @Override
     public EconomyResponse bankDeposit(String name, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'bankDeposit'");
+        return ResponseBanksNotSupported;
     }
 
     @Override
     public EconomyResponse bankHas(String name, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'bankHas'");
+        return ResponseBanksNotSupported;
     }
 
     @Override
     public EconomyResponse bankWithdraw(String name, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'bankWithdraw'");
+        return ResponseBanksNotSupported;
     }
 
     @Override
     public EconomyResponse createBank(String name, String player) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createBank'");
+        return ResponseBanksNotSupported;
     }
 
     @Override
     public EconomyResponse createBank(String name, OfflinePlayer player) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createBank'");
+        return ResponseBanksNotSupported;
     }
 
     @Override
     public boolean createPlayerAccount(String playerName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createPlayerAccount'");
+        return createPlayerAccount(getOfflinePlayer(playerName));
     }
 
     @Override
     public boolean createPlayerAccount(OfflinePlayer player) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createPlayerAccount'");
+        return economy.createAccount(player.getUniqueId(), player.getName(), true);
     }
 
     @Override
     public boolean createPlayerAccount(String playerName, String worldName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createPlayerAccount'");
+        return createPlayerAccount(getOfflinePlayer(playerName), worldName);
     }
 
     @Override
     public boolean createPlayerAccount(OfflinePlayer player, String worldName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createPlayerAccount'");
+        return economy.createAccount(player.getUniqueId(), player.getName(), worldName, true);
     }
 
     @Override
     public String currencyNamePlural() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'currencyNamePlural'");
+        return economy.defaultCurrencyNamePlural(null);
     }
 
     @Override
     public String currencyNameSingular() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'currencyNameSingular'");
+        return economy.defaultCurrencyNameSingular(null);
     }
 
     @Override
     public EconomyResponse deleteBank(String name) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteBank'");
+        return ResponseBanksNotSupported;
     }
 
     @Override
@@ -169,8 +158,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public List<String> getBanks() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getBanks'");
+        return List.of();
     }
 
     @Override
@@ -220,32 +208,27 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public boolean hasBankSupport() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hasBankSupport'");
+        return false;
     }
 
     @Override
     public EconomyResponse isBankMember(String name, String playerName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isBankMember'");
+        return ResponseBanksNotSupported;
     }
 
     @Override
     public EconomyResponse isBankMember(String name, OfflinePlayer player) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isBankMember'");
+        return ResponseBanksNotSupported;
     }
 
     @Override
     public EconomyResponse isBankOwner(String name, String playerName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isBankOwner'");
+        return ResponseBanksNotSupported;
     }
 
     @Override
     public EconomyResponse isBankOwner(String name, OfflinePlayer player) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isBankOwner'");
+        return ResponseBanksNotSupported;
     }
 
     @Override
