@@ -16,12 +16,10 @@ import net.milkbowl.vault.economy.EconomyResponse;
 
 public class LegacyEconomyAdapter implements Economy {
     private final EconomyImp economy;
-    private final JConomyConfig config;
     private final EconomyResponseMapper responseMapper;
 
-    public LegacyEconomyAdapter(EconomyImp economy, JConomyConfig config, EconomyResponseMapper responseMapper) {
+    public LegacyEconomyAdapter(EconomyImp economy, EconomyResponseMapper responseMapper) {
         this.economy = economy;
-        this.config = config;
         this.responseMapper = responseMapper;
     }
 
@@ -151,26 +149,22 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public double getBalance(String playerName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getBalance'");
+        return getBalance(getOfflinePlayer(playerName));
     }
 
     @Override
     public double getBalance(OfflinePlayer player) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getBalance'");
+        return economy.getBalance(null, player.getUniqueId()).doubleValue();
     }
 
     @Override
     public double getBalance(String playerName, String world) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getBalance'");
+        return getBalance(getOfflinePlayer(playerName), world);
     }
 
     @Override
     public double getBalance(OfflinePlayer player, String world) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getBalance'");
+        return economy.getBalance(null, player.getUniqueId(), world).doubleValue();
     }
 
     @Override
@@ -181,56 +175,47 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getName'");
+        return economy.getName();
     }
 
     @Override
     public boolean has(String playerName, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'has'");
+        return has(getOfflinePlayer(playerName), amount);
     }
 
     @Override
     public boolean has(OfflinePlayer player, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'has'");
+        return economy.has(null, player.getUniqueId(), new BigDecimal(amount));
     }
 
     @Override
     public boolean has(String playerName, String worldName, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'has'");
+        return has(getOfflinePlayer(playerName), worldName, amount);
     }
 
     @Override
     public boolean has(OfflinePlayer player, String worldName, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'has'");
+        return economy.has(null, player.getUniqueId(), worldName, new BigDecimal(amount));
     }
 
     @Override
     public boolean hasAccount(String playerName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hasAccount'");
+        return hasAccount(getOfflinePlayer(playerName));
     }
 
     @Override
     public boolean hasAccount(OfflinePlayer player) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hasAccount'");
+        return economy.hasAccount(player.getUniqueId());
     }
 
     @Override
     public boolean hasAccount(String playerName, String worldName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hasAccount'");
+        return hasAccount(getOfflinePlayer(playerName), worldName);
     }
 
     @Override
     public boolean hasAccount(OfflinePlayer player, String worldName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hasAccount'");
+        return economy.hasAccount(player.getUniqueId(), worldName);
     }
 
     @Override
@@ -265,32 +250,29 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public boolean isEnabled() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isEnabled'");
+        return economy.isEnabled();
     }
 
     @Override
     public EconomyResponse withdrawPlayer(String playerName, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'withdrawPlayer'");
+        return withdrawPlayer(getOfflinePlayer(playerName), amount);
     }
 
     @Override
     public EconomyResponse withdrawPlayer(OfflinePlayer player, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'withdrawPlayer'");
+        var response = economy.withdraw(null, player.getUniqueId(), new BigDecimal(amount));
+        return responseMapper.getLegacyResponse(response);
     }
 
     @Override
     public EconomyResponse withdrawPlayer(String playerName, String worldName, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'withdrawPlayer'");
+        return withdrawPlayer(getOfflinePlayer(playerName), worldName, amount);
     }
 
     @Override
     public EconomyResponse withdrawPlayer(OfflinePlayer player, String worldName, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'withdrawPlayer'");
+        var response = economy.withdraw(null, player.getUniqueId(), worldName, new BigDecimal(amount));
+        return responseMapper.getLegacyResponse(response);
     }
     
 }
