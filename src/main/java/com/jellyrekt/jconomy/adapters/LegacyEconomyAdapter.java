@@ -26,6 +26,19 @@ public class LegacyEconomyAdapter implements Economy {
         this.responseMapper = responseMapper;
     }
 
+    private OfflinePlayer getOfflinePlayer(String playerName) {
+        var player = Bukkit.getPlayer(playerName);
+        if (player != null) {
+            return player;
+        }
+        // I am assuming this is faster than a scheduled API call,
+        // and ok with not supporting players who have never joined.
+        Optional<OfflinePlayer> offlinePlayer = Arrays.stream(Bukkit.getOfflinePlayers())
+                .filter(p -> p.getName().equals(playerName))
+                .findFirst();
+        return offlinePlayer.get();
+    }
+
     @Override
     public EconomyResponse bankBalance(String name) {
         return ResponseBanksNotSupported;
@@ -94,19 +107,6 @@ public class LegacyEconomyAdapter implements Economy {
     @Override
     public EconomyResponse depositPlayer(String playerName, double amount) {
         return depositPlayer(getOfflinePlayer(playerName), amount);
-    }
-
-    private OfflinePlayer getOfflinePlayer(String playerName) {
-        var player = Bukkit.getPlayer(playerName);
-        if (player != null) {
-            return player;
-        }
-        // I am assuming this is faster than a scheduled API call,
-        // and ok with not supporting players who have never joined.
-        Optional<OfflinePlayer> offlinePlayer = Arrays.stream(Bukkit.getOfflinePlayers())
-            .filter(p -> p.getName().equals(playerName))
-            .findFirst();
-        return offlinePlayer.get();
     }
 
     public EconomyResponse depositPlayer(OfflinePlayer player, double amount) {
