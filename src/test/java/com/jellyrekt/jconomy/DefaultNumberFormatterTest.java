@@ -11,6 +11,8 @@ import com.jellyrekt.jconomy.config.JConomyConfig.CurrencyOptions;
 import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions;
 import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions.FractionalOptions;
 import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions.GroupingOptions;
+import com.jellyrekt.jconomy.presentation.DefaultNumberFormatter;
+import com.jellyrekt.jconomy.presentation.NumberFormatResult;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,23 +50,25 @@ public class DefaultNumberFormatterTest {
             int decimalPlaces,
             boolean rounding,
             String decimalSeparator,
-            String expected) {
+            String expectedFormatted,
+            boolean expectedSingular,
+            boolean expectedNegative) {
     }
 
     static Stream<TestCase> numberFormattingCases() {
         return Stream.of(
-                new TestCase(BigDecimal.valueOf(1234.56), 0, ",", 0, true, ".", "1235"),
-                new TestCase(BigDecimal.valueOf(-1234.56), 0, ",", 0, true, ".", "1235"),
-                new TestCase(BigDecimal.valueOf(12.3), 0, ",", 4, false, ".", "12.3000"),
-                new TestCase(BigDecimal.valueOf(-5.6), 0, ",", 3, false, ".", "5.600"),
-                new TestCase(BigDecimal.valueOf(1234567.891), 3, ",", 2, true, ".", "1,234,567.89"),
-                new TestCase(BigDecimal.valueOf(-98765.4321), 3, ",", 1, true, ".", "98,765.4"),
-                new TestCase(BigDecimal.ZERO, 3, ",", 2, true, ".", "0.00"),
-                new TestCase(BigDecimal.valueOf(1.5), 0, ",", 0, true, ".", "2"),
-                new TestCase(BigDecimal.valueOf(1.5), 0, ",", 0, false, ".", "1"),
-                new TestCase(BigDecimal.valueOf(-1.5), 0, ",", 0, true, ".", "2"),
-                new TestCase(BigDecimal.valueOf(-1.5), 0, ",", 0, false, ".", "1"),
-                new TestCase(BigDecimal.valueOf(1.4), 0, ",", 0, true, ".", "1"));
+                new TestCase(BigDecimal.valueOf(1234.56), 0, ",", 0, true, ".", "1235", false, false),
+                new TestCase(BigDecimal.valueOf(-1234.56), 0, ",", 0, true, ".", "1235", false, true),
+                new TestCase(BigDecimal.valueOf(12.3), 0, ",", 4, false, ".", "12.3000", false, false),
+                new TestCase(BigDecimal.valueOf(-5.6), 0, ",", 3, false, ".", "5.600", false, true),
+                new TestCase(BigDecimal.valueOf(1234567.891), 3, ",", 2, true, ".", "1,234,567.89", false, false),
+                new TestCase(BigDecimal.valueOf(-98765.4321), 3, ",", 1, true, ".", "98,765.4", false, true),
+                new TestCase(BigDecimal.ZERO, 3, ",", 2, true, ".", "0.00", false, false),
+                new TestCase(BigDecimal.valueOf(1.5), 0, ",", 0, true, ".", "2", false, false),
+                new TestCase(BigDecimal.valueOf(1.5), 0, ",", 0, false, ".", "1", true, false),
+                new TestCase(BigDecimal.valueOf(-1.5), 0, ",", 0, true, ".", "2", false, true),
+                new TestCase(BigDecimal.valueOf(-1.5), 0, ",", 0, false, ".", "1", true, true),
+                new TestCase(BigDecimal.valueOf(1.4), 0, ",", 0, true, ".", "1", true, false));
     }
 
     @ParameterizedTest
@@ -76,7 +80,10 @@ public class DefaultNumberFormatterTest {
         when(mockFractional.isRoundingEnabled()).thenReturn(tc.rounding);
         when(mockFractional.getSeparator()).thenReturn(tc.decimalSeparator);
 
-        String result = formatter.format(tc.input, "gold");
-        assertEquals(tc.expected, result);
+        NumberFormatResult result = formatter.format(tc.input, "gold");
+
+        assertEquals(tc.expectedFormatted, result.formattedNumber(), "Formatted string mismatch");
+        assertEquals(tc.expectedSingular, result.isSingular(), "Singular flag mismatch");
+        assertEquals(tc.expectedNegative, result.isNegative(), "Negative flag mismatch");
     }
 }

@@ -1,4 +1,4 @@
-package com.jellyrekt.jconomy;
+package com.jellyrekt.jconomy.presentation;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -18,10 +18,15 @@ public class DefaultNumberFormatter implements NumberFormatter {
     }
 
     @Override
-    public String format(BigDecimal number, String currency) {
+    public NumberFormatResult format(BigDecimal number, String currency) {
         var decimalFormat = getDecimalFormat(currency);
-        number = getRounded(number, currency).abs();
-        return decimalFormat.format(number.abs());
+        var rounded = getRounded(number, currency);
+
+        var formattedNumber = decimalFormat.format(rounded.abs());
+        var isSingular = new BigDecimal(1).compareTo(rounded.abs()) == 0;
+        var isNegative = number.compareTo(new BigDecimal(0)) < 0;
+
+        return new NumberFormatResult(formattedNumber, isSingular, isNegative);
     }
 
     private BigDecimal getRounded(BigDecimal number, String currency) {
