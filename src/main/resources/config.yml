@@ -61,12 +61,13 @@ currencies:
   #
   #   # How the currency display string is assembled.
   #   # The following placeholders are supported:
-  #   # - %amount_raw% : The raw, unformatted number. Could be ugly
-  #   # - %amount_formatted% : The number formatted by the number-formatter. Usually recommended for showing amounts.
+  #   # - %amount_raw% : The absolute value unformatted. Could be ugly
+  #   # - %amount_formatted% : The absolute value formatted by the number-formatter. Usually recommended for showing amounts.
   #   # - %symbol% : The currency symbol
   #   # - %display_name% : The display-name-singular, if the rounded amount is 1; else, the display-name-plural.
-  #   # Default: '%symbol%%amount_formatted%'
-  #   format-string: '%symbol%%amount_formatted%'
+  #   # - %sign% : If positive, nothing; if negative, '-'
+  #   # Default: '%sign%%symbol%%amount_formatted%'
+  #   format-string: '%sign%%symbol%%amount_formatted%'
   #
   #   # Format rules for how this currency is displayed.
   #   # You can omit any of these rules if you would like to use the defaults configured above.
