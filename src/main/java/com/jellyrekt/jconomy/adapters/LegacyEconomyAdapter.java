@@ -1,10 +1,14 @@
-package com.jellyrekt.jconomy;
+package com.jellyrekt.jconomy.adapters;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
+import com.jellyrekt.jconomy.EconomyImp;
 import com.jellyrekt.jconomy.config.JConomyConfig;
 
 import net.milkbowl.vault.economy.Economy;
@@ -13,10 +17,12 @@ import net.milkbowl.vault.economy.EconomyResponse;
 public class LegacyEconomyAdapter implements Economy {
     private final EconomyImp economy;
     private final JConomyConfig config;
+    private final EconomyResponseMapper responseMapper;
 
-    public LegacyEconomyAdapter(EconomyImp economy, JConomyConfig config) {
+    public LegacyEconomyAdapter(EconomyImp economy, JConomyConfig config, EconomyResponseMapper responseMapper) {
         this.economy = economy;
         this.config = config;
+        this.responseMapper = responseMapper;
     }
 
     @Override
@@ -100,26 +106,37 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public EconomyResponse depositPlayer(String playerName, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'depositPlayer'");
+        return depositPlayer(getOfflinePlayer(playerName), amount);
     }
 
-    @Override
+    private OfflinePlayer getOfflinePlayer(String playerName) {
+        var player = Bukkit.getPlayer(playerName);
+        if (player != null) {
+            return player;
+        }
+        // I am assuming this is faster than a scheduled API call,
+        // and ok with not supporting players who have never joined.
+        Optional<OfflinePlayer> offlinePlayer = Arrays.stream(Bukkit.getOfflinePlayers())
+            .filter(p -> p.getName().equals(playerName))
+            .findFirst();
+        return offlinePlayer.get();
+    }
+
     public EconomyResponse depositPlayer(OfflinePlayer player, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'depositPlayer'");
+        var response = economy.deposit(null, player.getUniqueId(), new BigDecimal(amount));
+        return responseMapper.getLegacyResponse(response);
     }
 
     @Override
     public EconomyResponse depositPlayer(String playerName, String worldName, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'depositPlayer'");
+        var player = getOfflinePlayer(playerName);
+        return depositPlayer(player, worldName, amount);
     }
 
     @Override
     public EconomyResponse depositPlayer(OfflinePlayer player, String worldName, double amount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'depositPlayer'");
+        var response = economy.deposit(null, player.getUniqueId(), worldName, new BigDecimal(amount));
+        return responseMapper.getLegacyResponse(response);
     }
 
     @Override
