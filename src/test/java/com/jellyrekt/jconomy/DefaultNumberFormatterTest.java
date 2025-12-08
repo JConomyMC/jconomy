@@ -61,6 +61,9 @@ public class DefaultNumberFormatterTest {
                 new TestCase(BigDecimal.valueOf(-98765.4321), 3, ",", 1, true, ".", "98,765.4"),
                 new TestCase(BigDecimal.ZERO, 3, ",", 2, true, ".", "0.00"),
                 new TestCase(BigDecimal.valueOf(1.5), 0, ",", 0, true, ".", "2"),
+                new TestCase(BigDecimal.valueOf(1.5), 0, ",", 0, false, ".", "1"),
+                new TestCase(BigDecimal.valueOf(-1.5), 0, ",", 0, true, ".", "2"),
+                new TestCase(BigDecimal.valueOf(-1.5), 0, ",", 0, false, ".", "1"),
                 new TestCase(BigDecimal.valueOf(1.4), 0, ",", 0, true, ".", "1"));
     }
 
