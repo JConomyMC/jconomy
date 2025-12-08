@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
 
 import com.jellyrekt.jconomy.config.JConomyConfig;
 import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions;
@@ -21,7 +20,19 @@ public class DefaultNumberFormatter implements NumberFormatter {
     @Override
     public String format(BigDecimal number, String currency) {
         var decimalFormat = getDecimalFormat(currency);
+        number = getRounded(number, currency).abs();
         return decimalFormat.format(number.abs());
+    }
+
+    private BigDecimal getRounded(BigDecimal number, String currency) {
+        var fractionalOptions = getNumberFormatterOptions(currency).getFractionalOptions();
+        int places = Math.max(0, fractionalOptions.getPlaces());
+
+        if (fractionalOptions.isRoundingEnabled()) {
+            return number.setScale(places, RoundingMode.HALF_UP);
+        } else {
+            return number.setScale(places, RoundingMode.DOWN);
+        }
     }
 
     private NumberFormatterOptions getNumberFormatterOptions(String currency) {
