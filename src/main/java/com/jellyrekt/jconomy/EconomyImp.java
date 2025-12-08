@@ -8,16 +8,20 @@ import java.util.UUID;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
+
 import net.milkbowl.vault2.economy.AccountPermission;
 import net.milkbowl.vault2.economy.Economy;
 import net.milkbowl.vault2.economy.EconomyResponse;
 
 public class EconomyImp implements Economy {
 
-    public final JavaPlugin plugin;
+    private final JavaPlugin plugin;
+    private final CurrencyFormatter currencyFormatter;
 
-    public EconomyImp(JavaPlugin plugin) {
+    public EconomyImp(JavaPlugin plugin, CurrencyFormatter currencyFormatter) {
         this.plugin = plugin;
+        this.currencyFormatter = currencyFormatter;
     }
 
     @Override
@@ -63,8 +67,7 @@ public class EconomyImp implements Economy {
 
     @Override
     public String format(String pluginName, BigDecimal amount, String currency) {
-        // TODO get from configuration
-        throw new UnsupportedOperationException("Unimplemented method 'format'");
+        return currencyFormatter.format(amount, currency);
     }
 
     @Override
