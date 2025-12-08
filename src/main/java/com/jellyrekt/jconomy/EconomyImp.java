@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.jellyrekt.jconomy.config.JConomyConfig;
 import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
 
 import net.milkbowl.vault2.economy.AccountPermission;
@@ -18,10 +19,12 @@ public class EconomyImp implements Economy {
 
     private final JavaPlugin plugin;
     private final CurrencyFormatter currencyFormatter;
+    private final JConomyConfig config;
 
-    public EconomyImp(JavaPlugin plugin, CurrencyFormatter currencyFormatter) {
+    public EconomyImp(JavaPlugin plugin, CurrencyFormatter currencyFormatter, JConomyConfig config) {
         this.plugin = plugin;
         this.currencyFormatter = currencyFormatter;
+        this.config = config;
     }
 
     @Override
@@ -72,8 +75,7 @@ public class EconomyImp implements Economy {
 
     @Override
     public String getDefaultCurrency(String pluginName) {
-        // TODO get from configuration
-        throw new UnsupportedOperationException("Unimplemented method 'getDefaultCurrency'");
+        return config.getDefaultCurrency();
     }
 
     @Override
