@@ -2,6 +2,9 @@ package com.jellyrekt.jconomy;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 
 import com.jellyrekt.jconomy.config.JConomyConfig;
 import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions;
@@ -17,64 +20,47 @@ public class DefaultNumberFormatter implements NumberFormatter {
 
     @Override
     public String format(BigDecimal number, String currency) {
-        var options = getNumberFormatterOptions(currency);
-        var groupingOptions = options.getGroupingOptions();
-        var fractionalOptions = options.getFractionalOptions();
-
-        number = getRounded(number.abs(), fractionalOptions);
-
-        var numberStrings = number.toString().split("\\.");
-        var integerPart = numberStrings[0];
-        var fractionalPart = numberStrings.length > 1 ? numberStrings[1] : "";
-
-        var formattedNumberBuilder = new StringBuilder();
-
-        var groupingSeparator = groupingOptions.getGroupSeparator();
-
-        for (int i = 0; i < integerPart.length(); i++) {
-            if (shouldAddGroupingSymbol(integerPart.length(), i, groupingOptions)) {
-                formattedNumberBuilder.append(groupingSeparator);
-            }
-            formattedNumberBuilder.append(integerPart.charAt(i));
-        }
-
-        if (fractionalOptions.getPlaces() <= 0) {
-            return formattedNumberBuilder.toString();
-        }
-
-        formattedNumberBuilder.append(fractionalOptions.getSeparator());
-
-        for (int i = 0; i < fractionalOptions.getPlaces(); i++) {
-            if (i < fractionalPart.length()) {
-                formattedNumberBuilder.append(fractionalPart.charAt(i));
-            } else {
-                formattedNumberBuilder.append(0);
-            }
-        }
-
-        return formattedNumberBuilder.toString();
+        var decimalFormat = getDecimalFormat(currency);
+        return decimalFormat.format(number.abs());
     }
 
     private NumberFormatterOptions getNumberFormatterOptions(String currency) {
         return config.getCurrencyOptions(currency).getNumberFormatterOptions();
     }
 
-    private static BigDecimal getRounded(BigDecimal number, FractionalOptions fractionalOptions) {
-        if (fractionalOptions.isRoundingEnabled()) {
-            var places = Math.max(0, fractionalOptions.getPlaces());
-            return number.setScale(places, RoundingMode.HALF_UP);
-        }
-        return number;
+    private DecimalFormat getDecimalFormat(String currency) {
+        var options = getNumberFormatterOptions(currency);
+        var groupingOptions = options.getGroupingOptions();
+        var fractionalOptions = options.getFractionalOptions();
+
+        var formatSymbols = getDecimalFormatSymbols(groupingOptions, fractionalOptions);
+        var places = fractionalOptions.getPlaces();
+
+        var decimalFormat = new DecimalFormat();
+
+        decimalFormat.setDecimalFormatSymbols(formatSymbols);
+        decimalFormat.setGroupingUsed(!groupingOptions.getGroupSeparator().isEmpty() && groupingOptions.getGroupSize() > 0);
+        decimalFormat.setGroupingSize(groupingOptions.getGroupSize());
+        decimalFormat.setMinimumFractionDigits(places);
+        decimalFormat.setMaximumFractionDigits(places);
+
+        return decimalFormat;
     }
 
-    boolean shouldAddGroupingSymbol(int length, int charIndex, GroupingOptions options) {
-        if (options.getGroupSize() <= 0) {
-            return false;
+    private DecimalFormatSymbols getDecimalFormatSymbols(GroupingOptions groupingOptions, FractionalOptions fractionalOptions) {
+        var symbols = new DecimalFormatSymbols();
+
+        var groupingSeparator = groupingOptions.getGroupSeparator();
+        if (groupingSeparator != null && !groupingSeparator.isEmpty()) {
+            symbols.setGroupingSeparator(groupingSeparator.charAt(0));
         }
-        if (charIndex == 0) {
-            return false;
+
+        var decimalSeparator = fractionalOptions.getSeparator();
+        if (decimalSeparator != null && !decimalSeparator.isEmpty()) {
+            symbols.setDecimalSeparator(decimalSeparator.charAt(0));
         }
-        return (length - charIndex) % options.getGroupSize() == 0;
+
+        return symbols;
     }
 
 }
