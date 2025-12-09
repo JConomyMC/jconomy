@@ -1,4 +1,4 @@
-package com.jellyrekt.jconomy.balances;
+package com.jellyrekt.jconomy.accounts;
 
 import java.util.Optional;
 import java.util.UUID;

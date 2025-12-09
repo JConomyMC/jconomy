@@ -49,7 +49,6 @@ public class EconomyImp implements Economy {
 
     @Override
     public int fractionalDigits(String pluginName) {
-        // TODO Auto-generated method stub
         return -1;
     }
 
@@ -74,18 +73,70 @@ public class EconomyImp implements Economy {
     }
 
     @Override
+    public boolean hasCurrency(String arg0) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'hasCurrency'");
+    }
+
+    @Override
     public String getDefaultCurrency(String pluginName) {
         return config.getDefaultCurrency();
     }
 
     @Override
-    public boolean accountSupportsCurrency(String arg0, UUID arg1, String arg2) {
+    public String defaultCurrencyNamePlural(String pluginName) {
+        var defaultCurrency = getDefaultCurrency(pluginName);
+        return config.getCurrencyOptions(defaultCurrency).getDisplayNamePlural();
+    }
+
+    @Override
+    public String defaultCurrencyNameSingular(String pluginName) {
+        var defaultCurrency = getDefaultCurrency(pluginName);
+        return config.getCurrencyOptions(defaultCurrency).getDisplayNameSingular();
+    }
+
+    @Override
+    public Collection<String> currencies() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'currencies'");
+    }
+
+    @Override
+    public boolean createAccount(UUID accountId, String name) {
+        return createAccount(accountId, name, true);
+    }
+
+    @Override
+    public boolean createAccount(UUID accountId, String name, boolean isPlayerAccount) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'createAccount'");
+    }
+
+    @Override
+    public boolean createAccount(UUID accountId, String name, String worldName) {
+        return createAccount(accountId, name, worldName, true);
+    }
+
+    @Override
+    public boolean createAccount(UUID accountId, String name, String worldName, boolean isPlayerAccount) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'createAccount'");
+    }
+
+    @Override
+    public Map<UUID, String> getUUIDNameMap() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getUUIDNameMap'");
+    }
+
+    @Override
+    public boolean accountSupportsCurrency(String arg0, UUID accountUuid, String arg2) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'accountSupportsCurrency'");
     }
 
     @Override
-    public boolean accountSupportsCurrency(String arg0, UUID arg1, String arg2,
+    public boolean accountSupportsCurrency(String arg0, UUID accountUuid, String arg2,
             String arg3) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'accountSupportsCurrency'");
@@ -105,52 +156,10 @@ public class EconomyImp implements Economy {
     }
 
     @Override
-    public boolean createAccount(UUID arg0, String arg1) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createAccount'");
-    }
-
-    @Override
-    public boolean createAccount(UUID arg0, String arg1, boolean arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createAccount'");
-    }
-
-    @Override
-    public boolean createAccount(UUID arg0, String arg1, String arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createAccount'");
-    }
-
-    @Override
-    public boolean createAccount(UUID arg0, String arg1, String arg2, boolean arg3) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createAccount'");
-    }
-
-    @Override
     public boolean createSharedAccount(String arg0, UUID arg1, String arg2,
             UUID arg3) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'createSharedAccount'");
-    }
-
-    @Override
-    public Collection<String> currencies() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'currencies'");
-    }
-
-    @Override
-    public String defaultCurrencyNamePlural(String arg0) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'defaultCurrencyNamePlural'");
-    }
-
-    @Override
-    public String defaultCurrencyNameSingular(String arg0) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'defaultCurrencyNameSingular'");
     }
 
     @Override
@@ -205,12 +214,6 @@ public class EconomyImp implements Economy {
     }
 
     @Override
-    public Map<UUID, String> getUUIDNameMap() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getUUIDNameMap'");
-    }
-
-    @Override
     public boolean has(String arg0, UUID arg1, BigDecimal arg2) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'has'");
@@ -246,12 +249,6 @@ public class EconomyImp implements Economy {
             AccountPermission arg3) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'hasAccountPermission'");
-    }
-
-    @Override
-    public boolean hasCurrency(String arg0) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hasCurrency'");
     }
 
     @Override

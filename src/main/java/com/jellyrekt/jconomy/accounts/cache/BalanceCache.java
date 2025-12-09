@@ -1,4 +1,4 @@
-package com.jellyrekt.jconomy.balances.cache;
+package com.jellyrekt.jconomy.accounts.cache;
 
 import java.util.Optional;
 import java.util.UUID;

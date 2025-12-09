@@ -2,8 +2,8 @@ package com.jellyrekt.jconomy;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.jellyrekt.jconomy.balances.cache.BalanceCache;
-import com.jellyrekt.jconomy.balances.cache.LruBalanceCache;
+import com.jellyrekt.jconomy.accounts.cache.BalanceCache;
+import com.jellyrekt.jconomy.accounts.cache.LruBalanceCache;
 import com.jellyrekt.jconomy.config.CacheConfig;
 import com.jellyrekt.jconomy.config.DefaultCacheConfig;
 import com.jellyrekt.jconomy.config.JConomyConfig;
