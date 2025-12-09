@@ -7,7 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.jellyrekt.jconomy.balances.BalanceRepository;
+import com.jellyrekt.jconomy.accounts.BalanceRepository;
 import com.jellyrekt.jconomy.config.JConomyConfig;
 
 public class PlayerJoinListener implements Listener {
