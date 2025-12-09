@@ -4,8 +4,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface BalanceRepository {
-    Optional<Balance> getByPlayerIdAndCurrencyName(UUID playerId, String currencyName);
+    Optional<Account> getById(UUID accountId);
     
-    void set(UUID playerId, String currencyName, double amount);
+    void save(Account account);
     
 }
