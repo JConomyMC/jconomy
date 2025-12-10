@@ -7,15 +7,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.jellyrekt.jconomy.accounts.BalanceRepository;
+import com.jellyrekt.jconomy.accounts.AccountRepository;
 import com.jellyrekt.jconomy.config.JConomyConfig;
 
 public class PlayerJoinListener implements Listener {
     private final JavaPlugin plugin;
     private final JConomyConfig config;
-    private final BalanceRepository balanceRepository;
+    private final AccountRepository balanceRepository;
 
-    public PlayerJoinListener(JavaPlugin plugin, JConomyConfig config, BalanceRepository balanceRepository) {
+    public PlayerJoinListener(JavaPlugin plugin, JConomyConfig config, AccountRepository balanceRepository) {
         this.plugin = plugin;
         this.config = config;
         this.balanceRepository = balanceRepository;

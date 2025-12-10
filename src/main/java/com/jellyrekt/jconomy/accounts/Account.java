@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Account {
+    
     private UUID accountId;
     private String name;
     private String worldName;
