@@ -3,14 +3,18 @@ package com.jellyrekt.jconomy;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.jellyrekt.jconomy.accounts.Account;
+import com.jellyrekt.jconomy.accounts.AccountRepository;
 import com.jellyrekt.jconomy.config.JConomyConfig;
 import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
 
+import net.milkbowl.vault2.economy.EconomyResponse.ResponseType;
 import net.milkbowl.vault2.economy.AccountPermission;
 import net.milkbowl.vault2.economy.Economy;
 import net.milkbowl.vault2.economy.EconomyResponse;
@@ -20,11 +24,29 @@ public class EconomyImp implements Economy {
     private final JavaPlugin plugin;
     private final CurrencyFormatter currencyFormatter;
     private final JConomyConfig config;
+    private final AccountRepository accountRepository;
 
-    public EconomyImp(JavaPlugin plugin, CurrencyFormatter currencyFormatter, JConomyConfig config) {
+    public EconomyImp(JavaPlugin plugin, CurrencyFormatter currencyFormatter, JConomyConfig config,
+            AccountRepository accountRepository) {
         this.plugin = plugin;
         this.currencyFormatter = currencyFormatter;
         this.config = config;
+        this.accountRepository = accountRepository;
+    }
+    
+    private Account getAccountOrThrow(UUID accountId, String world) {
+        return accountRepository.getByIdAndWorld(accountId, world)
+            .orElseThrow(() -> {
+                var message = String.format("Account (accountId='%s',world='%s') not found", accountId, world);
+                throw new NoSuchElementException(message);
+            });
+    }
+    
+    private String currencyOrDefault(String currency) {
+        if (currency == null) {
+            return config.getDefaultCurrency();
+        }
+        return currency;
     }
 
     @Override
@@ -103,24 +125,31 @@ public class EconomyImp implements Economy {
 
     @Override
     public boolean createAccount(UUID accountId, String name) {
-        return createAccount(accountId, name, true);
+        return createAccount(accountId, name, false);
     }
 
     @Override
     public boolean createAccount(UUID accountId, String name, boolean isPlayerAccount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createAccount'");
+        return createAccount(accountId, name, null, false);
     }
 
     @Override
-    public boolean createAccount(UUID accountId, String name, String worldName) {
-        return createAccount(accountId, name, worldName, true);
+    public boolean createAccount(UUID accountId, String name, String world) {
+        return createAccount(accountId, name, world, false);
     }
 
     @Override
-    public boolean createAccount(UUID accountId, String name, String worldName, boolean isPlayerAccount) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createAccount'");
+    public boolean createAccount(UUID accountId, String name, String world, boolean isPlayerAccount) {
+        try {
+            var account = new Account(accountId, name, world);
+            accountRepository.save(account);
+            return true;
+        } catch (Exception ex) {
+            var message = String.format("Unable to create account(accountId='%s',name='%s',world='%s'): %s",
+                    accountId, name, world, ex.getMessage());
+            plugin.getLogger().warning(message);
+            return false;
+        }
     }
 
     @Override
@@ -130,106 +159,175 @@ public class EconomyImp implements Economy {
     }
 
     @Override
-    public boolean accountSupportsCurrency(String arg0, UUID accountUuid, String arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'accountSupportsCurrency'");
+    public Optional<String> getAccountName(UUID accountId) {
+        return Optional.of(null);
     }
 
     @Override
-    public boolean accountSupportsCurrency(String arg0, UUID accountUuid, String arg2,
-            String arg3) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'accountSupportsCurrency'");
+    public boolean accountSupportsCurrency(String plugin, UUID accountId, String currency) {
+        return accountSupportsCurrency(plugin, accountId, currency, null);
     }
 
     @Override
-    public boolean addAccountMember(String arg0, UUID arg1, UUID arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addAccountMember'");
+    public boolean accountSupportsCurrency(String plugin, UUID accountId, String currency,
+            String worldName) {
+        return config.getAllCurrencyNames().contains(currency);
     }
 
     @Override
-    public boolean addAccountMember(String arg0, UUID arg1, UUID arg2,
-            AccountPermission... arg3) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addAccountMember'");
+    public BigDecimal getBalance(String pluginName, UUID accountId) {
+        return getBalance(pluginName, accountId, null);
+    }
+
+    @Override
+    public BigDecimal getBalance(String pluginName, UUID accountId, String world) {
+        return getBalance(pluginName, accountId, world, null);
+    }
+
+    @Override
+    public BigDecimal getBalance(String pluginName, UUID accountId, String world, String currency) {
+        return getAccountOrThrow(accountId, world).getBalance(
+                currency != null ? currency : config.getDefaultCurrency());
+    }
+
+    @Override
+    public boolean has(String pluginName, UUID accountId, BigDecimal amount) {
+        return has(pluginName, accountId, null, amount);
+    }
+
+    @Override
+    public boolean has(String pluginName, UUID accountId, String world, BigDecimal amount) {
+        return has(pluginName, accountId, world, config.getDefaultCurrency(), amount);
+    }
+
+    @Override
+    public boolean has(String pluginName, UUID accountId, String world, String currency,
+            BigDecimal amount) {
+        return getBalance(pluginName, accountId, world, currency).compareTo(amount) >= 0;
+    }
+
+    @Override
+    public EconomyResponse set(String pluginName, UUID accountID, BigDecimal amount) {
+        return set(pluginName, accountID, null, amount);
+    }
+
+    @Override
+    public EconomyResponse set(String pluginName, UUID accountID, String worldName, BigDecimal amount) {
+        return set(pluginName, accountID, worldName, null, amount);
+    }
+    
+    @Override
+    public EconomyResponse set(String pluginName, UUID accountID, String worldName, String currency, BigDecimal amount) {
+        try {
+            var account = getAccountOrThrow(accountID, worldName);
+            account.setBalance(currencyOrDefault(currency), amount);
+            accountRepository.save(account);
+
+            return new EconomyResponse(amount, account.getBalance(currency), ResponseType.SUCCESS, "");
+        } catch (Exception ex) {
+            return new EconomyResponse(BigDecimal.ZERO, null, ResponseType.FAILURE, ex.getMessage());
+        }
+    }
+
+    @Override
+    public EconomyResponse withdraw(String pluginName, UUID accountId, BigDecimal amount) {
+        return withdraw(pluginName, accountId, null, amount);
+    }
+
+    @Override
+    public EconomyResponse withdraw(String pluginName, UUID accountId, String worldName,
+            BigDecimal amount) {
+        return withdraw(pluginName, accountId, worldName, null, amount);
+    }
+
+    @Override
+    public EconomyResponse withdraw(String pluginName, UUID accountId, String worldName,
+            String currency, BigDecimal amount) {
+        currency = currencyOrDefault(currency);
+
+        var balance = getBalance(pluginName, accountId, worldName, currency);
+        var response = set(pluginName, accountId, worldName, currency, balance.subtract(amount));
+
+        var newBalance = response.transactionSuccess() ? response.balance : balance;
+
+        return new EconomyResponse(response.amount, newBalance, response.type, response.errorMessage);
+    }
+
+    @Override
+    public EconomyResponse deposit(String pluginName, UUID accountId, BigDecimal amount) {
+        return deposit(pluginName, accountId, null, amount);
+    }
+
+    @Override
+    public EconomyResponse deposit(String pluginName, UUID accountId, String worldName,
+            BigDecimal amount) {
+        return deposit(pluginName, accountId, worldName, null, amount);
+    }
+
+    @Override
+    public EconomyResponse deposit(String pluginName, UUID accountId, String worldName,
+            String currency, BigDecimal amount) {
+        currency = currencyOrDefault(currency);
+
+        var balance = getBalance(pluginName, accountId, worldName, currency);
+        var response = set(pluginName, accountId, worldName, currency, balance.add(amount));
+
+        var newBalance = response.transactionSuccess() ? response.balance : balance;
+
+        return new EconomyResponse(response.amount, newBalance, response.type, response.errorMessage);
+    }
+
+    private boolean accountsNotSupported(String pluginName, String calledMethod) {
+        plugin.getLogger().warning(String.format("%s called %s, but shared accounts are not supported.", pluginName, calledMethod));
+        return false;
     }
 
     @Override
     public boolean createSharedAccount(String arg0, UUID arg1, String arg2,
             UUID arg3) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createSharedAccount'");
+        return accountsNotSupported(arg0, "createSharedAccount");
     }
 
     @Override
     public boolean deleteAccount(String arg0, UUID arg1) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteAccount'");
+        return accountsNotSupported(arg0, "deleteAccount");
     }
 
     @Override
-    public EconomyResponse deposit(String arg0, UUID arg1, BigDecimal arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deposit'");
+    public boolean isAccountOwner(String arg0, UUID arg1, UUID arg2) {
+        return accountsNotSupported(arg0, "isAccountOwner");
     }
 
     @Override
-    public EconomyResponse deposit(String arg0, UUID arg1, String arg2,
-            BigDecimal arg3) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deposit'");
+    public boolean setOwner(String arg0, UUID arg1, UUID arg2) {
+        return accountsNotSupported(arg0, "setOwner");
     }
 
     @Override
-    public EconomyResponse deposit(String arg0, UUID arg1, String arg2,
-            String arg3, BigDecimal arg4) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deposit'");
+    public boolean isAccountMember(String arg0, UUID arg1, UUID arg2) {
+        return accountsNotSupported(arg0, "isAccountMember");
     }
 
     @Override
-    public Optional<String> getAccountName(UUID arg0) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAccountName'");
+    public boolean addAccountMember(String plugin, UUID accountId, UUID arg2) {
+        return addAccountMember(plugin, accountId, arg2, new AccountPermission[0]);
     }
 
     @Override
-    public BigDecimal getBalance(String arg0, UUID arg1) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getBalance'");
+    public boolean addAccountMember(String arg0, UUID arg1, UUID arg2,
+            AccountPermission... arg3) {
+        return accountsNotSupported(arg0, "addAccountMember");
     }
 
     @Override
-    public BigDecimal getBalance(String arg0, UUID arg1, String arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getBalance'");
+    public boolean removeAccountMember(String arg0, UUID arg1, UUID arg2) {
+        return accountsNotSupported(arg0, "removeAccountMember");
     }
 
     @Override
-    public BigDecimal getBalance(String arg0, UUID arg1, String arg2,
-            String arg3) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getBalance'");
-    }
-
-    @Override
-    public boolean has(String arg0, UUID arg1, BigDecimal arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'has'");
-    }
-
-    @Override
-    public boolean has(String arg0, UUID arg1, String arg2, BigDecimal arg3) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'has'");
-    }
-
-    @Override
-    public boolean has(String arg0, UUID arg1, String arg2, String arg3,
-            BigDecimal arg4) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'has'");
+    public boolean hasAccountPermission(String arg0, UUID arg1, UUID arg2,
+            AccountPermission arg3) {
+        return accountsNotSupported(arg0, "hasAccountPermission");
     }
 
     @Override
@@ -245,31 +343,6 @@ public class EconomyImp implements Economy {
     }
 
     @Override
-    public boolean hasAccountPermission(String arg0, UUID arg1, UUID arg2,
-            AccountPermission arg3) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hasAccountPermission'");
-    }
-
-    @Override
-    public boolean isAccountMember(String arg0, UUID arg1, UUID arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isAccountMember'");
-    }
-
-    @Override
-    public boolean isAccountOwner(String arg0, UUID arg1, UUID arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isAccountOwner'");
-    }
-
-    @Override
-    public boolean removeAccountMember(String arg0, UUID arg1, UUID arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeAccountMember'");
-    }
-
-    @Override
     public boolean renameAccount(UUID arg0, String arg1) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'renameAccount'");
@@ -282,36 +355,10 @@ public class EconomyImp implements Economy {
     }
 
     @Override
-    public boolean setOwner(String arg0, UUID arg1, UUID arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setOwner'");
-    }
-
-    @Override
     public boolean updateAccountPermission(String arg0, UUID arg1, UUID arg2,
             AccountPermission arg3, boolean arg4) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'updateAccountPermission'");
-    }
-
-    @Override
-    public EconomyResponse withdraw(String arg0, UUID arg1, BigDecimal arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'withdraw'");
-    }
-
-    @Override
-    public EconomyResponse withdraw(String arg0, UUID arg1, String arg2,
-            BigDecimal arg3) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'withdraw'");
-    }
-
-    @Override
-    public EconomyResponse withdraw(String arg0, UUID arg1, String arg2,
-            String arg3, BigDecimal arg4) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'withdraw'");
     }
     
 }
