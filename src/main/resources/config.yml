@@ -2,6 +2,10 @@
 # Don't change this value.
 config-version: 1
 
+# The name of the world to use for a player's default account.
+# Default: 'world'
+default-world: world
+
 # The name of the primary currency.
 # Must match a key under the 'currencies' section.
 # Legacy economy providers will always use this currency.

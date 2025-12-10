@@ -5,6 +5,8 @@ import java.util.Set;
 public interface JConomyConfig {
     String getDefaultCurrency();
 
+    String getDefaultWorldName();
+
     NumberFormatterOptions getDefaultNumberFormatterOptions();
 
     Set<String> getAllCurrencyNames();

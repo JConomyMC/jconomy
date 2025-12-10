@@ -19,6 +19,11 @@ public class YamlJConomyConfig extends FileConfigurationStorage implements JCono
     }
 
     @Override
+    public String getDefaultWorldName() {
+        return getFileConfiguration().getString("default-world-name", "world");
+    }
+
+    @Override
     public NumberFormatterOptions getDefaultNumberFormatterOptions() {
         var key = "default-number-formatter-options";
         var section = getFileConfiguration();

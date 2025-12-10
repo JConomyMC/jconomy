@@ -6,10 +6,13 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jellyrekt.jconomy.accounts.Account;
+import com.jellyrekt.jconomy.accounts.AccountName;
+import com.jellyrekt.jconomy.accounts.AccountNameRepository;
 import com.jellyrekt.jconomy.accounts.AccountRepository;
 import com.jellyrekt.jconomy.config.JConomyConfig;
 import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
@@ -20,22 +23,23 @@ import net.milkbowl.vault2.economy.Economy;
 import net.milkbowl.vault2.economy.EconomyResponse;
 
 public class EconomyImp implements Economy {
-
     private final JavaPlugin plugin;
     private final CurrencyFormatter currencyFormatter;
     private final JConomyConfig config;
     private final AccountRepository accountRepository;
+    private final AccountNameRepository accountNameRepository;
 
     public EconomyImp(JavaPlugin plugin, CurrencyFormatter currencyFormatter, JConomyConfig config,
-            AccountRepository accountRepository) {
+            AccountRepository accountRepository, AccountNameRepository accountNameRepository) {
         this.plugin = plugin;
         this.currencyFormatter = currencyFormatter;
         this.config = config;
         this.accountRepository = accountRepository;
+        this.accountNameRepository = accountNameRepository;
     }
     
     private Account getAccountOrThrow(UUID accountId, String world) {
-        return accountRepository.getByIdAndWorld(accountId, world)
+        return accountRepository.getByIdAndWorld(accountId, worldNameOrDefault(world))
             .orElseThrow(() -> {
                 var message = String.format("Account (accountId='%s',world='%s') not found", accountId, world);
                 throw new NoSuchElementException(message);
@@ -47,6 +51,13 @@ public class EconomyImp implements Economy {
             return config.getDefaultCurrency();
         }
         return currency;
+    }
+
+    private String worldNameOrDefault(String worldName) {
+        if (worldName == null) {
+            return config.getDefaultWorldName();
+        }
+        return worldName;
     }
 
     @Override
@@ -95,9 +106,8 @@ public class EconomyImp implements Economy {
     }
 
     @Override
-    public boolean hasCurrency(String arg0) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hasCurrency'");
+    public boolean hasCurrency(String currency) {
+        return currencies().stream().anyMatch(c -> c == currency);
     }
 
     @Override
@@ -119,8 +129,7 @@ public class EconomyImp implements Economy {
 
     @Override
     public Collection<String> currencies() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'currencies'");
+        return config.getAllCurrencyNames();
     }
 
     @Override
@@ -134,19 +143,19 @@ public class EconomyImp implements Economy {
     }
 
     @Override
-    public boolean createAccount(UUID accountId, String name, String world) {
-        return createAccount(accountId, name, world, false);
+    public boolean createAccount(UUID accountId, String name, String worldName) {
+        return createAccount(accountId, name, worldName, false);
     }
 
     @Override
-    public boolean createAccount(UUID accountId, String name, String world, boolean isPlayerAccount) {
+    public boolean createAccount(UUID accountId, String name, String worldName, boolean isPlayerAccount) {
         try {
-            var account = new Account(accountId, name, world);
+            var account = new Account(accountId, name, worldNameOrDefault(worldName));
             accountRepository.save(account);
             return true;
         } catch (Exception ex) {
             var message = String.format("Unable to create account(accountId='%s',name='%s',world='%s'): %s",
-                    accountId, name, world, ex.getMessage());
+                    accountId, name, worldName, ex.getMessage());
             plugin.getLogger().warning(message);
             return false;
         }
@@ -154,13 +163,13 @@ public class EconomyImp implements Economy {
 
     @Override
     public Map<UUID, String> getUUIDNameMap() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getUUIDNameMap'");
+        return accountNameRepository.getAll().stream()
+                .collect(Collectors.toMap(AccountName::getAccountId, AccountName::getName));
     }
 
     @Override
     public Optional<String> getAccountName(UUID accountId) {
-        return Optional.of(null);
+        return accountNameRepository.getByAccountId(accountId).map(AccountName::getName);
     }
 
     @Override
@@ -331,34 +340,38 @@ public class EconomyImp implements Economy {
     }
 
     @Override
-    public boolean hasAccount(UUID arg0) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hasAccount'");
+    public boolean hasAccount(UUID accountId) {
+        return accountsNotSupported("A plugin", "hasAccount");
     }
 
     @Override
-    public boolean hasAccount(UUID arg0, String arg1) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hasAccount'");
+    public boolean hasAccount(UUID accountId, String worldName) {
+        return accountsNotSupported("A plugin", "hasAccount");
     }
 
     @Override
-    public boolean renameAccount(UUID arg0, String arg1) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'renameAccount'");
+    public boolean renameAccount(UUID accountId, String name) {
+        return renameAccount(null, accountId, name);
     }
 
     @Override
-    public boolean renameAccount(String arg0, UUID arg1, String arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'renameAccount'");
+    public boolean renameAccount(String pluginName, UUID accountId, String name) {
+        var result = accountNameRepository.getByAccountId(accountId);
+        if (result.isPresent()) {
+            var accountName = result.get();
+            accountName.setName(name);
+            accountNameRepository.save(accountName);
+            return true;
+        }
+
+        plugin.getLogger().warning("Account(accountId='%s') does not exist");
+        return false;
     }
 
     @Override
-    public boolean updateAccountPermission(String arg0, UUID arg1, UUID arg2,
+    public boolean updateAccountPermission(String pluginName, UUID accountId, UUID name,
             AccountPermission arg3, boolean arg4) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateAccountPermission'");
+        return accountsNotSupported(pluginName, "updateAccountPermission");
     }
     
 }
