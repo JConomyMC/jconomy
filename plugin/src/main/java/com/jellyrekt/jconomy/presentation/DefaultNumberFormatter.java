@@ -23,8 +23,8 @@ public class DefaultNumberFormatter implements NumberFormatter {
         var rounded = getRounded(number, currency);
 
         var formattedNumber = decimalFormat.format(rounded.abs());
-        var isSingular = new BigDecimal(1).compareTo(rounded.abs()) == 0;
-        var isNegative = number.compareTo(new BigDecimal(0)) < 0;
+        var isSingular = BigDecimal.ONE.compareTo(rounded.abs()) == 0;
+        var isNegative = number.compareTo(BigDecimal.ZERO) < 0;
 
         return new NumberFormatResult(formattedNumber, isSingular, isNegative);
     }
