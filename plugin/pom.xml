@@ -90,6 +90,7 @@
     </dependencies>
 
     <build>
+        <finalName>JConomy-${project.version}</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
