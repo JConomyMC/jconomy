@@ -6,14 +6,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.jellyrekt.jconomy.accounts.AccountCache;
 import com.jellyrekt.jconomy.config.CacheConfig;
 
-public class LruBalanceCache implements BalanceCache {
+public class LruAccountCache implements AccountCache {
     private record BalanceCacheKey(UUID playerId, String currencyName) { }
 
     private final Map<BalanceCacheKey, Double> amounts;
 
-    public LruBalanceCache(CacheConfig config) {
+    public LruAccountCache(CacheConfig config) {
         amounts = Collections.synchronizedMap(
             new LinkedHashMap<BalanceCacheKey, Double>(config.getLruLimit(), 0.75f, true) {
                 @Override
