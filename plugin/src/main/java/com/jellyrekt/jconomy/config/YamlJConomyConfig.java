@@ -123,7 +123,12 @@ public class YamlJConomyConfig extends FileConfigurationStorage implements JCono
 
             @Override
             public int getGroupSize() {
-                return getConfigurationSection().getInt("group-size");
+                var section = getConfigurationSection();
+                var key = "group-size";
+                if (defaultGroupingOptions != null) {
+                    return section.getInt(key, defaultGroupingOptions.getGroupSize());
+                }
+                return section.getInt(key);
             }
 
             @Override
@@ -133,7 +138,7 @@ public class YamlJConomyConfig extends FileConfigurationStorage implements JCono
                 if (defaultGroupingOptions != null) {
                     return section.getString(key, defaultGroupingOptions.getGroupSeparator());
                 }
-                return section.getString("separator");
+                return section.getString(key);
             }
 
         }

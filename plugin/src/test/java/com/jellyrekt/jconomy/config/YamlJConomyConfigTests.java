@@ -6,24 +6,10 @@ import java.util.stream.Stream;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class YamlJConomyConfigTests {
-
-    // ------------------------------------------------------------
-    // Existing non-parameterized tests
-    // ------------------------------------------------------------
-
-    @Test
-    void someExistingNonParameterizedTest() {
-        // Keep your existing tests here
-    }
-
-    // ------------------------------------------------------------
-    // PARAMETERIZED: Grouping + Fractional logic using YAML fixtures
-    // ------------------------------------------------------------
 
     private static final String TEST_CURRENCY = "testcur";
 
