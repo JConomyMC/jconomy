@@ -1,12 +1,12 @@
 package com.jellyrekt.jconomy.config;
 
-import com.jellyrekt.jconomy.storage.ConfigFileConfigurationProvider;
+import com.jellyrekt.storage.fileconfiguration.FileConfigurationProvider;
 import com.jellyrekt.storage.fileconfiguration.FileConfigurationStorage;
 
 public class DefaultCacheConfig extends FileConfigurationStorage implements CacheConfig {
     private final String baseKey = "cache";
 
-    public DefaultCacheConfig(ConfigFileConfigurationProvider configurationProvider) {
+    public DefaultCacheConfig(FileConfigurationProvider configurationProvider) {
         super(configurationProvider);
         //TODO Auto-generated constructor stub
     }
