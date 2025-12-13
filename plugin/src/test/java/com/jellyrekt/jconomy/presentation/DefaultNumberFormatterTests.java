@@ -1,4 +1,4 @@
-package com.jellyrekt.jconomy;
+package com.jellyrekt.jconomy.presentation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -11,14 +11,12 @@ import com.jellyrekt.jconomy.config.JConomyConfig.CurrencyOptions;
 import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions;
 import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions.FractionalOptions;
 import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions.GroupingOptions;
-import com.jellyrekt.jconomy.presentation.DefaultNumberFormatter;
-import com.jellyrekt.jconomy.presentation.NumberFormatResult;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class DefaultNumberFormatterTest {
+public class DefaultNumberFormatterTests {
 
     private JConomyConfig mockConfig;
     private NumberFormatterOptions mockNumberFormatterOptions;
