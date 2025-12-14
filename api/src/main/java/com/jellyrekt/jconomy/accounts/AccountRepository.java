@@ -10,7 +10,7 @@ public interface AccountRepository {
     
     Optional<Account> getByIdAndWorld(UUID accountId, String world);
     
-    void save(Account account);
+    void upsert(Account account);
 
     void upsertAll(Set<Account> accounts);
 }
