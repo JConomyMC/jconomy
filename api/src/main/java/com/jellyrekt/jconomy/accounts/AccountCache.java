@@ -5,8 +5,8 @@ import java.util.UUID;
 
 public interface AccountCache {
 
-    Optional<Double> get(UUID playerId, String currencyName);
+    Optional<Account> get(UUID accountId, String world);
 
-    void put(UUID playerId, String currencyName, double amount);
+    void put(UUID accountId, String world, Account amount);
 
 }
