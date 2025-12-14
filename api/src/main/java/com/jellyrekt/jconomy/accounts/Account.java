@@ -2,6 +2,7 @@ package com.jellyrekt.jconomy.accounts;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class Account {
@@ -11,7 +12,7 @@ public class Account {
     private String worldName;
     private Map<String, BigDecimal> balances;
 
-    public Account(UUID accountId, String name, String worldName) {
+    public Account(UUID accountId, String worldName) {
         this.accountId = accountId;
     }
 
@@ -21,6 +22,10 @@ public class Account {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getWorldName() {
@@ -33,5 +38,9 @@ public class Account {
 
     public void setBalance(String currency, BigDecimal balance) {
         balances.put(currency, balance);
+    }
+
+    public Set<Map.Entry<String, BigDecimal>> getBalanceEntries() {
+        return balances.entrySet();
     }
 }
