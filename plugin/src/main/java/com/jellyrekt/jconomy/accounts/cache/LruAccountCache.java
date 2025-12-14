@@ -1,24 +1,26 @@
 package com.jellyrekt.jconomy.accounts.cache;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.jellyrekt.jconomy.accounts.Account;
 import com.jellyrekt.jconomy.accounts.AccountCache;
 import com.jellyrekt.jconomy.config.CacheConfig;
 
 public class LruAccountCache implements AccountCache {
-    private record BalanceCacheKey(UUID playerId, String currencyName) { }
+    private record AccountKey(UUID accountId, String world) { }
 
-    private final Map<BalanceCacheKey, Double> amounts;
+    private final Map<AccountKey, Account> accounts;
 
     public LruAccountCache(CacheConfig config) {
-        amounts = Collections.synchronizedMap(
-            new LinkedHashMap<BalanceCacheKey, Double>(config.getLruLimit(), 0.75f, true) {
+        accounts = Collections.synchronizedMap(
+            new LinkedHashMap<AccountKey, Account>(config.getLruLimit(), 0.75f, true) {
                 @Override
-                protected boolean removeEldestEntry(Map.Entry<BalanceCacheKey, Double> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<AccountKey, Account> eldest) {
                     return size() > config.getLruLimit();
                 }
             }
@@ -26,13 +28,13 @@ public class LruAccountCache implements AccountCache {
     }
 
     @Override
-    public Optional<Double> get(UUID playerId, String currencyName) {
-        var amount = amounts.get(new BalanceCacheKey(playerId, currencyName));
-        return Optional.ofNullable(amount);
+    public Optional<Account> get(UUID accountId, String world) {
+        var account = accounts.get(new AccountKey(accountId, world));
+        return Optional.ofNullable(account);
     }
 
     @Override
-    public void put(UUID playerId, String currencyName, double amount) {
-        amounts.put(new BalanceCacheKey(playerId, currencyName), amount);
+    public void put(UUID accountId, String world, Account amount) {
+        accounts.put(new AccountKey(accountId, world), amount);
     }
 }
