@@ -13,7 +13,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.jellyrekt.jconomy.accounts.Account;
 import com.jellyrekt.jconomy.accounts.AccountName;
 import com.jellyrekt.jconomy.accounts.AccountNameRepository;
-import com.jellyrekt.jconomy.accounts.AccountRepository;
+import com.jellyrekt.jconomy.accounts.AccountAccess;
 import com.jellyrekt.jconomy.config.JConomyConfig;
 import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
 
@@ -26,11 +26,11 @@ public class EconomyImp implements Economy {
     private final JavaPlugin plugin;
     private final CurrencyFormatter currencyFormatter;
     private final JConomyConfig config;
-    private final AccountRepository accountRepository;
+    private final AccountAccess accountRepository;
     private final AccountNameRepository accountNameRepository;
 
     public EconomyImp(JavaPlugin plugin, CurrencyFormatter currencyFormatter, JConomyConfig config,
-            AccountRepository accountRepository, AccountNameRepository accountNameRepository) {
+            AccountAccess accountRepository, AccountNameRepository accountNameRepository) {
         this.plugin = plugin;
         this.currencyFormatter = currencyFormatter;
         this.config = config;

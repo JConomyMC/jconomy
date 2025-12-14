@@ -1,4 +1,4 @@
-package com.jellyrekt.jconomy.accounts.cache;
+package com.jellyrekt.jconomy.accounts;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -6,21 +6,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
-import com.jellyrekt.jconomy.accounts.Account;
-import com.jellyrekt.jconomy.accounts.AccountCache;
-import com.jellyrekt.jconomy.accounts.AccountRepository;
-import com.jellyrekt.jconomy.storage.Flushable;
 import com.jellyrekt.jconomy.storage.SqlConnectionFactory;
 
-public class SqliteAccountRepository implements AccountRepository, Flushable {
+public class SqliteAccountRepository implements AccountRepository {
     private final SqlConnectionFactory connectionFactory;
-    private final AccountCache cache;
-
-    public SqliteAccountRepository(SqlConnectionFactory connectionFactory, AccountCache cache) {
+    
+    public SqliteAccountRepository(SqlConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
-        this.cache = cache;
     }
 
     @Override
@@ -31,16 +26,6 @@ public class SqliteAccountRepository implements AccountRepository, Flushable {
 
     @Override
     public Optional<Account> getByIdAndWorld(UUID accountId, String world) {
-        return cache.get(accountId, world).or(() -> {
-            var account = queryByIdAndWorld(accountId, world);
-            if (account.isPresent()) {
-                cache.put(account.get());
-            }
-            return account;
-        });
-    }
-
-    private Optional<Account> queryByIdAndWorld(UUID accountId, String world) {
         var sql = """
                 select a.*, n.account_name
                 from accounts a
@@ -50,8 +35,7 @@ public class SqliteAccountRepository implements AccountRepository, Flushable {
                 """;
         try (
                 var connection = connectionFactory.createConnection();
-                var statement = connection.prepareStatement(sql);
-        ) {
+                var statement = connection.prepareStatement(sql);) {
             statement.setString(1, accountId.toString());
             statement.setString(2, world);
             try (var results = statement.executeQuery()) {
@@ -80,19 +64,13 @@ public class SqliteAccountRepository implements AccountRepository, Flushable {
     }
 
     @Override
-    public Optional<String> getNameByAccountId(UUID accountId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getNameByAccountId'");
-    }
-
-    @Override
     public void save(Account account) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'save'");
     }
 
     @Override
-    public void flush() {
+    public void upsertAll(Set<Account> accounts) {
         var accountSql = """
                 insert into accounts (account_id, world, currency, amount)
                 values (?, ?, ?, ?)
@@ -110,16 +88,16 @@ public class SqliteAccountRepository implements AccountRepository, Flushable {
                 var accountStatement = connection.prepareStatement(accountSql);
                 var nameStatement = connection.prepareStatement(nameSql);
         ) {
-            upsertAll(connection, accountStatement, nameStatement);
+            upsertAll(accounts, connection, accountStatement, nameStatement);
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    private void upsertAll(Connection connection, PreparedStatement accountStatement, PreparedStatement nameStatement)
+    private void upsertAll(Set<Account> accounts, Connection connection, PreparedStatement accountStatement, PreparedStatement nameStatement)
             throws SQLException {
         connection.setAutoCommit(false);
-        for (var account : cache.getAll()) {
+        for (var account : accounts) {
             try {
                 upsert(account, accountStatement, nameStatement);
                 connection.commit();
@@ -148,4 +126,5 @@ public class SqliteAccountRepository implements AccountRepository, Flushable {
 
         accountStatement.clearBatch();
     }
+    
 }

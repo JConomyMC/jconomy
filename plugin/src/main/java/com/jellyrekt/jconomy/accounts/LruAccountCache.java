@@ -1,4 +1,4 @@
-package com.jellyrekt.jconomy.accounts.cache;
+package com.jellyrekt.jconomy.accounts;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -8,8 +8,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import com.jellyrekt.jconomy.accounts.Account;
-import com.jellyrekt.jconomy.accounts.AccountCache;
 import com.jellyrekt.jconomy.config.CacheConfig;
 
 public class LruAccountCache implements AccountCache {
