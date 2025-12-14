@@ -20,6 +20,7 @@ import com.jellyrekt.jconomy.presentation.DefaultCurrencyFormatter;
 import com.jellyrekt.jconomy.presentation.DefaultNumberFormatter;
 import com.jellyrekt.jconomy.presentation.NumberFormatter;
 import com.jellyrekt.jconomy.storage.DatabaseMigrator;
+import com.jellyrekt.jconomy.storage.Flushable;
 import com.jellyrekt.jconomy.storage.SqlConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteMigrator;
@@ -48,6 +49,14 @@ public class JConomy extends JavaPlugin {
 
         registerServices();
         registerEvents();
+    }
+
+    @Override
+    public void onDisable() {
+        var accountAccess = services.getRequiredService(AccountAccess.class);
+        if (accountAccess instanceof Flushable flushableAccountAccess) {
+            flushableAccountAccess.flush();
+        }
     }
     
     private void registerServices() {
