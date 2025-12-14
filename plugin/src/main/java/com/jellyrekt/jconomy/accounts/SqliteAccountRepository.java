@@ -49,8 +49,8 @@ public class SqliteAccountRepository implements AccountRepository {
         do {
             UUID accountId = UUID.fromString(rs.getString("account_id"));
             String world = rs.getString("world");
-            var account = new Account(accountId, world);
-            account.setName(rs.getString("account_name"));
+            String name = rs.getString("account_name");
+            var account = new Account(accountId, world, name);
 
             do {
                 account.setBalance(rs.getString("currency"), rs.getBigDecimal("amount"));
@@ -59,8 +59,6 @@ public class SqliteAccountRepository implements AccountRepository {
                     && world.equals(rs.getString("world")));
 
             accounts.add(account);
-
-            // If the inner do/while stopped before EOF, the outer do/while continues with the current row
         } while (!rs.isAfterLast());
 
         return accounts;
@@ -94,9 +92,9 @@ public class SqliteAccountRepository implements AccountRepository {
         }
         var accountId = UUID.fromString(result.getString("account_id"));
         var worldName = result.getString("world");
+        var accountName = result.getString("account_name");
         
-        var account = new Account(accountId, worldName);
-        account.setName(result.getString("account_name"));
+        var account = new Account(accountId, worldName, accountName);
         
         do {
             account.setBalance(result.getString("currency"), result.getBigDecimal("balance"));
@@ -110,8 +108,39 @@ public class SqliteAccountRepository implements AccountRepository {
         upsertAll(Set.of(account));
     }
 
-    private void upsert(Account account, PreparedStatement accountStatement, PreparedStatement nameStatement)
+    @Override
+    public void upsertAll(Set<Account> accounts) {
+        var sqlUpsertAccount = """
+                    insert into accounts (account_id, world, currency, amount)
+                    values (?, ?, ?, ?)
+                    on conflict (account_id, world, currency)
+                    do update set amount = excluded.amount
+                """;
+        try (
+                var connection = connectionFactory.createConnection();
+                var accountStatement = connection.prepareStatement(sqlUpsertAccount);
+        ) {
+            upsertAll(accounts, connection, accountStatement);
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private void upsertAll(Set<Account> accounts, Connection connection, PreparedStatement accountStatement)
             throws SQLException {
+        connection.setAutoCommit(false);
+        for (var account : accounts) {
+            try {
+                upsert(account, accountStatement);
+                connection.commit();
+            } catch (SQLException ex) {
+                // TODO log?
+                connection.rollback();
+            }
+        }
+    }
+
+    private void upsert(Account account, PreparedStatement accountStatement) throws SQLException {
         accountStatement.setString(1, account.getAccountId().toString());
         accountStatement.setString(2, account.getWorldName());
 
@@ -121,52 +150,8 @@ public class SqliteAccountRepository implements AccountRepository {
             accountStatement.addBatch();
         }
 
-        nameStatement.setString(1, account.getAccountId().toString());
-        nameStatement.setString(2, account.getName());
-
         accountStatement.executeBatch();
-        nameStatement.executeUpdate();
-
         accountStatement.clearBatch();
-    }
-
-    @Override
-    public void upsertAll(Set<Account> accounts) {
-        var sqlUpsertAccount = """
-                    insert into accounts (account_id, world, currency, amount)
-                    values (?, ?, ?, ?)
-                    on conflict (account_id, world, currency)
-                    do update set amount = excluded.amount
-                """;
-        var sqlUpsertName = """
-                    insert into account_names (account_id, account_name)
-                    values (?, ?)
-                    on conflict (account_id)
-                    do update set account_name = excluded.account_name
-                """;
-        try (
-                var connection = connectionFactory.createConnection();
-                var accountStatement = connection.prepareStatement(sqlUpsertAccount);
-                var nameStatement = connection.prepareStatement(sqlUpsertName);
-        ) {
-            upsertAll(accounts, connection, accountStatement, nameStatement);
-        } catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    private void upsertAll(Set<Account> accounts, Connection connection, PreparedStatement accountStatement, PreparedStatement nameStatement)
-            throws SQLException {
-        connection.setAutoCommit(false);
-        for (var account : accounts) {
-            try {
-                upsert(account, accountStatement, nameStatement);
-                connection.commit();
-            } catch (SQLException ex) {
-                // TODO log?
-                connection.rollback();
-            }
-        }
     }
     
 }

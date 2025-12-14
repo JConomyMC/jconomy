@@ -4,9 +4,16 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jellyrekt.jconomy.accounts.AccountCache;
+import com.jellyrekt.jconomy.accounts.AccountName;
+import com.jellyrekt.jconomy.accounts.AccountNameAccess;
+import com.jellyrekt.jconomy.accounts.AccountNameCache;
+import com.jellyrekt.jconomy.accounts.AccountNameRepository;
 import com.jellyrekt.jconomy.accounts.AccountRepository;
 import com.jellyrekt.jconomy.accounts.DefaultAccountAccess;
+import com.jellyrekt.jconomy.accounts.DefaultAccountNameAccess;
 import com.jellyrekt.jconomy.accounts.LruAccountCache;
+import com.jellyrekt.jconomy.accounts.LruAccountNameCache;
+import com.jellyrekt.jconomy.accounts.SqliteAccountNameRepository;
 import com.jellyrekt.jconomy.accounts.SqliteAccountRepository;
 import com.jellyrekt.jconomy.adapters.LegacyEconomyAdapter;
 import com.jellyrekt.jconomy.accounts.AccountAccess;
@@ -57,6 +64,10 @@ public class JConomy extends JavaPlugin {
         if (accountAccess instanceof Flushable flushableAccountAccess) {
             flushableAccountAccess.flush();
         }
+        var accountNameAccess = services.getRequiredService(AccountNameAccess.class);
+        if (accountNameAccess instanceof Flushable flushableAccountNameAccess) {
+            flushableAccountNameAccess.flush();
+        }
     }
     
     private void registerServices() {
@@ -95,6 +106,9 @@ public class JConomy extends JavaPlugin {
         builder.addSingleton(Economy.class, EconomyImp.class);
         builder.addSingleton(net.milkbowl.vault.economy.Economy.class, LegacyEconomyAdapter.class);
         builder.addSingleton(PlayerJoinListener.class);
+        builder.addSingleton(AccountNameCache.class, LruAccountNameCache.class);
+        builder.addSingleton(AccountNameRepository.class, SqliteAccountNameRepository.class);
+        builder.addSingleton(AccountNameAccess.class, DefaultAccountNameAccess.class);
 
         services = builder.build(true);
     }
