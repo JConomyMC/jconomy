@@ -1,10 +1,11 @@
 package com.jellyrekt.jconomy.accounts.cache;
 
-import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import com.jellyrekt.jconomy.accounts.Account;
@@ -34,7 +35,12 @@ public class LruAccountCache implements AccountCache {
     }
 
     @Override
-    public void put(UUID accountId, String world, Account amount) {
-        accounts.put(new AccountKey(accountId, world), amount);
+    public void put(Account account) {
+        accounts.put(new AccountKey(account.getAccountId(), account.getWorldName()), account);
+    }
+
+    @Override
+    public Set<Account> getAll() {
+        return new HashSet<>(accounts.values());
     }
 }
