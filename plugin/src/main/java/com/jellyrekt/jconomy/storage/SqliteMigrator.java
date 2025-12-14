@@ -12,11 +12,16 @@ public class SqliteMigrator implements DatabaseMigrator {
 
     @Override
     public void migrate() {
-        try (var connection = connectionFactory.createConnection(); var statement = connection.createStatement()) {
+        try (var connection = connectionFactory.createConnection()) {
             connection.setAutoCommit(false);
-            createVersionTable(statement);
-            _1_createAccountsAndAccountNames(statement);
-            connection.commit();
+            try (var statement = connection.createStatement()) {
+                createVersionTable(statement);
+                _1_createAccountsAndAccountNames(statement);
+                connection.commit();
+            } catch (Exception ex) {
+                connection.rollback();
+                throw ex;
+            }
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
