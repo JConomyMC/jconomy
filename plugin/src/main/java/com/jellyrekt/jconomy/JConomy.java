@@ -5,7 +5,10 @@ import java.nio.file.Path;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jellyrekt.jconomy.accounts.AccountCache;
+import com.jellyrekt.jconomy.accounts.AccountRepository;
+import com.jellyrekt.jconomy.accounts.DefaultAccountAccess;
 import com.jellyrekt.jconomy.accounts.LruAccountCache;
+import com.jellyrekt.jconomy.accounts.SqliteAccountRepository;
 import com.jellyrekt.jconomy.accounts.AccountAccess;
 import com.jellyrekt.jconomy.config.CacheConfig;
 import com.jellyrekt.jconomy.config.DefaultCacheConfig;
@@ -59,6 +62,8 @@ public class JConomy extends JavaPlugin {
         builder.addSingleton(SqlConnectionFactory.class,
                 new SqliteConnectionFactory(getDataFolder().toPath().resolve("jconomy.db")));
         builder.addSingleton(DatabaseMigrator.class, SqliteMigrator.class);
+        builder.addSingleton(AccountRepository.class, SqliteAccountRepository.class);
+        builder.addSingleton(AccountAccess.class, DefaultAccountAccess.class);
 
         services = builder.build(true);
     }
