@@ -5,8 +5,8 @@ import java.nio.file.Path;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jellyrekt.jconomy.accounts.AccountCache;
-import com.jellyrekt.jconomy.accounts.AccountRepository;
-import com.jellyrekt.jconomy.accounts.cache.LruAccountCache;
+import com.jellyrekt.jconomy.accounts.LruAccountCache;
+import com.jellyrekt.jconomy.accounts.AccountAccess;
 import com.jellyrekt.jconomy.config.CacheConfig;
 import com.jellyrekt.jconomy.config.DefaultCacheConfig;
 import com.jellyrekt.jconomy.config.JConomyConfig;
