@@ -150,7 +150,8 @@ public class EconomyImp implements Economy {
     @Override
     public boolean createAccount(UUID accountId, String name, String worldName, boolean isPlayerAccount) {
         try {
-            var account = new Account(accountId, name, worldNameOrDefault(worldName));
+            var account = new Account(accountId, worldNameOrDefault(worldName));
+            account.setName(worldName);
             accountRepository.save(account);
             return true;
         } catch (Exception ex) {
