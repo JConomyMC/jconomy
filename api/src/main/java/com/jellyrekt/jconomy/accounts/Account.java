@@ -12,7 +12,7 @@ public class Account {
     private String worldName;
     private Map<String, BigDecimal> balances;
 
-    public Account(UUID accountId, String worldName) {
+    public Account(UUID accountId, String worldName, String accountName) {
         this.accountId = accountId;
     }
 
@@ -22,10 +22,6 @@ public class Account {
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getWorldName() {

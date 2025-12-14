@@ -12,7 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jellyrekt.jconomy.accounts.Account;
 import com.jellyrekt.jconomy.accounts.AccountName;
-import com.jellyrekt.jconomy.accounts.AccountNameRepository;
+import com.jellyrekt.jconomy.accounts.AccountNameAccess;
 import com.jellyrekt.jconomy.accounts.AccountAccess;
 import com.jellyrekt.jconomy.config.JConomyConfig;
 import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
@@ -27,15 +27,15 @@ public class EconomyImp implements Economy {
     private final CurrencyFormatter currencyFormatter;
     private final JConomyConfig config;
     private final AccountAccess accountRepository;
-    private final AccountNameRepository accountNameRepository;
+    private final AccountNameAccess accountNameAccess;
 
     public EconomyImp(JavaPlugin plugin, CurrencyFormatter currencyFormatter, JConomyConfig config,
-            AccountAccess accountRepository, AccountNameRepository accountNameRepository) {
+            AccountAccess accountRepository, AccountNameAccess accountNameRepository) {
         this.plugin = plugin;
         this.currencyFormatter = currencyFormatter;
         this.config = config;
         this.accountRepository = accountRepository;
-        this.accountNameRepository = accountNameRepository;
+        this.accountNameAccess = accountNameRepository;
     }
     
     private Account getAccountOrThrow(UUID accountId, String world) {
@@ -150,8 +150,7 @@ public class EconomyImp implements Economy {
     @Override
     public boolean createAccount(UUID accountId, String name, String worldName, boolean isPlayerAccount) {
         try {
-            var account = new Account(accountId, worldNameOrDefault(worldName));
-            account.setName(worldName);
+            var account = new Account(accountId, worldNameOrDefault(worldName), null);
             accountRepository.save(account);
             return true;
         } catch (Exception ex) {
@@ -164,13 +163,13 @@ public class EconomyImp implements Economy {
 
     @Override
     public Map<UUID, String> getUUIDNameMap() {
-        return accountNameRepository.getAll().stream()
+        return accountNameAccess.getAll().stream()
                 .collect(Collectors.toMap(AccountName::getAccountId, AccountName::getName));
     }
 
     @Override
     public Optional<String> getAccountName(UUID accountId) {
-        return accountNameRepository.getByAccountId(accountId).map(AccountName::getName);
+        return accountNameAccess.getByAccountId(accountId).map(AccountName::getName);
     }
 
     @Override
@@ -357,11 +356,11 @@ public class EconomyImp implements Economy {
 
     @Override
     public boolean renameAccount(String pluginName, UUID accountId, String name) {
-        var result = accountNameRepository.getByAccountId(accountId);
+        var result = accountNameAccess.getByAccountId(accountId);
         if (result.isPresent()) {
             var accountName = result.get();
             accountName.setName(name);
-            accountNameRepository.save(accountName);
+            accountNameAccess.save(accountName);
             return true;
         }
 
