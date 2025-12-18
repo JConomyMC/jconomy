@@ -4,7 +4,6 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jellyrekt.jconomy.accounts.AccountCache;
-import com.jellyrekt.jconomy.accounts.AccountName;
 import com.jellyrekt.jconomy.accounts.AccountNameAccess;
 import com.jellyrekt.jconomy.accounts.AccountNameCache;
 import com.jellyrekt.jconomy.accounts.AccountNameRepository;
@@ -25,7 +24,6 @@ import com.jellyrekt.jconomy.dependencyinjection.DefaultServiceBuilder;
 import com.jellyrekt.jconomy.dependencyinjection.JConomyServiceProvider;
 import com.jellyrekt.jconomy.expansions.DefaultExpansionLoader;
 import com.jellyrekt.jconomy.expansions.DefaultExpansionManager;
-import com.jellyrekt.jconomy.expansions.ExpansionLoader;
 import com.jellyrekt.jconomy.expansions.ExpansionManager;
 import com.jellyrekt.jconomy.listeners.PlayerJoinListener;
 import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
@@ -105,7 +103,14 @@ public class JConomy extends JavaPlugin {
     }
 
     private void importData() {
-        services.getServices(DataImporter.class).forEach(importer -> importer.importData());
+        services.getServices(DataImporter.class).forEach(importer -> {
+            try {
+                importer.importData();
+            } catch (Exception ex) {
+                getLogger().warning(String.format("Data import failed for '%s': %s", importer.getClass().getName(),
+                        ex.getMessage()));
+            }
+        });
     }
 
     private void configureServices() throws Exception {
