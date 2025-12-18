@@ -23,11 +23,16 @@ import com.jellyrekt.jconomy.config.JConomyConfig;
 import com.jellyrekt.jconomy.config.YamlJConomyConfig;
 import com.jellyrekt.jconomy.dependencyinjection.DefaultServiceBuilder;
 import com.jellyrekt.jconomy.dependencyinjection.JConomyServiceProvider;
+import com.jellyrekt.jconomy.expansions.DefaultExpansionLoader;
+import com.jellyrekt.jconomy.expansions.DefaultExpansionManager;
+import com.jellyrekt.jconomy.expansions.ExpansionLoader;
+import com.jellyrekt.jconomy.expansions.ExpansionManager;
 import com.jellyrekt.jconomy.listeners.PlayerJoinListener;
 import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
 import com.jellyrekt.jconomy.presentation.DefaultCurrencyFormatter;
 import com.jellyrekt.jconomy.presentation.DefaultNumberFormatter;
 import com.jellyrekt.jconomy.presentation.NumberFormatter;
+import com.jellyrekt.jconomy.storage.DataImporter;
 import com.jellyrekt.jconomy.storage.DatabaseMigrator;
 import com.jellyrekt.jconomy.storage.Flushable;
 import com.jellyrekt.jconomy.storage.SqlConnectionFactory;
@@ -38,8 +43,14 @@ import net.milkbowl.vault2.economy.Economy;
 
 public class JConomy extends JavaPlugin {
     public static final int CONFIG_VERSION = 1;
+    private final ExpansionManager expansionManager = createExpansionManager();
 
     private JConomyServiceProvider services;
+
+    private ExpansionManager createExpansionManager() {
+        var loader = new DefaultExpansionLoader(this, getClassLoader());
+        return new DefaultExpansionManager(loader, getLogger());
+    }
 
     @Override
     public void onEnable() {
@@ -54,7 +65,9 @@ public class JConomy extends JavaPlugin {
             return;
         }
 
+        importData();
         registerServices();
+
         registerEvents();
     }
 
@@ -68,6 +81,8 @@ public class JConomy extends JavaPlugin {
         if (accountNameAccess instanceof Flushable flushableAccountNameAccess) {
             flushableAccountNameAccess.flush();
         }
+
+        expansionManager.close();
     }
     
     private void registerServices() {
@@ -87,6 +102,10 @@ public class JConomy extends JavaPlugin {
         var pluginManager = getServer().getPluginManager();
 
         pluginManager.registerEvents(services.getRequiredService(PlayerJoinListener.class), this);
+    }
+
+    private void importData() {
+        services.getServices(DataImporter.class).forEach(importer -> importer.importData());
     }
 
     private void configureServices() throws Exception {
