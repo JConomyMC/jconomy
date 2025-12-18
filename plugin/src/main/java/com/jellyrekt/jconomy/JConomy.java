@@ -21,6 +21,8 @@ import com.jellyrekt.jconomy.config.CacheConfig;
 import com.jellyrekt.jconomy.config.DefaultCacheConfig;
 import com.jellyrekt.jconomy.config.JConomyConfig;
 import com.jellyrekt.jconomy.config.YamlJConomyConfig;
+import com.jellyrekt.jconomy.dependencyinjection.DefaultServiceBuilder;
+import com.jellyrekt.jconomy.dependencyinjection.JConomyServiceProvider;
 import com.jellyrekt.jconomy.listeners.PlayerJoinListener;
 import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
 import com.jellyrekt.jconomy.presentation.DefaultCurrencyFormatter;
@@ -31,15 +33,13 @@ import com.jellyrekt.jconomy.storage.Flushable;
 import com.jellyrekt.jconomy.storage.SqlConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteMigrator;
-import com.merenze.dependencyinjection.ServiceBuilder;
-import com.merenze.dependencyinjection.ServiceProvider;
 
 import net.milkbowl.vault2.economy.Economy;
 
 public class JConomy extends JavaPlugin {
     public static final int CONFIG_VERSION = 1;
 
-    private ServiceProvider services;
+    private JConomyServiceProvider services;
 
     @Override
     public void onEnable() {
@@ -90,7 +90,7 @@ public class JConomy extends JavaPlugin {
     }
 
     private void configureServices() throws Exception {
-        var builder = new ServiceBuilder();
+        var builder = new DefaultServiceBuilder();
 
         builder.addSingleton(JavaPlugin.class, this);
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
@@ -110,6 +110,6 @@ public class JConomy extends JavaPlugin {
         builder.addSingleton(AccountNameRepository.class, SqliteAccountNameRepository.class);
         builder.addSingleton(AccountNameAccess.class, DefaultAccountNameAccess.class);
 
-        services = builder.build(true);
+        services = builder.build();
     }
 }
