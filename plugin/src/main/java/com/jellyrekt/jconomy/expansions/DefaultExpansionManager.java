@@ -2,9 +2,8 @@ package com.jellyrekt.jconomy.expansions;
 
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-import com.jellyrekt.jconomy.JConomyExpansion;
+import com.jellyrekt.jconomy.dependencyinjection.JConomyServiceBuilder;
 
 public class DefaultExpansionManager implements ExpansionManager {
     private final Set<LoadedExpansion> loadedExpansions;
@@ -16,8 +15,8 @@ public class DefaultExpansionManager implements ExpansionManager {
     }
 
     @Override
-    public Set<JConomyExpansion> getExpansions() {
-        return loadedExpansions.stream().map(LoadedExpansion::expansion).collect(Collectors.toSet());
+    public void configureServices(JConomyServiceBuilder builder) {
+        loadedExpansions.forEach(expansion -> expansion.expansion().configureServices(builder));
     }
 
     @Override

@@ -129,6 +129,8 @@ public class JConomy extends JavaPlugin {
         builder.addSingleton(AccountNameRepository.class, SqliteAccountNameRepository.class);
         builder.addSingleton(AccountNameAccess.class, DefaultAccountNameAccess.class);
 
+        expansionManager.configureServices(builder);
+
         services = builder.build();
     }
 }

@@ -1,12 +1,10 @@
 package com.jellyrekt.jconomy.expansions;
 
-import java.util.Set;
-
-import com.jellyrekt.jconomy.JConomyExpansion;
+import com.jellyrekt.jconomy.dependencyinjection.JConomyServiceBuilder;
 
 public interface ExpansionManager {
 
-    Set<JConomyExpansion> getExpansions();
+    void configureServices(JConomyServiceBuilder builder);
 
     void close();
 
