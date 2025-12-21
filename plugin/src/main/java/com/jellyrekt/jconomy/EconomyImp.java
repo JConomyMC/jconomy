@@ -13,8 +13,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.jellyrekt.jconomy.accounts.Account;
 import com.jellyrekt.jconomy.accounts.AccountName;
 import com.jellyrekt.jconomy.accounts.AccountNameAccess;
+import com.jellyrekt.jconomy.config.economy.EconomyConfig;
 import com.jellyrekt.jconomy.accounts.AccountAccess;
-import com.jellyrekt.jconomy.config.JConomyConfig;
 import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
 
 import net.milkbowl.vault2.economy.EconomyResponse.ResponseType;
@@ -25,11 +25,11 @@ import net.milkbowl.vault2.economy.EconomyResponse;
 public class EconomyImp implements Economy {
     private final JavaPlugin plugin;
     private final CurrencyFormatter currencyFormatter;
-    private final JConomyConfig config;
+    private final EconomyConfig config;
     private final AccountAccess accountRepository;
     private final AccountNameAccess accountNameAccess;
 
-    public EconomyImp(JavaPlugin plugin, CurrencyFormatter currencyFormatter, JConomyConfig config,
+    public EconomyImp(JavaPlugin plugin, CurrencyFormatter currencyFormatter, EconomyConfig config,
             AccountAccess accountRepository, AccountNameAccess accountNameRepository) {
         this.plugin = plugin;
         this.currencyFormatter = currencyFormatter;

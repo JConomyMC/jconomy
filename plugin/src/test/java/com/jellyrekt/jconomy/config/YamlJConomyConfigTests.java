@@ -4,10 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.stream.Stream;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.jellyrekt.jconomy.config.economy.YamlEconomyConfig;
+import com.jellyrekt.storage.configurationsection.ConfigurationSectionProvider;
 
 public class YamlJConomyConfigTests {
 
@@ -16,7 +20,7 @@ public class YamlJConomyConfigTests {
     @ParameterizedTest(name = "{0}")
     @MethodSource("groupingAndFractionalCases")
     void groupingAndFractional_matrix(NumberFormatterCase c) {
-        var config = new YamlJConomyConfig(new TestFileConfigurationProvider(c.yaml()));
+        var config = new YamlEconomyConfig(new DefaultJConomyConfig(new TestFileConfigurationProvider(c.yaml())));
         var currency = config.getCurrencyOptions(TEST_CURRENCY);
 
         assertNotNull(currency, "Expected currency node to exist");
@@ -218,38 +222,21 @@ public class YamlJConomyConfigTests {
             String expectedFractionalSeparator) {
     }
 
-    static final class TestFileConfigurationProvider
-            implements com.jellyrekt.storage.fileconfiguration.FileConfigurationProvider {
+    static final class TestFileConfigurationProvider implements ConfigurationSectionProvider {
 
         private final String yaml;
-        private FileConfiguration config;
 
         TestFileConfigurationProvider(String yaml) {
             this.yaml = yaml;
-            this.config = load(yaml);
         }
 
         @Override
-        public FileConfiguration getFileConfiguration() {
-            return config;
-        }
-
-        @Override
-        public void reload() {
-            this.config = load(yaml);
-        }
-
-        @Override
-        public void save() {
-            // no-op
-        }
-
-        private static FileConfiguration load(String yaml) {
+        public ConfigurationSection getConfigurationSection() {
             YamlConfiguration cfg = new YamlConfiguration();
             try {
-                cfg.loadFromString(yaml);
+              cfg.loadFromString(yaml);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+              throw new RuntimeException(e);
             }
             return cfg;
         }

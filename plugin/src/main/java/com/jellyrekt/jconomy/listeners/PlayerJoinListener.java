@@ -11,14 +11,14 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jellyrekt.jconomy.accounts.AccountAccess;
-import com.jellyrekt.jconomy.config.JConomyConfig;
+import com.jellyrekt.jconomy.config.economy.EconomyConfig;
 
 public class PlayerJoinListener implements Listener {
     private final JavaPlugin plugin;
     private final AccountAccess accountAccess;
-    private final JConomyConfig config;
+    private final EconomyConfig config;
 
-    public PlayerJoinListener(JavaPlugin plugin, AccountAccess accountAccess, JConomyConfig config) {
+    public PlayerJoinListener(JavaPlugin plugin, AccountAccess accountAccess, EconomyConfig config) {
         this.accountAccess = accountAccess;
         this.plugin = plugin;
         this.config = config;

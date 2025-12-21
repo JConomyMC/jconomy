@@ -5,15 +5,15 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
-import com.jellyrekt.jconomy.config.JConomyConfig;
-import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions;
-import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions.FractionalOptions;
-import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions.GroupingOptions;
+import com.jellyrekt.jconomy.config.economy.EconomyConfig;
+import com.jellyrekt.jconomy.config.economy.EconomyConfig.NumberFormatterOptions;
+import com.jellyrekt.jconomy.config.economy.EconomyConfig.NumberFormatterOptions.FractionalOptions;
+import com.jellyrekt.jconomy.config.economy.EconomyConfig.NumberFormatterOptions.GroupingOptions;
 
 public class DefaultNumberFormatter implements NumberFormatter {
-    private final JConomyConfig config;
+    private final EconomyConfig config;
 
-    public DefaultNumberFormatter(JConomyConfig config) {
+    public DefaultNumberFormatter(EconomyConfig config) {
         this.config = config;
     }
 
