@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>com.jellyrekt.jconomy</groupId>
-    <artifactId>plugin</artifactId>
+    <artifactId>jconomy-plugin</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -38,8 +38,8 @@
     <dependencies>
         <dependency>
             <groupId>com.jellyrekt.jconomy</groupId>
-            <artifactId>api</artifactId>
-            <version>${project.version}</version>
+            <artifactId>jconomy-api</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
