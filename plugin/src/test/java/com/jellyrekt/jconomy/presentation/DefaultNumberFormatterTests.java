@@ -6,19 +6,19 @@ import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 import java.util.stream.Stream;
 
-import com.jellyrekt.jconomy.config.JConomyConfig;
-import com.jellyrekt.jconomy.config.JConomyConfig.CurrencyOptions;
-import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions;
-import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions.FractionalOptions;
-import com.jellyrekt.jconomy.config.JConomyConfig.NumberFormatterOptions.GroupingOptions;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.jellyrekt.jconomy.config.economy.EconomyConfig;
+import com.jellyrekt.jconomy.config.economy.EconomyConfig.CurrencyOptions;
+import com.jellyrekt.jconomy.config.economy.EconomyConfig.NumberFormatterOptions;
+import com.jellyrekt.jconomy.config.economy.EconomyConfig.NumberFormatterOptions.FractionalOptions;
+import com.jellyrekt.jconomy.config.economy.EconomyConfig.NumberFormatterOptions.GroupingOptions;
+
 public class DefaultNumberFormatterTests {
 
-    private JConomyConfig mockConfig;
+    private EconomyConfig mockConfig;
     private NumberFormatterOptions mockNumberFormatterOptions;
     private GroupingOptions mockGrouping;
     private FractionalOptions mockFractional;
@@ -27,7 +27,7 @@ public class DefaultNumberFormatterTests {
 
     @BeforeEach
     void setup() {
-        mockConfig = mock(JConomyConfig.class);
+        mockConfig = mock(EconomyConfig.class);
         mockNumberFormatterOptions = mock(NumberFormatterOptions.class);
         mockGrouping = mock(GroupingOptions.class);
         mockFractional = mock(FractionalOptions.class);

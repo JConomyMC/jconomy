@@ -1,8 +1,8 @@
-package com.jellyrekt.jconomy.config;
+package com.jellyrekt.jconomy.config.economy;
 
 import java.util.Set;
 
-public interface JConomyConfig {
+public interface EconomyConfig {
     String getDefaultCurrency();
 
     String getDefaultWorldName();

@@ -18,8 +18,10 @@ import com.jellyrekt.jconomy.adapters.LegacyEconomyAdapter;
 import com.jellyrekt.jconomy.accounts.AccountAccess;
 import com.jellyrekt.jconomy.config.CacheConfig;
 import com.jellyrekt.jconomy.config.DefaultCacheConfig;
+import com.jellyrekt.jconomy.config.DefaultJConomyConfig;
 import com.jellyrekt.jconomy.config.JConomyConfig;
-import com.jellyrekt.jconomy.config.YamlJConomyConfig;
+import com.jellyrekt.jconomy.config.economy.EconomyConfig;
+import com.jellyrekt.jconomy.config.economy.YamlEconomyConfig;
 import com.jellyrekt.jconomy.dependencyinjection.DefaultServiceBuilder;
 import com.jellyrekt.jconomy.dependencyinjection.JConomyServiceProvider;
 import com.jellyrekt.jconomy.expansions.DefaultExpansionLoader;
@@ -36,6 +38,7 @@ import com.jellyrekt.jconomy.storage.Flushable;
 import com.jellyrekt.jconomy.storage.SqlConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteMigrator;
+import com.jellyrekt.storage.configurationsection.ConfigurationSectionProvider;
 
 import net.milkbowl.vault2.economy.Economy;
 
@@ -119,7 +122,7 @@ public class JConomy extends JavaPlugin {
         builder.addSingleton(JavaPlugin.class, this);
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
         builder.addSingleton(AccountCache.class, LruAccountCache.class);
-        builder.addSingleton(JConomyConfig.class, YamlJConomyConfig.class);
+        builder.addSingleton(EconomyConfig.class, YamlEconomyConfig.class);
         builder.addSingleton(NumberFormatter.class, DefaultNumberFormatter.class);
         builder.addSingleton(CurrencyFormatter.class, DefaultCurrencyFormatter.class);
         builder.addSingleton(SqlConnectionFactory.class,
@@ -133,6 +136,10 @@ public class JConomy extends JavaPlugin {
         builder.addSingleton(AccountNameCache.class, LruAccountNameCache.class);
         builder.addSingleton(AccountNameRepository.class, SqliteAccountNameRepository.class);
         builder.addSingleton(AccountNameAccess.class, DefaultAccountNameAccess.class);
+        builder.addSingletonFactory(JConomyConfig.class, serviceProvider -> {
+            var plugin = serviceProvider.getRequiredService(JavaPlugin.class);
+            return new DefaultJConomyConfig(() -> plugin.getConfig());
+        });
 
         expansionManager.configureServices(builder);
 
