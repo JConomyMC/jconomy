@@ -1,6 +1,7 @@
 package com.jellyrekt.jconomy.accounts;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -14,6 +15,9 @@ public class Account {
 
     public Account(UUID accountId, String worldName, String accountName) {
         this.accountId = accountId;
+        this.worldName = worldName;
+        this.name = accountName;
+        this.balances = new HashMap<>();
     }
 
     public UUID getAccountId() {

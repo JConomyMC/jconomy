@@ -51,7 +51,7 @@ public class SqliteMigrator implements DatabaseMigrator {
                         world text not null,
                         currency text not null,
                         amount numeric,
-                        primary key(account_id, world)
+                        primary key(account_id, world, currency)
                     )
                     """);
             statement.executeUpdate("""

@@ -42,7 +42,7 @@ import com.jellyrekt.jconomy.storage.SqliteMigrator;
 
 import net.milkbowl.vault2.economy.Economy;
 
-public class JConomy extends JavaPlugin {
+public class JConomy extends JavaPlugin implements PluginContext {
     public static final int CONFIG_VERSION = 1;
     private final ExpansionManager expansionManager = createExpansionManager();
 
@@ -137,6 +137,8 @@ public class JConomy extends JavaPlugin {
         var builder = new DefaultServiceBuilder();
 
         builder.addSingleton(JavaPlugin.class, this);
+        builder.addSingleton(PluginContext.class, this);
+        builder.addSingleton(java.util.logging.Logger.class, getLogger());
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
         builder.addSingleton(AccountCache.class, LruAccountCache.class);
         builder.addSingleton(EconomyConfig.class, YamlEconomyConfig.class);

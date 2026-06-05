@@ -97,7 +97,7 @@ public class SqliteAccountRepository implements AccountRepository {
         var account = new Account(accountId, worldName, accountName);
         
         do {
-            account.setBalance(result.getString("currency"), result.getBigDecimal("balance"));
+            account.setBalance(result.getString("currency"), result.getBigDecimal("amount"));
         } while (result.next());
 
         return Optional.of(account);
