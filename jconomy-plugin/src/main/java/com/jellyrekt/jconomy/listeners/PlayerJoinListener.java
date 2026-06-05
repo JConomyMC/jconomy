@@ -2,13 +2,13 @@ package com.jellyrekt.jconomy.listeners;
 
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import com.jellyrekt.jconomy.accounts.AccountAccess;
 import com.jellyrekt.jconomy.config.economy.EconomyConfig;
@@ -17,11 +17,14 @@ public class PlayerJoinListener implements Listener {
     private final JavaPlugin plugin;
     private final AccountAccess accountAccess;
     private final EconomyConfig config;
+    private final BukkitScheduler scheduler;
 
-    public PlayerJoinListener(JavaPlugin plugin, AccountAccess accountAccess, EconomyConfig config) {
+    public PlayerJoinListener(JavaPlugin plugin, AccountAccess accountAccess, EconomyConfig config,
+            BukkitScheduler scheduler) {
         this.accountAccess = accountAccess;
         this.plugin = plugin;
         this.config = config;
+        this.scheduler = scheduler;
     }
 
     @EventHandler
@@ -42,7 +45,7 @@ public class PlayerJoinListener implements Listener {
     }
 
     private void scheduleCache(UUID playerId, String worldName) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        scheduler.runTaskAsynchronously(plugin, () -> {
             accountAccess.getByIdAndWorld(playerId, worldName);
         });
     }

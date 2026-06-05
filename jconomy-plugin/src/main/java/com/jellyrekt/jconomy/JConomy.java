@@ -46,6 +46,8 @@ import com.jellyrekt.jconomy.storage.SqliteMigrator;
 
 import net.milkbowl.vault2.economy.Economy;
 
+import org.bukkit.scheduler.BukkitScheduler;
+
 public class JConomy extends JavaPlugin implements PluginContext {
     public static final int CONFIG_VERSION = 1;
     private final ExpansionManager expansionManager = createExpansionManager();
@@ -157,6 +159,8 @@ public class JConomy extends JavaPlugin implements PluginContext {
         builder.addSingleton(EconomyResponseMapper.class, DefaultResponseMapper.class);
         builder.addSingleton(PlayerResolver.class, BukkitPlayerResolver.class);
         builder.addSingleton(net.milkbowl.vault.economy.Economy.class, LegacyEconomyAdapter.class);
+        builder.addSingletonFactory(BukkitScheduler.class, sp ->
+                sp.getRequiredService(JavaPlugin.class).getServer().getScheduler());
         builder.addSingleton(PlayerJoinListener.class);
         builder.addSingleton(AccountNameCache.class, LruAccountNameCache.class);
         builder.addSingleton(AccountNameRepository.class, SqliteAccountNameRepository.class);
