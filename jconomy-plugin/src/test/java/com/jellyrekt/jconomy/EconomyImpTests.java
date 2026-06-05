@@ -110,6 +110,20 @@ class EconomyImpTests {
     }
 
     @Test
+    void set_response_balance_reflects_new_balance_when_currency_is_null() {
+        var id = UUID.randomUUID();
+        var account = accountWithBalance(id, "world", "gold", BigDecimal.ZERO);
+        when(config.getDefaultCurrency()).thenReturn("gold");
+        when(config.getDefaultWorldName()).thenReturn("world");
+        when(accountAccess.getByIdAndWorld(id, "world")).thenReturn(Optional.of(account));
+
+        var response = economy.set("plugin", id, "world", null, BigDecimal.valueOf(250));
+
+        assertEquals(ResponseType.SUCCESS, response.type);
+        assertEquals(BigDecimal.valueOf(250), response.balance);
+    }
+
+    @Test
     void set_returns_failure_when_account_not_found() {
         var id = UUID.randomUUID();
         when(accountAccess.getByIdAndWorld(eq(id), any())).thenReturn(Optional.empty());

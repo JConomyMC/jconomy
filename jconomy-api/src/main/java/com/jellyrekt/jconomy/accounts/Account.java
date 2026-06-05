@@ -33,7 +33,7 @@ public class Account {
     }
 
     public BigDecimal getBalance(String currency) {
-        return balances.get(currency);
+        return balances.getOrDefault(currency, BigDecimal.ZERO);
     }
 
     public void setBalance(String currency, BigDecimal balance) {
