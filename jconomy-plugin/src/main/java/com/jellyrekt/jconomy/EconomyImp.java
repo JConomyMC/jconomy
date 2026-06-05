@@ -233,7 +233,10 @@ public class EconomyImp implements Economy {
             account.setBalance(currencyOrDefault(currency), amount);
             accountRepository.save(account);
 
-            return new EconomyResponse(amount, account.getBalance(currency), ResponseType.SUCCESS, "");
+            currency = currencyOrDefault(currency);
+            var balance = account.getBalance(currency);
+
+            return new EconomyResponse(amount, balance, ResponseType.SUCCESS, "");
         } catch (Exception ex) {
             return new EconomyResponse(BigDecimal.ZERO, null, ResponseType.FAILURE, ex.getMessage());
         }
