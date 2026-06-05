@@ -17,13 +17,26 @@ class LegacyEconomyAdapterTests {
 
     private net.milkbowl.vault2.economy.Economy modernEconomy;
     private EconomyResponseMapper responseMapper;
+    private PlayerResolver playerResolver;
     private LegacyEconomyAdapter adapter;
 
     @BeforeEach
     void setUp() {
         modernEconomy = mock(net.milkbowl.vault2.economy.Economy.class);
         responseMapper = mock(EconomyResponseMapper.class);
-        adapter = new LegacyEconomyAdapter(modernEconomy, responseMapper);
+        playerResolver = mock(PlayerResolver.class);
+        adapter = new LegacyEconomyAdapter(modernEconomy, responseMapper, playerResolver);
+    }
+
+    @Test
+    void getBalance_with_player_name_resolves_player_and_delegates() {
+        var playerId = UUID.randomUUID();
+        var player = offlinePlayerWithId(playerId);
+        when(playerResolver.resolve("Alice")).thenReturn(player);
+        when(modernEconomy.getBalance(null, playerId)).thenReturn(BigDecimal.valueOf(50));
+
+        assertEquals(50.0, adapter.getBalance("Alice"));
+        verify(playerResolver).resolve("Alice");
     }
 
     @Test
