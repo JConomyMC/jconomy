@@ -19,28 +19,28 @@ public class DefaultServiceProvider implements JConomyServiceProvider {
 
     @Override
     public <T> T getService(Class<T> type) {
-        validateState();
         if (type == JConomyServiceProvider.class) {
             return type.cast(this);
         }
+        validateState();
         return services.getService(type);
     }
 
     @Override
     public <T> T getRequiredService(Class<T> type) {
-        validateState();
         if (type == JConomyServiceProvider.class) {
             return type.cast(this);
         }
+        validateState();
         return services.getRequiredService(type);
     }
 
     @Override
     public <T> List<T> getServices(Class<T> type) {
-        validateState();
         if (type == JConomyServiceProvider.class) {
             return List.of(type.cast(this));
         }
+        validateState();
         return services.getServices(type);
     }
     

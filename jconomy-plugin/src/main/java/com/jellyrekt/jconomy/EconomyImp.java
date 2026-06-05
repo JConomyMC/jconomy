@@ -6,9 +6,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import org.bukkit.plugin.java.JavaPlugin;
 
 import com.jellyrekt.jconomy.accounts.Account;
 import com.jellyrekt.jconomy.accounts.AccountName;
@@ -23,15 +22,17 @@ import net.milkbowl.vault2.economy.Economy;
 import net.milkbowl.vault2.economy.EconomyResponse;
 
 public class EconomyImp implements Economy {
-    private final JavaPlugin plugin;
+    private final PluginContext plugin;
+    private final Logger logger;
     private final CurrencyFormatter currencyFormatter;
     private final EconomyConfig config;
     private final AccountAccess accountRepository;
     private final AccountNameAccess accountNameAccess;
 
-    public EconomyImp(JavaPlugin plugin, CurrencyFormatter currencyFormatter, EconomyConfig config,
+    public EconomyImp(PluginContext plugin, Logger logger, CurrencyFormatter currencyFormatter, EconomyConfig config,
             AccountAccess accountRepository, AccountNameAccess accountNameRepository) {
         this.plugin = plugin;
+        this.logger = logger;
         this.currencyFormatter = currencyFormatter;
         this.config = config;
         this.accountRepository = accountRepository;
@@ -156,7 +157,7 @@ public class EconomyImp implements Economy {
         } catch (Exception ex) {
             var message = String.format("Unable to create account(accountId='%s',name='%s',world='%s'): %s",
                     accountId, name, worldName, ex.getMessage());
-            plugin.getLogger().warning(message);
+            logger.warning(message);
             return false;
         }
     }
@@ -287,7 +288,7 @@ public class EconomyImp implements Economy {
     }
 
     private boolean accountsNotSupported(String pluginName, String calledMethod) {
-        plugin.getLogger().warning(String.format("%s called %s, but shared accounts are not supported.", pluginName, calledMethod));
+        logger.warning(String.format("%s called %s, but shared accounts are not supported.", pluginName, calledMethod));
         return false;
     }
 
@@ -364,7 +365,7 @@ public class EconomyImp implements Economy {
             return true;
         }
 
-        plugin.getLogger().warning("Account(accountId='%s') does not exist");
+        logger.warning("Account(accountId='%s') does not exist");
         return false;
     }
 
