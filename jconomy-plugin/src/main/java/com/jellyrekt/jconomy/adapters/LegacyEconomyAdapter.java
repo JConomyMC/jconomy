@@ -8,8 +8,6 @@ import java.util.Optional;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
-import com.jellyrekt.jconomy.EconomyImp;
-
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType;
@@ -18,10 +16,10 @@ public class LegacyEconomyAdapter implements Economy {
     private static final EconomyResponse ResponseBanksNotSupported = new EconomyResponse(0, 0,
             ResponseType.NOT_IMPLEMENTED, "JConomy does not support banking for Vault legacy");
 
-    private final EconomyImp economy;
+    private final net.milkbowl.vault2.economy.Economy economy;
     private final EconomyResponseMapper responseMapper;
 
-    public LegacyEconomyAdapter(EconomyImp economy, EconomyResponseMapper responseMapper) {
+    public LegacyEconomyAdapter(net.milkbowl.vault2.economy.Economy economy, EconomyResponseMapper responseMapper) {
         this.economy = economy;
         this.responseMapper = responseMapper;
     }
