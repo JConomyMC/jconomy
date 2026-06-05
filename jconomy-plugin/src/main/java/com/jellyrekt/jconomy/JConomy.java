@@ -1,5 +1,6 @@
 package com.jellyrekt.jconomy;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -38,7 +39,6 @@ import com.jellyrekt.jconomy.storage.Flushable;
 import com.jellyrekt.jconomy.storage.SqlConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteMigrator;
-import com.jellyrekt.storage.configurationsection.ConfigurationSectionProvider;
 
 import net.milkbowl.vault2.economy.Economy;
 
@@ -55,12 +55,18 @@ public class JConomy extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        ConfigUtils.runConfigMigrations(this);
+        if (!isVaultUnlockedAPILoaded()) {
+            getLogger().severe("VaultUnlockedAPI is not loaded. Disabling plugin.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
+        ConfigUtils.runConfigMigrations(this);
+        
         try {
             configureServices();
         } catch (Exception ex) {
-            getLogger().severe("Some services could not be instantiated: " + ex.getMessage());
+            getLogger().severe("Some services could not be instantiated: " + ExceptionUtils.getStackTrace(ex));
             getLogger().severe("Disabling plugin.");
             getServer().getPluginManager().disablePlugin(this);
             return;
@@ -70,6 +76,15 @@ public class JConomy extends JavaPlugin {
         registerServices();
 
         registerEvents();
+    }
+
+    private boolean isVaultUnlockedAPILoaded() {
+        try {
+            Class.forName("net.milkbowl.vault2.economy.Economy");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     @Override
@@ -92,6 +107,7 @@ public class JConomy extends JavaPlugin {
                 services.getRequiredService(Economy.class),
                 this,
                 ServicePriority.Normal);
+                
         getServer().getServicesManager().register(
                 net.milkbowl.vault.economy.Economy.class,
                 services.getRequiredService(net.milkbowl.vault.economy.Economy.class),
@@ -109,6 +125,7 @@ public class JConomy extends JavaPlugin {
         services.getServices(DataImporter.class).forEach(importer -> {
             try {
                 importer.importData();
+                getLogger().info(String.format("Imported data with " + importer.getClass().getName()));
             } catch (Exception ex) {
                 getLogger().warning(String.format("Data import failed for '%s': %s", importer.getClass().getName(),
                         ex.getMessage()));

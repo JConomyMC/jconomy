@@ -1,7 +1,10 @@
 name: JConomy
+main: com.jellyrekt.jconomy.JConomy
 version: 1.0.0
 description: Provider for VaultUnlimited and Vault legacy
 author: JellyRekt
 api-version: '1.16'
 website: https://github.com/merenze/JConomy
-depend: [VaultUnlocked]
+depend: [Vault]
+libraries:
+  - commons-lang:commons-lang:2.6
