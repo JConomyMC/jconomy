@@ -93,6 +93,12 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.51.1.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -121,16 +127,12 @@
                         <configuration>
                             <relocations>
                                 <relocation>
-                                    <pattern>com.jellyrekt.jconomy.api</pattern>
-                                    <shadedPattern>com.jellyrekt.jconomy.plugin.api</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>com.jellyrekt.storage</pattern>
-                                    <shadedPattern>com.jellyrekt.jconomy.plugin.storage</shadedPattern>
+                                    <shadedPattern>com.jellyrekt.jconomy.com.jellyrekt.storage</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.merenze.dependencyinjection</pattern>
-                                    <shadedPattern>com.jellyrekt.jconomy.plugin.dependencyinjection</shadedPattern>
+                                    <shadedPattern>com.jellyrekt.jconomy.com.merenze.dependencyinjection</shadedPattern>
                                 </relocation>
                             </relocations>
                             <createDependencyReducedPom>true</createDependencyReducedPom>

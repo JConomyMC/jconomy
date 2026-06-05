@@ -39,7 +39,10 @@ public class DefaultServiceBuilder implements JConomyServiceBuilder {
     @Override
     public <T> JConomyServiceBuilder addSingletonFactory(Class<T> type, Function<JConomyServiceProvider, T> factory) {
         validateState();
-        internalBuilder.addSingletonFactory(type, internalProvider -> factory.apply(provider));
+        internalBuilder.addSingletonFactory(type, internalProvider -> {
+            var provider = internalProvider.getRequiredService(JConomyServiceProvider.class);
+            return factory.apply(provider);
+        });
         return this;
     }
 
@@ -48,8 +51,10 @@ public class DefaultServiceBuilder implements JConomyServiceBuilder {
         if (isBuilt) {
             throw new IllegalStateException("Provider has already been built");
         }
+        var provider = new DefaultServiceProvider();
+        internalBuilder.addSingleton(JConomyServiceProvider.class, provider);
         var internalProvider = internalBuilder.build(true);
-        provider = new DefaultServiceProvider(internalProvider);
+        provider.setDelegate(internalProvider);
         isBuilt = true;
         return provider;
     }
