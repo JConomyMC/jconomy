@@ -22,7 +22,13 @@ public class DefaultAccountNameAccess implements AccountNameAccess, Flushable {
 
     @Override
     public Optional<AccountName> getByAccountId(UUID accountId) {
-        return cache.get(accountId).or(() -> repository.getByAccountId(accountId));
+        return cache.get(accountId).or(() -> {
+            var accountName = repository.getByAccountId(accountId);
+            if (accountName.isPresent()) {
+                cache.put(accountName.get());
+            }
+            return accountName;
+        });
     }
 
     @Override
