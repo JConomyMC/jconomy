@@ -25,7 +25,7 @@ public class LruAccountNameCache implements AccountNameCache {
     }
     
     public Optional<AccountName> get(UUID accountId) {
-        return Optional.of(accountNames.get(accountId));
+        return Optional.ofNullable(accountNames.get(accountId));
     }
 
     public void put(AccountName accountName) {
