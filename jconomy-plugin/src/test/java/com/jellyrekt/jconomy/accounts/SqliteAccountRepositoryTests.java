@@ -74,7 +74,7 @@ class SqliteAccountRepositoryTests {
     @Test
     void upsertAll_inserts_new_accounts() throws Exception {
         var id = UUID.randomUUID();
-        var account = new Account(id, "world", "Alice");
+        var account = new Account(id, "world");
         account.setBalance("gold", BigDecimal.valueOf(200));
 
         repository.upsertAll(Set.of(account));

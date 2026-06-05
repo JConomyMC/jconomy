@@ -31,7 +31,7 @@ class DefaultAccountAccessTests {
     @Test
     void getByIdAndWorld_returns_from_cache_without_calling_repository() {
         var id = UUID.randomUUID();
-        var account = new Account(id, "world", "Alice");
+        var account = new Account(id, "world");
         cache.put(account);
 
         var result = access.getByIdAndWorld(id, "world");
@@ -43,7 +43,7 @@ class DefaultAccountAccessTests {
     @Test
     void getByIdAndWorld_calls_repository_on_cache_miss_and_caches_result() {
         var id = UUID.randomUUID();
-        var account = new Account(id, "world", "Alice");
+        var account = new Account(id, "world");
         repository.store(account);
 
         var result = access.getByIdAndWorld(id, "world");
@@ -65,7 +65,7 @@ class DefaultAccountAccessTests {
     @Test
     void save_puts_account_into_cache_only() {
         var id = UUID.randomUUID();
-        var account = new Account(id, "world", "Alice");
+        var account = new Account(id, "world");
 
         access.save(account);
 
@@ -75,8 +75,8 @@ class DefaultAccountAccessTests {
 
     @Test
     void flush_calls_upsertAll_with_all_cached_accounts() {
-        var account1 = new Account(UUID.randomUUID(), "world", "Alice");
-        var account2 = new Account(UUID.randomUUID(), "world", "Bob");
+        var account1 = new Account(UUID.randomUUID(), "world");
+        var account2 = new Account(UUID.randomUUID(), "world");
         cache.put(account1);
         cache.put(account2);
 

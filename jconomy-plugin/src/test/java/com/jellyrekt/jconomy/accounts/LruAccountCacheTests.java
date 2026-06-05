@@ -29,7 +29,7 @@ class LruAccountCacheTests {
     void get_returns_account_after_put() {
         var cache = cacheWithLimit(10);
         var id = UUID.randomUUID();
-        var account = new Account(id, "world", "Alice");
+        var account = new Account(id, "world");
 
         cache.put(account);
 
@@ -65,7 +65,7 @@ class LruAccountCacheTests {
     }
 
     private static Account accountIn(LruAccountCache cache, String world) {
-        var account = new Account(UUID.randomUUID(), world, null);
+        var account = new Account(UUID.randomUUID(), world);
         account.setBalance("gold", BigDecimal.ZERO);
         cache.put(account);
         return account;
