@@ -9,23 +9,17 @@ import java.util.UUID;
 public class Account {
     
     private UUID accountId;
-    private String name;
     private String worldName;
     private Map<String, BigDecimal> balances;
 
-    public Account(UUID accountId, String worldName, String accountName) {
+    public Account(UUID accountId, String worldName) {
         this.accountId = accountId;
         this.worldName = worldName;
-        this.name = accountName;
         this.balances = new HashMap<>();
     }
 
     public UUID getAccountId() {
         return accountId;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public String getWorldName() {

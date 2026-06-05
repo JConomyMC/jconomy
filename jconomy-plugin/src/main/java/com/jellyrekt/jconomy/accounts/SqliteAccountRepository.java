@@ -23,10 +23,9 @@ public class SqliteAccountRepository implements AccountRepository {
     @Override
     public List<Account> getAll() {
         var sql = """
-                select a.account_id, a.world, a.currency, a.amount, n.account_name
-                from accounts a
-                left join account_names n on a.account_id = n.account_id
-                order by a.account_id, a.world
+                select account_id, world, currency, amount
+                from accounts
+                order by account_id, world
                 """;
 
         try (
@@ -49,8 +48,7 @@ public class SqliteAccountRepository implements AccountRepository {
         do {
             UUID accountId = UUID.fromString(rs.getString("account_id"));
             String world = rs.getString("world");
-            String name = rs.getString("account_name");
-            var account = new Account(accountId, world, name);
+            var account = new Account(accountId, world);
 
             do {
                 account.setBalance(rs.getString("currency"), rs.getBigDecimal("amount"));
@@ -67,11 +65,9 @@ public class SqliteAccountRepository implements AccountRepository {
     @Override
     public Optional<Account> getByIdAndWorld(UUID accountId, String world) {
         var sql = """
-                select a.*, n.account_name
-                from accounts a
-                left join account_names n
-                on a.account_id = n.account_id
-                where a.account_id = ? and a.world = ?
+                select account_id, world, currency, amount
+                from accounts
+                where account_id = ? and world = ?
                 """;
         try (
                 var connection = connectionFactory.createConnection();
@@ -92,9 +88,8 @@ public class SqliteAccountRepository implements AccountRepository {
         }
         var accountId = UUID.fromString(result.getString("account_id"));
         var worldName = result.getString("world");
-        var accountName = result.getString("account_name");
-        
-        var account = new Account(accountId, worldName, accountName);
+
+        var account = new Account(accountId, worldName);
         
         do {
             account.setBalance(result.getString("currency"), result.getBigDecimal("amount"));

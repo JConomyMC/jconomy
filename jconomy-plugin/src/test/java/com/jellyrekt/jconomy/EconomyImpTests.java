@@ -224,7 +224,7 @@ class EconomyImpTests {
     }
 
     private static Account accountWithBalance(UUID id, String world, String currency, BigDecimal amount) {
-        var account = new Account(id, world, null);
+        var account = new Account(id, world);
         account.setBalance(currency, amount);
         return account;
     }

@@ -84,8 +84,6 @@ class DefaultAccountNameAccessTests {
         assertTrue(repository.lastUpsertAll.contains(name2));
     }
 
-    // --- Helpers ---
-
     private static AccountName accountNameWith(UUID id, String name) {
         var accountName = new AccountName(id);
         accountName.setName(name);
