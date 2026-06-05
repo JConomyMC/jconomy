@@ -67,8 +67,6 @@ public class JConomy extends JavaPlugin implements PluginContext {
             return;
         }
 
-        ConfigUtils.runConfigMigrations(this);
-        
         try {
             configureServices();
         } catch (Exception ex) {
@@ -78,6 +76,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
             return;
         }
 
+        services.getRequiredService(ConfigMigrator.class).migrate();
         importData();
         registerServices();
 
@@ -138,6 +137,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
         builder.addSingleton(JavaPlugin.class, this);
         builder.addSingleton(PluginContext.class, this);
         builder.addSingleton(java.util.logging.Logger.class, getLogger());
+        builder.addSingleton(ConfigMigrator.class, DefaultConfigMigrator.class);
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
         builder.addSingleton(AccountCache.class, LruAccountCache.class);
         builder.addSingleton(EconomyConfig.class, YamlEconomyConfig.class);

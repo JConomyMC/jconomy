@@ -3,8 +3,15 @@ package com.jellyrekt.jconomy;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class ConfigUtils {
-    public static void runConfigMigrations(JavaPlugin plugin) {
+public class DefaultConfigMigrator implements ConfigMigrator {
+    private final JavaPlugin plugin;
+
+    public DefaultConfigMigrator(JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public void migrate() {
         plugin.saveDefaultConfig();
 
         var config = plugin.getConfig();
@@ -14,7 +21,7 @@ public final class ConfigUtils {
 
         plugin.saveConfig();
     }
-    
+
     private static int getVersion(Configuration config) {
         return config.getInt("config-version", 0);
     }
@@ -22,12 +29,12 @@ public final class ConfigUtils {
     private static void setVersion(Configuration config, int version) {
         config.set("config-version", version);
     }
-    
+
     private static void upgradeToVersion1(Configuration config) {
         if (!config.contains("cache.lru-limit")) {
             config.set("cache.lru-limit", 10000);
         }
-        
+
         setVersion(config, 1);
     }
 }
