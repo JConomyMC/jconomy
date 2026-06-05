@@ -15,6 +15,8 @@ import com.jellyrekt.jconomy.accounts.LruAccountCache;
 import com.jellyrekt.jconomy.accounts.LruAccountNameCache;
 import com.jellyrekt.jconomy.accounts.SqliteAccountNameRepository;
 import com.jellyrekt.jconomy.accounts.SqliteAccountRepository;
+import com.jellyrekt.jconomy.adapters.DefaultResponseMapper;
+import com.jellyrekt.jconomy.adapters.EconomyResponseMapper;
 import com.jellyrekt.jconomy.adapters.LegacyEconomyAdapter;
 import com.jellyrekt.jconomy.accounts.AccountAccess;
 import com.jellyrekt.jconomy.config.CacheConfig;
@@ -150,6 +152,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
         builder.addSingleton(AccountRepository.class, SqliteAccountRepository.class);
         builder.addSingleton(AccountAccess.class, DefaultAccountAccess.class);
         builder.addSingleton(Economy.class, EconomyImp.class);
+        builder.addSingleton(EconomyResponseMapper.class, DefaultResponseMapper.class);
         builder.addSingleton(net.milkbowl.vault.economy.Economy.class, LegacyEconomyAdapter.class);
         builder.addSingleton(PlayerJoinListener.class);
         builder.addSingleton(AccountNameCache.class, LruAccountNameCache.class);
