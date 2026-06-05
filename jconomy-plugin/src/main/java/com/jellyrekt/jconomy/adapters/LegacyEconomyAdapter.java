@@ -1,11 +1,8 @@
 package com.jellyrekt.jconomy.adapters;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import net.milkbowl.vault.economy.Economy;
@@ -18,23 +15,13 @@ public class LegacyEconomyAdapter implements Economy {
 
     private final net.milkbowl.vault2.economy.Economy economy;
     private final EconomyResponseMapper responseMapper;
+    private final PlayerResolver playerResolver;
 
-    public LegacyEconomyAdapter(net.milkbowl.vault2.economy.Economy economy, EconomyResponseMapper responseMapper) {
+    public LegacyEconomyAdapter(net.milkbowl.vault2.economy.Economy economy, EconomyResponseMapper responseMapper,
+            PlayerResolver playerResolver) {
         this.economy = economy;
         this.responseMapper = responseMapper;
-    }
-
-    private OfflinePlayer getOfflinePlayer(String playerName) {
-        var player = Bukkit.getPlayer(playerName);
-        if (player != null) {
-            return player;
-        }
-        // I am assuming this is faster than a scheduled API call,
-        // and ok with not supporting players who have never joined.
-        Optional<OfflinePlayer> offlinePlayer = Arrays.stream(Bukkit.getOfflinePlayers())
-                .filter(p -> p.getName().equals(playerName))
-                .findFirst();
-        return offlinePlayer.get();
+        this.playerResolver = playerResolver;
     }
 
     @Override
@@ -69,7 +56,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public boolean createPlayerAccount(String playerName) {
-        return createPlayerAccount(getOfflinePlayer(playerName));
+        return createPlayerAccount(playerResolver.resolve(playerName));
     }
 
     @Override
@@ -79,7 +66,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public boolean createPlayerAccount(String playerName, String worldName) {
-        return createPlayerAccount(getOfflinePlayer(playerName), worldName);
+        return createPlayerAccount(playerResolver.resolve(playerName), worldName);
     }
 
     @Override
@@ -104,7 +91,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public EconomyResponse depositPlayer(String playerName, double amount) {
-        return depositPlayer(getOfflinePlayer(playerName), amount);
+        return depositPlayer(playerResolver.resolve(playerName), amount);
     }
 
     public EconomyResponse depositPlayer(OfflinePlayer player, double amount) {
@@ -114,7 +101,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public EconomyResponse depositPlayer(String playerName, String worldName, double amount) {
-        var player = getOfflinePlayer(playerName);
+        var player = playerResolver.resolve(playerName);
         return depositPlayer(player, worldName, amount);
     }
 
@@ -136,7 +123,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public double getBalance(String playerName) {
-        return getBalance(getOfflinePlayer(playerName));
+        return getBalance(playerResolver.resolve(playerName));
     }
 
     @Override
@@ -146,7 +133,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public double getBalance(String playerName, String world) {
-        return getBalance(getOfflinePlayer(playerName), world);
+        return getBalance(playerResolver.resolve(playerName), world);
     }
 
     @Override
@@ -166,7 +153,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public boolean has(String playerName, double amount) {
-        return has(getOfflinePlayer(playerName), amount);
+        return has(playerResolver.resolve(playerName), amount);
     }
 
     @Override
@@ -176,7 +163,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public boolean has(String playerName, String worldName, double amount) {
-        return has(getOfflinePlayer(playerName), worldName, amount);
+        return has(playerResolver.resolve(playerName), worldName, amount);
     }
 
     @Override
@@ -186,7 +173,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public boolean hasAccount(String playerName) {
-        return hasAccount(getOfflinePlayer(playerName));
+        return hasAccount(playerResolver.resolve(playerName));
     }
 
     @Override
@@ -196,7 +183,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public boolean hasAccount(String playerName, String worldName) {
-        return hasAccount(getOfflinePlayer(playerName), worldName);
+        return hasAccount(playerResolver.resolve(playerName), worldName);
     }
 
     @Override
@@ -236,7 +223,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public EconomyResponse withdrawPlayer(String playerName, double amount) {
-        return withdrawPlayer(getOfflinePlayer(playerName), amount);
+        return withdrawPlayer(playerResolver.resolve(playerName), amount);
     }
 
     @Override
@@ -247,7 +234,7 @@ public class LegacyEconomyAdapter implements Economy {
 
     @Override
     public EconomyResponse withdrawPlayer(String playerName, String worldName, double amount) {
-        return withdrawPlayer(getOfflinePlayer(playerName), worldName, amount);
+        return withdrawPlayer(playerResolver.resolve(playerName), worldName, amount);
     }
 
     @Override
