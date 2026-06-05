@@ -95,14 +95,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
 
     @Override
     public void onDisable() {
-        var accountAccess = services.getRequiredService(AccountAccess.class);
-        if (accountAccess instanceof Flushable flushableAccountAccess) {
-            flushableAccountAccess.flush();
-        }
-        var accountNameAccess = services.getRequiredService(AccountNameAccess.class);
-        if (accountNameAccess instanceof Flushable flushableAccountNameAccess) {
-            flushableAccountNameAccess.flush();
-        }
+        services.getServices(Flushable.class).forEach(Flushable::flush);
 
         expansionManager.close();
     }
@@ -155,6 +148,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
         builder.addSingleton(DatabaseMigrator.class, SqliteMigrator.class);
         builder.addSingleton(AccountRepository.class, SqliteAccountRepository.class);
         builder.addSingleton(AccountAccess.class, DefaultAccountAccess.class);
+        builder.addSingletonFactory(Flushable.class, sp -> (Flushable) sp.getRequiredService(AccountAccess.class));
         builder.addSingleton(Economy.class, EconomyImp.class);
         builder.addSingleton(EconomyResponseMapper.class, DefaultResponseMapper.class);
         builder.addSingleton(PlayerResolver.class, BukkitPlayerResolver.class);
@@ -165,6 +159,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
         builder.addSingleton(AccountNameCache.class, LruAccountNameCache.class);
         builder.addSingleton(AccountNameRepository.class, SqliteAccountNameRepository.class);
         builder.addSingleton(AccountNameAccess.class, DefaultAccountNameAccess.class);
+        builder.addSingletonFactory(Flushable.class, sp -> (Flushable) sp.getRequiredService(AccountNameAccess.class));
         builder.addSingletonFactory(JConomyConfig.class, serviceProvider -> {
             var plugin = serviceProvider.getRequiredService(JavaPlugin.class);
             return new DefaultJConomyConfig(() -> plugin.getConfig());

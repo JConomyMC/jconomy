@@ -1,10 +1,30 @@
 package com.jellyrekt.jconomy.dependencyinjection;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import com.jellyrekt.jconomy.storage.Flushable;
 
 import org.junit.jupiter.api.Test;
 
 class DefaultServiceBuilderTests {
+
+    @Test
+    void getServices_returns_all_registered_flushables_in_order() {
+        var flushable1 = mock(Flushable.class);
+        var flushable2 = mock(Flushable.class);
+        var builder = new DefaultServiceBuilder();
+        builder.addSingletonFactory(Flushable.class, sp -> flushable1);
+        builder.addSingletonFactory(Flushable.class, sp -> flushable2);
+
+        var provider = builder.build();
+        var flushables = provider.getServices(Flushable.class);
+        flushables.forEach(Flushable::flush);
+
+        assertEquals(2, flushables.size());
+        verify(flushable1).flush();
+        verify(flushable2).flush();
+    }
 
     @Test
     void factory_can_resolve_JConomyServiceProvider_from_within_lambda() {
