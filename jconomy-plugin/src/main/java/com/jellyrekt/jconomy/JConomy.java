@@ -96,8 +96,4 @@ public class JConomy extends JavaPlugin implements PluginContext {
             }
         });
     }
-
-    private void configureServices() throws Exception {
-        services = JConomyServiceRegistrar.buildServiceProvider(this, this, expansionManager);
-    }
 }
