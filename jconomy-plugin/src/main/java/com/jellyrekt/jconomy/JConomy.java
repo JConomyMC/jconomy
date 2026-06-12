@@ -9,6 +9,7 @@ import com.jellyrekt.jconomy.expansions.DefaultExpansionLoader;
 import com.jellyrekt.jconomy.expansions.DefaultExpansionManager;
 import com.jellyrekt.jconomy.expansions.ExpansionManager;
 import com.jellyrekt.jconomy.listeners.PlayerJoinListener;
+import com.jellyrekt.jconomy.storage.DatabaseMigrator;
 import com.jellyrekt.jconomy.storage.DataImporter;
 import com.jellyrekt.jconomy.storage.Flushable;
 
@@ -43,6 +44,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
         }
 
         services.getRequiredService(ConfigMigrator.class).migrate();
+        services.getRequiredService(DatabaseMigrator.class).migrate();
         importData();
         registerServices();
 
