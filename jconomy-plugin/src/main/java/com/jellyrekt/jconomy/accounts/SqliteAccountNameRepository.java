@@ -21,7 +21,7 @@ public class SqliteAccountNameRepository implements AccountNameRepository {
     public List<AccountName> getAll() {
         try (
             var connection = connectionFactory.createConnection();
-            var statement = connection.prepareStatement("select * from accounts_names");
+            var statement = connection.prepareStatement("select * from account_names");
             var result = statement.executeQuery();
         ) {
             var accountNames = new ArrayList<AccountName>();
@@ -43,7 +43,7 @@ public class SqliteAccountNameRepository implements AccountNameRepository {
             var connection = connectionFactory.createConnection();
             var statement = connection.prepareStatement("select * from account_names where account_id = ?");
         ) {
-            statement.setString(1, null);
+            statement.setString(1, accountId.toString());
             var result = statement.executeQuery();
             if (!result.next()) {
                 return Optional.ofNullable(null);

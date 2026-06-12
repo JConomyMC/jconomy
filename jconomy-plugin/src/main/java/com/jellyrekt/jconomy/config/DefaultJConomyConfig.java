@@ -3,8 +3,8 @@ package com.jellyrekt.jconomy.config;
 import java.util.List;
 import java.util.Set;
 
-import com.jellyrekt.storage.configurationsection.ConfigurationSectionProvider;
-import com.jellyrekt.storage.configurationsection.ConfigurationSectionStorage;
+import com.jellyrekt.storage.configuration.ConfigurationSectionProvider;
+import com.jellyrekt.storage.configuration.ConfigurationSectionStorage;
 
 public class DefaultJConomyConfig extends ConfigurationSectionStorage implements JConomyConfig {
 
