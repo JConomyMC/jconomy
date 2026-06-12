@@ -45,6 +45,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
 
         services.getRequiredService(ConfigMigrator.class).migrate();
         services.getRequiredService(DatabaseMigrator.class).migrate();
+        expansionManager.notifyServicesReady(services);
         importData();
         registerServices();
 
