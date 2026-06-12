@@ -3,10 +3,6 @@ package com.jellyrekt.jconomy.config.economy;
 import java.util.Set;
 
 import com.jellyrekt.jconomy.config.JConomyConfig;
-import com.jellyrekt.storage.configurationsection.ConfigurationSectionProvider;
-import com.jellyrekt.storage.configurationsection.ConfigurationSectionStorage;
-import com.jellyrekt.storage.fileconfiguration.FileConfigurationProvider;
-import com.jellyrekt.storage.fileconfiguration.FileConfigurationStorage;
 
 public class YamlEconomyConfig implements EconomyConfig {
     private final JConomyConfig config;
