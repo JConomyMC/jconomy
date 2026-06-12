@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import com.jellyrekt.jconomy.dependencyinjection.JConomyServiceBuilder;
+import com.jellyrekt.jconomy.dependencyinjection.JConomyServiceProvider;
 
 public class DefaultExpansionManager implements ExpansionManager {
     private final Set<LoadedExpansion> loadedExpansions;
@@ -17,6 +18,11 @@ public class DefaultExpansionManager implements ExpansionManager {
     @Override
     public void configureServices(JConomyServiceBuilder builder) {
         loadedExpansions.forEach(expansion -> expansion.expansion().configureServices(builder));
+    }
+
+    @Override
+    public void notifyServicesReady(JConomyServiceProvider provider) {
+        loadedExpansions.forEach(expansion -> expansion.expansion().onServicesReady(provider));
     }
 
     @Override
