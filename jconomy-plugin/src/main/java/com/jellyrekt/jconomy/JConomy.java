@@ -9,9 +9,11 @@ import com.jellyrekt.jconomy.expansions.DefaultExpansionLoader;
 import com.jellyrekt.jconomy.expansions.DefaultExpansionManager;
 import com.jellyrekt.jconomy.expansions.ExpansionManager;
 import com.jellyrekt.jconomy.listeners.PlayerJoinListener;
+import com.jellyrekt.jconomy.storage.DataImportOrchestrator;
 import com.jellyrekt.jconomy.storage.DatabaseMigrator;
 import com.jellyrekt.jconomy.storage.DataImporter;
 import com.jellyrekt.jconomy.storage.Flushable;
+import com.jellyrekt.jconomy.storage.ImportRunRecord;
 
 import net.milkbowl.vault2.economy.Economy;
 
@@ -89,14 +91,9 @@ public class JConomy extends JavaPlugin implements PluginContext {
     }
 
     private void importData() {
-        services.getServices(DataImporter.class).forEach(importer -> {
-            try {
-                importer.importData();
-                getLogger().info(String.format("Imported data with " + importer.getClass().getName()));
-            } catch (Exception ex) {
-                getLogger().warning(String.format("Data import failed for '%s': %s", importer.getClass().getName(),
-                        ex.getMessage()));
-            }
-        });
+        var importers = services.getServices(DataImporter.class);
+        var record = services.getRequiredService(ImportRunRecord.class);
+        new DataImportOrchestrator(importers, record, getLogger()).run();
     }
+    
 }

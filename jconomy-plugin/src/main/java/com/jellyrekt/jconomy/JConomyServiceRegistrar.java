@@ -36,11 +36,15 @@ import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
 import com.jellyrekt.jconomy.presentation.DefaultCurrencyFormatter;
 import com.jellyrekt.jconomy.presentation.DefaultNumberFormatter;
 import com.jellyrekt.jconomy.presentation.NumberFormatter;
+import com.jellyrekt.jconomy.storage.ConfigImportRunRecord;
 import com.jellyrekt.jconomy.storage.DatabaseMigrator;
 import com.jellyrekt.jconomy.storage.Flushable;
+import com.jellyrekt.jconomy.storage.ImportRunRecord;
 import com.jellyrekt.jconomy.storage.SqlConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteMigrator;
+import com.jellyrekt.storage.configuration.file.FileConfigurationProvider;
+import com.jellyrekt.storage.configuration.file.javaplugin.JavaPluginConfigurationProvider;
 
 import net.milkbowl.vault2.economy.Economy;
 
@@ -86,6 +90,14 @@ public class JConomyServiceRegistrar {
             var javaPlugin = sp.getRequiredService(JavaPlugin.class);
             return new DefaultJConomyConfig(() -> javaPlugin.getConfig());
         });
+        builder.addSingletonFactory(FileConfigurationProvider.class, sp -> {
+            try {
+                return new JavaPluginConfigurationProvider(sp.getRequiredService(JavaPlugin.class));
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to create config provider", e);
+            }
+        });
+        builder.addSingleton(ImportRunRecord.class, ConfigImportRunRecord.class);
 
         expansionManager.configureServices(builder);
     }
