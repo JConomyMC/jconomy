@@ -9,11 +9,8 @@ import com.jellyrekt.jconomy.expansions.DefaultExpansionLoader;
 import com.jellyrekt.jconomy.expansions.DefaultExpansionManager;
 import com.jellyrekt.jconomy.expansions.ExpansionManager;
 import com.jellyrekt.jconomy.listeners.PlayerJoinListener;
-import com.jellyrekt.jconomy.storage.DataImportOrchestrator;
 import com.jellyrekt.jconomy.storage.DatabaseMigrator;
-import com.jellyrekt.jconomy.storage.DataImporter;
 import com.jellyrekt.jconomy.storage.Flushable;
-import com.jellyrekt.jconomy.storage.ImportRunRecord;
 
 import net.milkbowl.vault2.economy.Economy;
 
@@ -48,7 +45,6 @@ public class JConomy extends JavaPlugin implements PluginContext {
         services.getRequiredService(ConfigMigrator.class).migrate();
         services.getRequiredService(DatabaseMigrator.class).migrate();
         expansionManager.notifyServicesReady(services);
-        importData();
         registerServices();
 
         registerEvents();
@@ -90,10 +86,4 @@ public class JConomy extends JavaPlugin implements PluginContext {
         pluginManager.registerEvents(services.getRequiredService(PlayerJoinListener.class), this);
     }
 
-    private void importData() {
-        var importers = services.getServices(DataImporter.class);
-        var record = services.getRequiredService(ImportRunRecord.class);
-        new DataImportOrchestrator(importers, record, getLogger()).run();
-    }
-    
 }
