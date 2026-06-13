@@ -36,10 +36,8 @@ import com.jellyrekt.jconomy.presentation.CurrencyFormatter;
 import com.jellyrekt.jconomy.presentation.DefaultCurrencyFormatter;
 import com.jellyrekt.jconomy.presentation.DefaultNumberFormatter;
 import com.jellyrekt.jconomy.presentation.NumberFormatter;
-import com.jellyrekt.jconomy.storage.ConfigImportRunRecord;
 import com.jellyrekt.jconomy.storage.DatabaseMigrator;
 import com.jellyrekt.jconomy.storage.Flushable;
-import com.jellyrekt.jconomy.storage.ImportRunRecord;
 import com.jellyrekt.jconomy.storage.SqlConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteConnectionFactory;
 import com.jellyrekt.jconomy.storage.SqliteMigrator;
@@ -97,8 +95,6 @@ public class JConomyServiceRegistrar {
                 throw new RuntimeException("Failed to create config provider", e);
             }
         });
-        builder.addSingleton(ImportRunRecord.class, ConfigImportRunRecord.class);
-
         expansionManager.configureServices(builder);
     }
 }
