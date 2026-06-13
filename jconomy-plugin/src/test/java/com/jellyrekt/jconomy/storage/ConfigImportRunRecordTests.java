@@ -5,11 +5,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.jellyrekt.storage.configuration.file.FileConfigurationProvider;
 import com.jellyrekt.storage.configuration.file.yaml.StringYamlConfigurationProvider;
 
 class ConfigImportRunRecordTests {
 
-    private StringYamlConfigurationProvider provider;
+    private FileConfigurationProvider provider;
     private ConfigImportRunRecord record;
 
     @BeforeEach

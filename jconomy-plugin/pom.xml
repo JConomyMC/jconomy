@@ -27,12 +27,6 @@
             <id>codemc-creatorfromhell</id>
             <url>https://repo.codemc.io/repository/creatorfromhell/</url>
         </repository>
-
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/merenze/FileConfigurationStorage</url>
-        </repository>
     </repositories>
 
     <dependencies>
@@ -71,13 +65,13 @@
         <dependency>
             <groupId>com.jellyrekt.storage</groupId>
             <artifactId>file-configuration-storage</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <version>1.2.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.jellyrekt.storage</groupId>
             <artifactId>file-configuration-storage-test</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <version>1.0.1</version>
         </dependency>
 
         <dependency>
