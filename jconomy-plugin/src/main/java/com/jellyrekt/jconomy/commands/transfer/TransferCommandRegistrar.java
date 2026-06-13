@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.bukkit.command.CommandSender;
 import org.incendo.cloud.CommandManager;
+import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.permission.Permission;
 
 import com.jellyrekt.jconomy.transfer.TransferExporter;
@@ -27,19 +28,38 @@ public class TransferCommandRegistrar {
     public void register() {
         var importListHandler = new ImportListCommandHandler(importers);
         var exportListHandler = new ExportListCommandHandler(exporters);
+        var importPreviewHandler = new ImportPreviewCommandHandler();
+        var exportPreviewHandler = new ExportPreviewCommandHandler();
+
+        ParserDescriptor<CommandSender, TransferImporter> importerParser =
+                ParserDescriptor.of(new TransferImporterParser<>(importers), TransferImporter.class);
+        ParserDescriptor<CommandSender, TransferExporter> exporterParser =
+                ParserDescriptor.of(new TransferExporterParser<>(exporters), TransferExporter.class);
 
         var base = commandManager.commandBuilder("jconomy");
+        var importBase = base.literal("import");
+        var exportBase = base.literal("export");
 
-        commandManager.command(base
-                .literal("import")
+        commandManager.command(importBase
                 .literal("list")
                 .permission(Permission.of("jconomy.list.import"))
                 .handler(importListHandler::execute));
 
-        commandManager.command(base
-                .literal("export")
+        commandManager.command(exportBase
                 .literal("list")
                 .permission(Permission.of("jconomy.list.export"))
                 .handler(exportListHandler::execute));
+
+        commandManager.command(importBase
+                .required("provider", importerParser)
+                .literal("preview")
+                .permission(Permission.of("jconomy.preview.import"))
+                .handler(importPreviewHandler::execute));
+
+        commandManager.command(exportBase
+                .required("provider", exporterParser)
+                .literal("preview")
+                .permission(Permission.of("jconomy.preview.export"))
+                .handler(exportPreviewHandler::execute));
     }
 }
