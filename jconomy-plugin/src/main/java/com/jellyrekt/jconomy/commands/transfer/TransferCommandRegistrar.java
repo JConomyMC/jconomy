@@ -3,6 +3,8 @@ package com.jellyrekt.jconomy.commands.transfer;
 import java.util.List;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.incendo.cloud.CommandManager;
 import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.permission.Permission;
@@ -15,14 +17,20 @@ public class TransferCommandRegistrar {
     private final CommandManager<CommandSender> commandManager;
     private final List<TransferImporter> importers;
     private final List<TransferExporter> exporters;
+    private final BukkitScheduler scheduler;
+    private final JavaPlugin plugin;
 
     public TransferCommandRegistrar(
             CommandManager<CommandSender> commandManager,
             List<TransferImporter> importers,
-            List<TransferExporter> exporters) {
+            List<TransferExporter> exporters,
+            BukkitScheduler scheduler,
+            JavaPlugin plugin) {
         this.commandManager = commandManager;
         this.importers = importers;
         this.exporters = exporters;
+        this.scheduler = scheduler;
+        this.plugin = plugin;
     }
 
     public void register() {
@@ -30,6 +38,10 @@ public class TransferCommandRegistrar {
         var exportListHandler = new ExportListCommandHandler(exporters);
         var importPreviewHandler = new ImportPreviewCommandHandler();
         var exportPreviewHandler = new ExportPreviewCommandHandler();
+        var importExecuteHandler = new ImportExecuteCommandHandler(scheduler, plugin);
+        var importForceExecuteHandler = new ImportForceExecuteCommandHandler(scheduler, plugin);
+        var exportExecuteHandler = new ExportExecuteCommandHandler(scheduler, plugin);
+        var exportForceExecuteHandler = new ExportForceExecuteCommandHandler(scheduler, plugin);
 
         ParserDescriptor<CommandSender, TransferImporter> importerParser =
                 ParserDescriptor.of(new TransferImporterParser<>(importers), TransferImporter.class);
@@ -61,5 +73,31 @@ public class TransferCommandRegistrar {
                 .literal("preview")
                 .permission(Permission.of("jconomy.preview.export"))
                 .handler(exportPreviewHandler::execute));
+
+        commandManager.command(importBase
+                .required("provider", importerParser)
+                .literal("execute")
+                .permission(Permission.of("jconomy.execute.import"))
+                .handler(importExecuteHandler::execute));
+
+        commandManager.command(importBase
+                .required("provider", importerParser)
+                .literal("execute")
+                .literal("force")
+                .permission(Permission.of("jconomy.force.execute.import"))
+                .handler(importForceExecuteHandler::execute));
+
+        commandManager.command(exportBase
+                .required("provider", exporterParser)
+                .literal("execute")
+                .permission(Permission.of("jconomy.execute.export"))
+                .handler(exportExecuteHandler::execute));
+
+        commandManager.command(exportBase
+                .required("provider", exporterParser)
+                .literal("execute")
+                .literal("force")
+                .permission(Permission.of("jconomy.force.execute.export"))
+                .handler(exportForceExecuteHandler::execute));
     }
 }

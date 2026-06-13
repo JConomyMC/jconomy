@@ -3,6 +3,7 @@ package com.jellyrekt.jconomy;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import org.incendo.cloud.paper.LegacyPaperCommandManager;
 
@@ -105,7 +106,9 @@ public class JConomy extends JavaPlugin implements PluginContext {
             return new TransferCommandRegistrar(
                     sp.getRequiredService(LegacyPaperCommandManager.class),
                     importers,
-                    exporters);
+                    exporters,
+                    services.getRequiredService(BukkitScheduler.class),
+                    this);
         });
         commandServiceBuilder.build().getRequiredService(TransferCommandRegistrar.class).register();
     }
