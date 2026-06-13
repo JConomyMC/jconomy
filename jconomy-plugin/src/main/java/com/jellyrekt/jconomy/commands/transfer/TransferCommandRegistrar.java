@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.bukkit.command.CommandSender;
 import org.incendo.cloud.CommandManager;
+import org.incendo.cloud.permission.Permission;
 
 import com.jellyrekt.jconomy.transfer.TransferExporter;
 import com.jellyrekt.jconomy.transfer.TransferImporter;
@@ -24,5 +25,21 @@ public class TransferCommandRegistrar {
     }
 
     public void register() {
+        var importListHandler = new ImportListCommandHandler(importers);
+        var exportListHandler = new ExportListCommandHandler(exporters);
+
+        var base = commandManager.commandBuilder("jconomy");
+
+        commandManager.command(base
+                .literal("import")
+                .literal("list")
+                .permission(Permission.of("jconomy.list.import"))
+                .handler(importListHandler::execute));
+
+        commandManager.command(base
+                .literal("export")
+                .literal("list")
+                .permission(Permission.of("jconomy.list.export"))
+                .handler(exportListHandler::execute));
     }
 }

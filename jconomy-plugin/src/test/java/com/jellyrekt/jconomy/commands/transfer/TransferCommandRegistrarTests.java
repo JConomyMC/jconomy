@@ -2,6 +2,7 @@ package com.jellyrekt.jconomy.commands.transfer;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ class TransferCommandRegistrarTests {
     @Test
     @SuppressWarnings("unchecked")
     void register_does_not_throw_with_empty_provider_lists() {
-        CommandManager<CommandSender> commandManager = mock(CommandManager.class);
+        CommandManager<CommandSender> commandManager = mock(CommandManager.class, RETURNS_DEEP_STUBS);
         var registrar = new TransferCommandRegistrar(commandManager, List.of(), List.of());
 
         assertDoesNotThrow(() -> registrar.register());
