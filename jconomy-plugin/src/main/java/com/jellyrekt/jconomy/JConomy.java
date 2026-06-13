@@ -4,6 +4,11 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import org.incendo.cloud.paper.LegacyPaperCommandManager;
+
+import com.jellyrekt.jconomy.commands.CommandManagerFactory;
+import com.jellyrekt.jconomy.commands.transfer.TransferCommandRegistrar;
+import com.jellyrekt.jconomy.dependencyinjection.DefaultServiceBuilder;
 import com.jellyrekt.jconomy.dependencyinjection.JConomyServiceProvider;
 import com.jellyrekt.jconomy.expansions.DefaultExpansionLoader;
 import com.jellyrekt.jconomy.expansions.DefaultExpansionManager;
@@ -11,6 +16,8 @@ import com.jellyrekt.jconomy.expansions.ExpansionManager;
 import com.jellyrekt.jconomy.listeners.PlayerJoinListener;
 import com.jellyrekt.jconomy.storage.DatabaseMigrator;
 import com.jellyrekt.jconomy.storage.Flushable;
+import com.jellyrekt.jconomy.transfer.TransferExporter;
+import com.jellyrekt.jconomy.transfer.TransferImporter;
 
 import net.milkbowl.vault2.economy.Economy;
 
@@ -46,8 +53,8 @@ public class JConomy extends JavaPlugin implements PluginContext {
         services.getRequiredService(DatabaseMigrator.class).migrate();
         expansionManager.notifyServicesReady(services);
         registerServices();
-
         registerEvents();
+        registerCommands();
     }
 
     private boolean isVaultUnlockedAPILoaded() {
@@ -84,6 +91,23 @@ public class JConomy extends JavaPlugin implements PluginContext {
         var pluginManager = getServer().getPluginManager();
 
         pluginManager.registerEvents(services.getRequiredService(PlayerJoinListener.class), this);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void registerCommands() {
+        var commandServiceBuilder = new DefaultServiceBuilder();
+        commandServiceBuilder.addSingletonFactory(
+                (Class) LegacyPaperCommandManager.class,
+                sp -> new CommandManagerFactory(this).create());
+        commandServiceBuilder.addSingletonFactory(TransferCommandRegistrar.class, sp -> {
+            var importers = services.getServices(TransferImporter.class);
+            var exporters = services.getServices(TransferExporter.class);
+            return new TransferCommandRegistrar(
+                    sp.getRequiredService(LegacyPaperCommandManager.class),
+                    importers,
+                    exporters);
+        });
+        commandServiceBuilder.build().getRequiredService(TransferCommandRegistrar.class).register();
     }
 
 }
