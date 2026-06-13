@@ -20,7 +20,11 @@ public class ExportForceExecuteCommandHandler {
 
     public void execute(CommandContext<CommandSender> context) {
         TransferExporter exporter = context.get("provider");
-        context.sender().sendMessage("Starting forced export via '" + exporter.getName() + "'...");
-        scheduler.runTaskAsynchronously(plugin, () -> exporter.execute(ConflictPolicy.OVERWRITE));
+        var sender = context.sender();
+        sender.sendMessage("Starting forced export via '" + exporter.getName() + "'...");
+        scheduler.runTaskAsynchronously(plugin, () -> {
+            exporter.execute(ConflictPolicy.OVERWRITE);
+            scheduler.runTask(plugin, () -> sender.sendMessage("Forced export via '" + exporter.getName() + "' completed."));
+        });
     }
 }

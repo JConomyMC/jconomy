@@ -20,7 +20,11 @@ public class ImportExecuteCommandHandler {
 
     public void execute(CommandContext<CommandSender> context) {
         TransferImporter importer = context.get("provider");
-        context.sender().sendMessage("Starting import from '" + importer.getName() + "'...");
-        scheduler.runTaskAsynchronously(plugin, () -> importer.execute(ConflictPolicy.SKIP));
+        var sender = context.sender();
+        sender.sendMessage("Starting import from '" + importer.getName() + "'...");
+        scheduler.runTaskAsynchronously(plugin, () -> {
+            importer.execute(ConflictPolicy.SKIP);
+            scheduler.runTask(plugin, () -> sender.sendMessage("Import from '" + importer.getName() + "' completed."));
+        });
     }
 }
