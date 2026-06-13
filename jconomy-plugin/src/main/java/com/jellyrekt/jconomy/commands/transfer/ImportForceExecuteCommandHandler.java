@@ -20,7 +20,11 @@ public class ImportForceExecuteCommandHandler {
 
     public void execute(CommandContext<CommandSender> context) {
         TransferImporter importer = context.get("provider");
-        context.sender().sendMessage("Starting forced import from '" + importer.getName() + "'...");
-        scheduler.runTaskAsynchronously(plugin, () -> importer.execute(ConflictPolicy.OVERWRITE));
+        var sender = context.sender();
+        sender.sendMessage("Starting forced import from '" + importer.getName() + "'...");
+        scheduler.runTaskAsynchronously(plugin, () -> {
+            importer.execute(ConflictPolicy.OVERWRITE);
+            scheduler.runTask(plugin, () -> sender.sendMessage("Forced import from '" + importer.getName() + "' completed."));
+        });
     }
 }

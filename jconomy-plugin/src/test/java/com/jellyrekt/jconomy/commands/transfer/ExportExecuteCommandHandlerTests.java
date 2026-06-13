@@ -78,4 +78,52 @@ class ExportExecuteCommandHandlerTests {
 
         verify(scheduler).runTaskAsynchronously(eq(plugin), any(Runnable.class));
     }
+
+    @Test
+    void execute_schedules_completion_message_on_main_thread() {
+        doAnswer(inv -> {
+            inv.getArgument(1, Runnable.class).run();
+            return null;
+        }).when(scheduler).runTaskAsynchronously(eq(plugin), any(Runnable.class));
+
+        new ExportExecuteCommandHandler(scheduler, plugin).execute(context);
+
+        verify(scheduler).runTask(eq(plugin), any(Runnable.class));
+    }
+
+    @Test
+    void execute_sends_completion_message_after_export() {
+        doAnswer(inv -> { inv.getArgument(1, Runnable.class).run(); return null; })
+                .when(scheduler).runTaskAsynchronously(eq(plugin), any(Runnable.class));
+        doAnswer(inv -> { inv.getArgument(1, Runnable.class).run(); return null; })
+                .when(scheduler).runTask(eq(plugin), any(Runnable.class));
+
+        new ExportExecuteCommandHandler(scheduler, plugin).execute(context);
+
+        verify(sender, times(2)).sendMessage(anyString());
+    }
+
+    @Test
+    void force_execute_schedules_completion_message_on_main_thread() {
+        doAnswer(inv -> {
+            inv.getArgument(1, Runnable.class).run();
+            return null;
+        }).when(scheduler).runTaskAsynchronously(eq(plugin), any(Runnable.class));
+
+        new ExportForceExecuteCommandHandler(scheduler, plugin).execute(context);
+
+        verify(scheduler).runTask(eq(plugin), any(Runnable.class));
+    }
+
+    @Test
+    void force_execute_sends_completion_message_after_export() {
+        doAnswer(inv -> { inv.getArgument(1, Runnable.class).run(); return null; })
+                .when(scheduler).runTaskAsynchronously(eq(plugin), any(Runnable.class));
+        doAnswer(inv -> { inv.getArgument(1, Runnable.class).run(); return null; })
+                .when(scheduler).runTask(eq(plugin), any(Runnable.class));
+
+        new ExportForceExecuteCommandHandler(scheduler, plugin).execute(context);
+
+        verify(sender, times(2)).sendMessage(anyString());
+    }
 }
