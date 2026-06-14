@@ -1,0 +1,100 @@
+﻿package org.jconomy;
+
+import java.util.logging.Logger;
+
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
+
+import org.jconomy.accounts.AccountAccess;
+import org.jconomy.accounts.AccountCache;
+import org.jconomy.accounts.AccountNameAccess;
+import org.jconomy.accounts.AccountNameCache;
+import org.jconomy.accounts.AccountNameRepository;
+import org.jconomy.accounts.AccountRepository;
+import org.jconomy.accounts.DefaultAccountAccess;
+import org.jconomy.accounts.DefaultAccountNameAccess;
+import org.jconomy.accounts.LruAccountCache;
+import org.jconomy.accounts.LruAccountNameCache;
+import org.jconomy.accounts.SqliteAccountNameRepository;
+import org.jconomy.accounts.SqliteAccountRepository;
+import org.jconomy.adapters.BukkitPlayerResolver;
+import org.jconomy.adapters.DefaultResponseMapper;
+import org.jconomy.adapters.EconomyResponseMapper;
+import org.jconomy.adapters.LegacyEconomyAdapter;
+import org.jconomy.adapters.PlayerResolver;
+import org.jconomy.config.CacheConfig;
+import org.jconomy.config.DefaultCacheConfig;
+import org.jconomy.config.DefaultJConomyConfig;
+import org.jconomy.config.JConomyConfig;
+import org.jconomy.config.economy.EconomyConfig;
+import org.jconomy.config.economy.YamlEconomyConfig;
+import org.jconomy.dependencyinjection.DefaultServiceBuilder;
+import org.jconomy.dependencyinjection.JConomyServiceProvider;
+import org.jconomy.expansions.ExpansionManager;
+import org.jconomy.listeners.PlayerJoinListener;
+import org.jconomy.presentation.CurrencyFormatter;
+import org.jconomy.presentation.DefaultCurrencyFormatter;
+import org.jconomy.presentation.DefaultNumberFormatter;
+import org.jconomy.presentation.NumberFormatter;
+import org.jconomy.storage.DatabaseMigrator;
+import org.jconomy.storage.Flushable;
+import org.jconomy.storage.SqlConnectionFactory;
+import org.jconomy.storage.SqliteConnectionFactory;
+import org.jconomy.storage.SqliteMigrator;
+import com.jellyrekt.storage.configuration.file.FileConfigurationProvider;
+import com.jellyrekt.storage.configuration.file.javaplugin.JavaPluginConfigurationProvider;
+
+import net.milkbowl.vault2.economy.Economy;
+
+public class JConomyServiceRegistrar {
+
+    public static JConomyServiceProvider buildServiceProvider(
+            JavaPlugin plugin, PluginContext pluginContext, ExpansionManager expansionManager) {
+        var builder = new DefaultServiceBuilder();
+        registerServices(builder, plugin, pluginContext, expansionManager);
+        return builder.build();
+    }
+
+    private static void registerServices(
+            DefaultServiceBuilder builder,
+            JavaPlugin plugin, PluginContext pluginContext, ExpansionManager expansionManager) {
+        builder.addSingleton(JavaPlugin.class, plugin);
+        builder.addSingleton(PluginContext.class, pluginContext);
+        builder.addSingleton(Logger.class, plugin.getLogger());
+        builder.addSingleton(ConfigMigrator.class, DefaultConfigMigrator.class);
+        builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
+        builder.addSingleton(AccountCache.class, LruAccountCache.class);
+        builder.addSingleton(EconomyConfig.class, YamlEconomyConfig.class);
+        builder.addSingleton(NumberFormatter.class, DefaultNumberFormatter.class);
+        builder.addSingleton(CurrencyFormatter.class, DefaultCurrencyFormatter.class);
+        builder.addSingleton(SqlConnectionFactory.class,
+                new SqliteConnectionFactory(plugin.getDataFolder().toPath().resolve("jconomy.db")));
+        builder.addSingleton(DatabaseMigrator.class, SqliteMigrator.class);
+        builder.addSingleton(AccountRepository.class, SqliteAccountRepository.class);
+        builder.addSingleton(AccountAccess.class, DefaultAccountAccess.class);
+        builder.addSingletonFactory(Flushable.class, sp -> (Flushable) sp.getRequiredService(AccountAccess.class));
+        builder.addSingleton(Economy.class, EconomyImp.class);
+        builder.addSingleton(EconomyResponseMapper.class, DefaultResponseMapper.class);
+        builder.addSingleton(PlayerResolver.class, BukkitPlayerResolver.class);
+        builder.addSingleton(net.milkbowl.vault.economy.Economy.class, LegacyEconomyAdapter.class);
+        builder.addSingletonFactory(BukkitScheduler.class, sp ->
+                sp.getRequiredService(JavaPlugin.class).getServer().getScheduler());
+        builder.addSingleton(PlayerJoinListener.class);
+        builder.addSingleton(AccountNameCache.class, LruAccountNameCache.class);
+        builder.addSingleton(AccountNameRepository.class, SqliteAccountNameRepository.class);
+        builder.addSingleton(AccountNameAccess.class, DefaultAccountNameAccess.class);
+        builder.addSingletonFactory(Flushable.class, sp -> (Flushable) sp.getRequiredService(AccountNameAccess.class));
+        builder.addSingletonFactory(JConomyConfig.class, sp -> {
+            var javaPlugin = sp.getRequiredService(JavaPlugin.class);
+            return new DefaultJConomyConfig(() -> javaPlugin.getConfig());
+        });
+        builder.addSingletonFactory(FileConfigurationProvider.class, sp -> {
+            try {
+                return new JavaPluginConfigurationProvider(sp.getRequiredService(JavaPlugin.class));
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to create config provider", e);
+            }
+        });
+        expansionManager.configureServices(builder);
+    }
+}

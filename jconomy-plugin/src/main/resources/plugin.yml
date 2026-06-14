@@ -1,5 +1,5 @@
-name: JConomy
-main: com.jellyrekt.jconomy.JConomy
+﻿name: JConomy
+main: org.jconomy.JConomy
 version: 1.0.0
 description: Provider for VaultUnlimited and Vault legacy
 author: JellyRekt

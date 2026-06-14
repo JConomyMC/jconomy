@@ -4,12 +4,12 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.jellyrekt.jconomy</groupId>
+        <groupId>org.jconomy</groupId>
         <artifactId>jconomy-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.jellyrekt.jconomy</groupId>
+    <groupId>org.jconomy</groupId>
     <artifactId>jconomy-plugin</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -31,7 +31,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.jellyrekt.jconomy</groupId>
+            <groupId>org.jconomy</groupId>
             <artifactId>jconomy-api</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
@@ -134,12 +134,12 @@
                             <relocations>
                                 <relocation>
                                     <pattern>com.jellyrekt.storage</pattern>
-                                    <shadedPattern>com.jellyrekt.jconomy.com.jellyrekt.storage</shadedPattern>
+                                    <shadedPattern>org.jconomy.com.jellyrekt.storage</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.merenze.dependencyinjection</pattern>
                                     <shadedPattern>
-                                        com.jellyrekt.jconomy.com.merenze.dependencyinjection</shadedPattern>
+                                        org.jconomy.com.merenze.dependencyinjection</shadedPattern>
                                 </relocation>
                             </relocations>
                             <createDependencyReducedPom>true</createDependencyReducedPom>
