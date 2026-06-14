@@ -25,7 +25,7 @@ public interface TransferImporter {
      * @param policy the conflict policy to apply when building the plan
      * @return a snapshot of what this importer would write
      */
-    TransferPlan preview(ConflictPolicy policy);
+    TransferPlan createPlan(ConflictPolicy policy);
 
     /**
      * Executes the import operation described by the given plan.
@@ -34,7 +34,7 @@ public interface TransferImporter {
      * call the Bukkit API directly, as most Bukkit API methods are not thread-safe.
      * </p>
      *
-     * @param plan the plan produced by {@link #preview(ConflictPolicy)} to execute
+     * @param plan the plan produced by {@link #createPlan(ConflictPolicy)} to execute
      */
     void execute(TransferPlan plan);
 }

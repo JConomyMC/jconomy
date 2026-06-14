@@ -10,7 +10,7 @@ import com.jellyrekt.jconomy.accounts.AccountName;
  *
  * <p>
  * A {@code TransferPlan} is produced by calling
- * {@link TransferImporter#preview(ConflictPolicy)} or
+ * {@link TransferImporter#createPlan(ConflictPolicy)} or
  * {@link TransferExporter#createPlan(ConflictPolicy)}. It contains the exact set
  * of {@link Account} and {@link AccountName} records that the corresponding
  * {@code execute} call will write, already filtered according to the given
