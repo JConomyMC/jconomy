@@ -1,117 +1,169 @@
 # JConomy
 
-> Design economies, not storage systems.
+_Design economies, not storage systems._
 
-JConomy lets you create and manage as many currencies as your server needs from a single configuration. Just define your currencies and build the gameplay around them.
+JConomy is a shared economy infrastructure layer for Minecraft servers running Spigot, Paper, and compatible platforms.
 
-JConomy is an economy backend for Minecraft servers running Spigot, Paper, and compatible platforms—[see requirements for more info](#requirements).
+**The next gameplay system shouldn't require another persistence implementation.**
+
+JConomy provides a shared backend for currencies and other quantity-like systems, allowing plugins to focus on gameplay while JConomy handles persistence, formatting, and integration.
+
+**Think beyond money.** Gold. Event tokens. Faction reputation. Guild prestige. Honor. Seasonal points. Premium credits.
+
+If your plugin needs to track a number that belongs to a player, JConomy can provide the infrastructure behind it.
 
 ## Why JConomy?
 
-When servers need additional currencies, they often end up building new plugins, each manging its own configuration, storage, formatting, and migration logic. Over time, economy infrastructure becomes fragmented and increasingly difficult to maintain.
+Minecraft servers often evolve beyond a single currency.
 
-Every new currency shouldn't require a new plugin.
+You might introduce:
 
-With JConomy, you define your currencies once and expose them through a shared economy backend. Your custom plugins build against VaultUnlocked using the currencies they need, while JConomy handles persistence, configuration, formatting, and storage.
+- Premium currencies
+- Event tokens
+- Faction reputation
+- Guild prestige
+- Seasonal points
+- Dungeon keys
+- Honor systems
+- Custom reward systems
 
-No duplicate infrastructure. No reinventing economy systems.
+As servers grow, new gameplay systems often bring new persistence layers with them.
 
-### What it is
+One plugin stores balances in YAML. Another uses SQLite. A third defines its own database schema.
 
-JConomy is an Economy provider.
+Over time, economy infrastructure becomes fragmented and increasingly difficult to maintain.
 
-It provides the infrastructure needed to define, persist, and expose your currencies to other plugins. It handles
+JConomy centralizes that infrastructure so that new systems can build on a shared foundation instead of reinventing it.
+
+Your plugins remain responsible for gameplay mechanics. JConomy takes care of the plumbing.
+
+**No duplicate infrastructure. No reinventing economy systems.**
+
+## What it is
+
+JConomy is a shared economy infrastructure layer.
+
+It provides the services needed to define, persist, and expose currencies and other balance-like systems to plugins throughout your server ecosystem.
+
+JConomy handles:
+
 - Persistent storage
 - Currency definition and formatting
-- [VaultUnlocked](https://github.com/TheNewEconomy/VaultUnlockedAPI and [Vault classic](https://github.com/MilkBowl/Vault) integration
-- Exposing currencies to both Unlocked-aware and classic-aware plugins
-- An expansion API for modifying functionality without forking JConomy
+- VaultUnlocked integration
+- Optional Vault compatibility for legacy plugins
+- Shared account management
+- Storage backend abstraction
+- An expansion API for extending functionality without forking the plugin
 
-### What it isn't
+## What it isn't
 
 JConomy is **not** a complete economy suite.
 
-It intentially does not provide any player-facing or admin-facing interface for paying players or checking balances.
+It intentionally does not provide:
 
-As a pure infrastructure provider, JConomy will pair any Vault-aware plugin to bring you full economy support, e.g.
-- [Essentials](https://essentialsx.net/)
-- [CMI](https://www.zrips.net/cmi/)
+- `/pay`
+- `/balance`
+- `/eco`
+- `/baltop`
+- Administrative economy commands
+- Economy GUIs
 
-### Who is it for
+Those are application concerns.
 
-JConomy is designed for server owners and plugin developers who need more flexibility than traditional single-currency economy plugins provide. Choose JConomy when
+Different currencies often have different rules governing how they are earned, transferred, consumed, and administered. JConomy focuses exclusively on shared infrastructure, leaving gameplay behavior to the plugins that define it.
 
-#### You have more than one currency
+Continue using the economy applications and commands that already fit your server.
 
-Your server uses multiple currencies, such as
-* Gold
-* Gems
-* Event tokens
-* Premium currencies
+## Who is it for?
 
-Instead of introducing a new storage solution for every currency, JConomy gives you a single place to define and manage them all.
+### Plugin developers
 
-#### You build plugins with custom economy mechanics
+You build plugins that track balances, points, reputation, prestige, influence, or other quantity-like values.
 
-Maybe you
-* Award tokens for participating in events
-* Rotate seasonal currencies
-* Bank money, xp, or items in a virtual vault
-* Introduce entirely new ways for players to earn and spend money
+Instead of creating another repository, database schema, migration strategy, and formatting system, build against VaultUnlocked and let JConomy handle the infrastructure.
 
-JConomy provides the infrastructure for all of these use cases, allowing you to keep your plugin focused on gameplay logic.
+### Growing servers
 
-#### You want flexibility without complexity
+Your server already has multiple plugins maintaining their own balance data, and you'd prefer future systems to share a common backend.
 
-JConomy ships with a Sqlite storage backend out of the box and provides a simple configuration structure.
+JConomy lets you stop creating new silos without requiring you to migrate existing ones.
 
-You don't need to design a database schema or build a persistence layer just to introduce a new currency.
+### Existing economy users
 
-#### Is JConomy for me?
+Already happy with Essentials or another traditional economy plugin?
 
-JConomy is probably a good fit if your server uses **multiple currencies**, **custom economy mechanics**, or **plugins that maintain their own balance data**.
+Keep it.
 
-If you're happy with a single currency managed entirely by an existing economy plugin, JConomy may be more flexibility than you need.
+JConomy does not require you to replace your existing economy provider. Existing systems can continue to operate exactly as they do today while new systems take advantage of shared infrastructure.
+
+## Is JConomy for me?
+
+JConomy is probably a good fit if:
+
+- You're developing custom plugins with economy mechanics.
+- Your server uses multiple balance-like systems.
+- You want new gameplay systems to share common infrastructure.
+- You're tired of implementing persistence every time you introduce a new currency, reputation system, or point-based mechanic.
+
+JConomy may be more flexibility than you need if:
+
+- Your server uses a single currency.
+- You're happy with your existing economy plugin.
+- Your server relies entirely on off-the-shelf plugins.
+- You have no plans to introduce custom balance-driven systems.
+
+JConomy is infrastructure.
+
+If you're building custom gameplay experiences, JConomy gives those systems a shared foundation. If your existing setup already meets your needs, there's no reason to replace it.
 
 ## Requirements
 
 - Spigot / Paper 1.21+
 - Java 21+
-- [VaultUnlocked](https://github.com/TheNewEconomy/VaultUnlocked) (and optionally classic [Vault](https://github.com/MilkBowl/VaultAPI) for broad plugin compatibility)
+- VaultUnlocked
+- Vault (optional, for legacy compatibility)
 
 ## Features
 
-- **Multi-currency** — define any number of currencies in `config.yml`
-- **Per-world accounts** — balances are tracked per world, with a configurable default world
-- **Flexible formatting** — configure grouping separators, decimal places, rounding, symbols, and a free-form display template per currency
-- **Vault and VaultUnlocked** — registers as an economy provider for both legacy Vault and VaultUnlocked, maximising compatibility with economy-consuming plugins
-- **Account caching** — in-memory cache with a configurable size limit keeps frequent lookups off disk
-- **Expansion API** — extend JConomy with custom storage backends, importers, or services without forking the plugin (see [jconomy-api](jconomy-api/README.md))
+- **Multi-currency support** — Define any number of currencies in `config.yml`.
+- **Per-world accounts** — Track balances per world, with configurable default-world behavior.
+- **Flexible formatting** — Configure symbols, grouping separators, decimal precision, rounding, and display templates.
+- **VaultUnlocked integration** — Expose currencies to VaultUnlocked-aware plugins.
+- **Optional Vault compatibility** — Expose a selected currency to legacy Vault plugins when explicitly enabled.
+- **Account caching** — Reduce disk access through configurable in-memory caching.
+- **Storage abstraction** — Separate gameplay logic from persistence concerns.
+- **Expansion API** — Extend JConomy with custom storage backends and integrations without forking the project.
 
 ## Installation
 
-1. Drop `JConomy.jar` into your `plugins/` folder
-2. Install VaultUnlocked (and Vault if needed)
-3. Start the server — `plugins/JConomy/config.yml` is created automatically
-4. Configure your currencies and restart
+1. Drop `JConomy.jar` into your `plugins/` folder.
+1. Install VaultUnlocked.
+1. Start the server to generate the default configuration.
+1. Define your currencies and restart the server.
 
 ## Configuration overview
 
-The generated `config.yml` is fully commented. Key settings:
+The generated `config.yml` is fully documented.
 
-| Key                 | Description                                                                       |
-|---------------------|-----------------------------------------------------------------------------------|
-| `default-world`     | World used for a player's default balance                                         |
-| `default-currency`  | Primary currency key (used by legacy Vault)                                       |
-| `currencies.<name>` | Define a currency with display names, symbol, format string, and number formatter |
-| `cache.lru-limit`   | Maximum number of accounts held in memory at once                                 |
+Key settings include:
 
-## Importing from another plugin
-
-**Coming or going?** The JConomy API supports data transfer expansions, allowing you to import data from your current Vault provider or export it to your new one.
-
-See [officially supported transfer expansions](https://github.com/JConomyMC/jconomy-import/) or [roll your own](#)!
+| Key                    | Description                                             |
+|------------------------|---------------------------------------------------------|
+| `default-world`        | World used for default balance lookups.                 |
+| `default-currency`     | Currency exposed through the optional Vault adapter.    |
+| `currencies.<name>`    | Currency definitions, formatting, and display settings. |
+| `cache.lru-limit`      | Maximum number of cached accounts.                      |
+| `legacy-vault.enabled` | Whether to register the legacy Vault adapter.           |
 
 ## Expansion API
 
-Developers can extend JConomy — adding custom importers, storage backends, or services — through the expansion API. See the [API README](jconomy-api/README.md) for an overview.
+JConomy provides an extension model for adding new capabilities without modifying the core plugin.
+
+Examples include:
+
+- Additional storage backends
+- Custom integrations
+- Transfer and migration tooling
+- Supplemental services
+
+See the API documentation for more information.
