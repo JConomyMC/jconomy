@@ -2,6 +2,11 @@
 # Don't change this value.
 config-version: 1
 
+# Settings for the legacy Vault adapter (net.milkbowl.vault.economy.Economy).
+# Set 'enabled' to true to register the adapter with Bukkit's service manager.
+vault-legacy-adapter:
+  enabled: false
+
 # The name of the world to use for a player's default account.
 # Default: 'world'
 default-world: world
