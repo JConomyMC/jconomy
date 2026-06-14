@@ -20,7 +20,8 @@ class TransferCommandRegistrarTests {
         CommandManager<CommandSender> commandManager = mock(CommandManager.class, RETURNS_DEEP_STUBS);
         var scheduler = mock(BukkitScheduler.class);
         var plugin = mock(JavaPlugin.class);
-        var registrar = new TransferCommandRegistrar(commandManager, List.of(), List.of(), scheduler, plugin);
+        var planStore = new TransferPlanStore();
+        var registrar = new TransferCommandRegistrar(commandManager, List.of(), List.of(), scheduler, plugin, planStore);
 
         assertDoesNotThrow(() -> registrar.register());
     }

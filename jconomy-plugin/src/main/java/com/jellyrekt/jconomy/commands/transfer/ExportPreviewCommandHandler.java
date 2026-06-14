@@ -1,26 +1,44 @@
 package com.jellyrekt.jconomy.commands.transfer;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.incendo.cloud.context.CommandContext;
 
+import com.jellyrekt.jconomy.transfer.ConflictPolicy;
 import com.jellyrekt.jconomy.transfer.TransferExporter;
-import com.jellyrekt.jconomy.transfer.TransferPreview;
+import com.jellyrekt.jconomy.transfer.TransferPlan;
 
-public class ExportPreviewCommandHandler {
+class ExportPreviewCommandHandler {
 
-    public void execute(CommandContext<CommandSender> context) {
-        var sender = context.sender();
-        TransferExporter exporter = context.get("provider");
-        TransferPreview preview = exporter.preview();
-        sendSummary(sender, preview);
+    private final TransferPlanStore planStore;
+    private final BukkitScheduler scheduler;
+    private final JavaPlugin plugin;
+
+    ExportPreviewCommandHandler(TransferPlanStore planStore, BukkitScheduler scheduler, JavaPlugin plugin) {
+        this.planStore = planStore;
+        this.scheduler = scheduler;
+        this.plugin = plugin;
     }
 
-    private void sendSummary(CommandSender sender, TransferPreview preview) {
+    public void execute(CommandContext<CommandSender> context) {
+        TransferExporter exporter = context.get("provider");
+        ConflictPolicy policy = context.get("policy");
+        var sender = context.sender();
+        sender.sendMessage("Generating export preview via '" + exporter.getName() + "'...");
+        scheduler.runTaskAsynchronously(plugin, () -> {
+            TransferPlan plan = exporter.createPlan(policy);
+            planStore.store(sender.getName(), plan);
+            scheduler.runTask(plugin, () -> sendSummary(sender, plan));
+        });
+    }
+
+    private void sendSummary(CommandSender sender, TransferPlan plan) {
         sender.sendMessage("=== Export Preview ===");
-        sender.sendMessage("Total accounts: " + preview.totalAccounts());
-        sender.sendMessage("New accounts: " + preview.newAccounts());
-        sender.sendMessage("Existing accounts: " + preview.existingAccounts());
-        sender.sendMessage("Conflicts: " + preview.conflicts());
-        sender.sendMessage("Currencies affected: " + String.join(", ", preview.currenciesAffected()));
+        sender.sendMessage("Accounts to transfer: " + plan.accountsToTransfer().size());
+        sender.sendMessage("Account names to transfer: " + plan.accountNamesToTransfer().size());
+        sender.sendMessage("Conflicts: " + plan.conflicts());
+        sender.sendMessage("Conflict policy: " + plan.policy());
+        sender.sendMessage("Run '/jconomy export " + plan.providerName() + " execute' to apply this plan.");
     }
 }
