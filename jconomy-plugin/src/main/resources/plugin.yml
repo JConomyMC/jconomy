@@ -4,7 +4,25 @@ version: 1.0.0
 description: Provider for VaultUnlimited and Vault legacy
 author: JellyRekt
 api-version: '1.16'
-website: https://github.com/merenze/JConomy
+website: https://github.com/JConomyMC/jconomy
 depend: [Vault]
 libraries:
   - commons-lang:commons-lang:2.6
+
+permissions:
+  jconomy.list.import:
+    description: List available import providers
+  jconomy.list.export:
+    description: List available export providers
+  jconomy.preview.import:
+    description: Preview an import operation without modifying data
+  jconomy.preview.export:
+    description: Preview an export operation without modifying data
+  jconomy.execute.import:
+    description: Execute an import operation (preserves existing data on conflict)
+  jconomy.execute.export:
+    description: Execute an export operation (preserves existing data on conflict)
+  jconomy.force.execute.import:
+    description: Execute an import operation, overwriting existing data on conflict
+  jconomy.force.execute.export:
+    description: Execute an export operation, overwriting existing data on conflict
