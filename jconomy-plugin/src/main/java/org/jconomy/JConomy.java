@@ -10,7 +10,8 @@ import org.incendo.cloud.paper.LegacyPaperCommandManager;
 import org.jconomy.commands.CommandManagerFactory;
 import org.jconomy.commands.transfer.TransferCommandRegistrar;
 import org.jconomy.commands.transfer.TransferPlanStore;
-import org.jconomy.config.FeatureManager;
+import org.jconomy.FeatureManager;
+import org.jconomy.FeatureNames;
 import org.jconomy.dependencyinjection.DefaultServiceBuilder;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.expansions.DefaultExpansionLoader;
@@ -102,7 +103,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void registerCommands() {
-        if (!services.getRequiredService(FeatureManager.class).isEnabled(FeatureManager.DATA_TRANSFER)) {
+        if (!services.getRequiredService(FeatureManager.class).isEnabled(FeatureNames.DATA_TRANSFER)) {
             return;
         }
 

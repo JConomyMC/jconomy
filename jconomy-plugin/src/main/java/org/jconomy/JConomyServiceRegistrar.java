@@ -27,7 +27,7 @@ import org.jconomy.config.DefaultCacheConfig;
 import org.jconomy.config.DefaultFeatureManager;
 import org.jconomy.config.DefaultJConomyConfig;
 import org.jconomy.config.DefaultVaultLegacyAdapterConfig;
-import org.jconomy.config.FeatureManager;
+import org.jconomy.FeatureManager;
 import org.jconomy.config.JConomyConfig;
 import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.config.economy.EconomyConfig;
