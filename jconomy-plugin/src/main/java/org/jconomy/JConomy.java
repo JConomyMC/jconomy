@@ -15,6 +15,7 @@ import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.expansions.DefaultExpansionLoader;
 import org.jconomy.expansions.DefaultExpansionManager;
 import org.jconomy.expansions.ExpansionManager;
+import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.storage.DatabaseMigrator;
 import org.jconomy.storage.Flushable;
@@ -81,12 +82,15 @@ public class JConomy extends JavaPlugin implements PluginContext {
                 services.getRequiredService(Economy.class),
                 this,
                 ServicePriority.Normal);
-                
-        getServer().getServicesManager().register(
-                net.milkbowl.vault.economy.Economy.class,
-                services.getRequiredService(net.milkbowl.vault.economy.Economy.class),
-                this,
-                ServicePriority.Normal);
+
+        var legacyAdapterConfig = services.getRequiredService(VaultLegacyAdapterConfig.class);
+        if (legacyAdapterConfig.isEnabled()) {
+            getServer().getServicesManager().register(
+                    net.milkbowl.vault.economy.Economy.class,
+                    services.getRequiredService(net.milkbowl.vault.economy.Economy.class),
+                    this,
+                    ServicePriority.Normal);
+        }
     }
     
     private void registerEvents() {
