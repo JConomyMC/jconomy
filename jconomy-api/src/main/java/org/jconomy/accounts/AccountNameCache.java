@@ -3,6 +3,7 @@
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public interface AccountNameCache {
     Optional<AccountName> get(UUID accountId);
@@ -10,4 +11,6 @@ public interface AccountNameCache {
     void put(AccountName accountName);
 
     Set<AccountName> getAll();
+
+    default void setEvictionListener(Consumer<AccountName> listener) {}
 }

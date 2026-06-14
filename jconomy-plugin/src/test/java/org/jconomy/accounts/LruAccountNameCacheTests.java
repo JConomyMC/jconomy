@@ -3,6 +3,7 @@ package org.jconomy.accounts;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -62,6 +63,33 @@ class LruAccountNameCacheTests {
         assertTrue(all.contains(a2));
         assertTrue(all.contains(a3));
         assertTrue(all.contains(a4));
+    }
+
+    @Test
+    void listener_is_notified_when_entry_is_evicted() {
+        var cache = cacheWithLimit(3);
+        var evicted = new ArrayList<AccountName>();
+        cache.setEvictionListener(evicted::add);
+
+        var oldest = accountNameIn(cache);
+        accountNameIn(cache);
+        accountNameIn(cache);
+        accountNameIn(cache); // triggers eviction of oldest
+
+        assertEquals(1, evicted.size());
+        assertEquals(oldest, evicted.get(0));
+    }
+
+    @Test
+    void listener_is_not_notified_when_no_eviction_occurs() {
+        var cache = cacheWithLimit(3);
+        var evicted = new ArrayList<AccountName>();
+        cache.setEvictionListener(evicted::add);
+
+        accountNameIn(cache);
+        accountNameIn(cache);
+
+        assertTrue(evicted.isEmpty());
     }
 
     private static AccountName accountNameIn(LruAccountNameCache cache) {
