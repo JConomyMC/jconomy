@@ -1,5 +1,7 @@
 package org.jconomy.config;
 
+import org.jconomy.FeatureManager;
+
 public class DefaultFeatureManager implements FeatureManager {
     private final JConomyConfig config;
 

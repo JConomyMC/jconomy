@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.Test;
+import org.jconomy.FeatureManager;
+import org.jconomy.FeatureNames;
 
 class DefaultFeatureManagerTests {
 
@@ -19,7 +21,7 @@ class DefaultFeatureManagerTests {
 
         var manager = new DefaultFeatureManager(root);
 
-        assertFalse(manager.isEnabled(FeatureManager.DATA_TRANSFER));
+        assertFalse(manager.isEnabled(FeatureNames.DATA_TRANSFER));
     }
 
     @Test
@@ -35,7 +37,7 @@ class DefaultFeatureManagerTests {
 
         var manager = new DefaultFeatureManager(root);
 
-        assertFalse(manager.isEnabled(FeatureManager.DATA_TRANSFER));
+        assertFalse(manager.isEnabled(FeatureNames.DATA_TRANSFER));
     }
 
     @Test
@@ -51,6 +53,6 @@ class DefaultFeatureManagerTests {
 
         var manager = new DefaultFeatureManager(root);
 
-        assertTrue(manager.isEnabled(FeatureManager.DATA_TRANSFER));
+        assertTrue(manager.isEnabled(FeatureNames.DATA_TRANSFER));
     }
 }
