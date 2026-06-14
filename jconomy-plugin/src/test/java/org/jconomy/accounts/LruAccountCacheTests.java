@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -62,6 +63,33 @@ class LruAccountCacheTests {
         assertTrue(all.contains(a2));
         assertTrue(all.contains(a3));
         assertTrue(all.contains(a4));
+    }
+
+    @Test
+    void listener_is_notified_when_entry_is_evicted() {
+        var cache = cacheWithLimit(3);
+        var evicted = new ArrayList<Account>();
+        cache.setEvictionListener(evicted::add);
+
+        var oldest = accountIn(cache, "world1");
+        accountIn(cache, "world2");
+        accountIn(cache, "world3");
+        accountIn(cache, "world4"); // triggers eviction of oldest
+
+        assertEquals(1, evicted.size());
+        assertEquals(oldest, evicted.get(0));
+    }
+
+    @Test
+    void listener_is_not_notified_when_no_eviction_occurs() {
+        var cache = cacheWithLimit(3);
+        var evicted = new ArrayList<Account>();
+        cache.setEvictionListener(evicted::add);
+
+        accountIn(cache, "world1");
+        accountIn(cache, "world2");
+
+        assertTrue(evicted.isEmpty());
     }
 
     private static Account accountIn(LruAccountCache cache, String world) {

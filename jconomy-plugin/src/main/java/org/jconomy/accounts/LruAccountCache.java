@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.jconomy.config.CacheConfig;
 
@@ -14,16 +15,26 @@ public class LruAccountCache implements AccountCache {
     private record AccountKey(UUID accountId, String world) { }
 
     private final Map<AccountKey, Account> accounts;
+    private Consumer<Account> evictionListener = ignored -> {};
 
     public LruAccountCache(CacheConfig config) {
         accounts = Collections.synchronizedMap(
             new LinkedHashMap<AccountKey, Account>(config.getLruLimit(), 0.75f, true) {
                 @Override
                 protected boolean removeEldestEntry(Map.Entry<AccountKey, Account> eldest) {
-                    return size() > config.getLruLimit();
+                    if (size() > config.getLruLimit()) {
+                        evictionListener.accept(eldest.getValue());
+                        return true;
+                    }
+                    return false;
                 }
             }
         );
+    }
+
+    @Override
+    public void setEvictionListener(Consumer<Account> listener) {
+        this.evictionListener = listener;
     }
 
     @Override
