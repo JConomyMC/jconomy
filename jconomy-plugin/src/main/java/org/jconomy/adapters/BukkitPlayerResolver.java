@@ -1,4 +1,4 @@
-﻿package org.jconomy.adapters;
+package org.jconomy.adapters;
 
 import java.util.Arrays;
 import java.util.NoSuchElementException;

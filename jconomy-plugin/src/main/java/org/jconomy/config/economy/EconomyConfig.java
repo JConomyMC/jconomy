@@ -1,4 +1,4 @@
-﻿package org.jconomy.config.economy;
+package org.jconomy.config.economy;
 
 import java.util.Set;
 

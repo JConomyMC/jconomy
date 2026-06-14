@@ -1,4 +1,4 @@
-﻿package org.jconomy.config;
+package org.jconomy.config;
 
 import java.util.List;
 import java.util.Set;

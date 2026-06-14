@@ -1,4 +1,4 @@
-﻿package org.jconomy.storage;
+package org.jconomy.storage;
 
 import org.junit.jupiter.api.*;
 import java.sql.*;

@@ -1,4 +1,4 @@
-﻿package org.jconomy.storage;
+package org.jconomy.storage;
 
 import java.sql.SQLException;
 import java.sql.Statement;

@@ -1,4 +1,4 @@
-﻿package org.jconomy.adapters;
+package org.jconomy.adapters;
 
 import net.milkbowl.vault2.economy.EconomyResponse;
 

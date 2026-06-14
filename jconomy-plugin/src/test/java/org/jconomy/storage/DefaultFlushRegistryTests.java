@@ -1,4 +1,4 @@
-﻿package org.jconomy.storage;
+package org.jconomy.storage;
 
 import static org.junit.jupiter.api.Assertions.*;
 

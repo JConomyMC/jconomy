@@ -1,4 +1,4 @@
-﻿package org.jconomy;
+package org.jconomy;
 
 import org.bukkit.configuration.Configuration;
 import org.bukkit.plugin.java.JavaPlugin;

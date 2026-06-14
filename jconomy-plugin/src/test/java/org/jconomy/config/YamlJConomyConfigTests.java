@@ -1,4 +1,4 @@
-﻿package org.jconomy.config;
+package org.jconomy.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
