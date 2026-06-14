@@ -9,6 +9,7 @@ import org.incendo.cloud.paper.LegacyPaperCommandManager;
 
 import com.jellyrekt.jconomy.commands.CommandManagerFactory;
 import com.jellyrekt.jconomy.commands.transfer.TransferCommandRegistrar;
+import com.jellyrekt.jconomy.commands.transfer.TransferPlanStore;
 import com.jellyrekt.jconomy.dependencyinjection.DefaultServiceBuilder;
 import com.jellyrekt.jconomy.dependencyinjection.JConomyServiceProvider;
 import com.jellyrekt.jconomy.expansions.DefaultExpansionLoader;
@@ -108,7 +109,8 @@ public class JConomy extends JavaPlugin implements PluginContext {
                     importers,
                     exporters,
                     services.getRequiredService(BukkitScheduler.class),
-                    this);
+                    this,
+                    new TransferPlanStore());
         });
         commandServiceBuilder.build().getRequiredService(TransferCommandRegistrar.class).register();
     }

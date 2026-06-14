@@ -1,49 +1,93 @@
 package com.jellyrekt.jconomy.commands.transfer;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Set;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.incendo.cloud.context.CommandContext;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.jellyrekt.jconomy.transfer.ConflictPolicy;
 import com.jellyrekt.jconomy.transfer.TransferExporter;
-import com.jellyrekt.jconomy.transfer.TransferPreview;
+import com.jellyrekt.jconomy.transfer.TransferPlan;
 
 class ExportPreviewCommandHandlerTests {
 
-    @Test
-    @SuppressWarnings("unchecked")
-    void execute_calls_preview_on_exporter_and_sends_summary() {
-        var exporter = mock(TransferExporter.class);
-        var preview = new TransferPreview(10, 3, 7, 2, Set.of("gold"));
-        when(exporter.preview()).thenReturn(preview);
+    private TransferExporter exporter;
+    private BukkitScheduler scheduler;
+    private JavaPlugin plugin;
+    private CommandSender sender;
+    private CommandContext<CommandSender> context;
+    private TransferPlanStore planStore;
+    private TransferPlan plan;
 
-        var sender = mock(CommandSender.class);
-        var context = mock(CommandContext.class);
+    @BeforeEach
+    @SuppressWarnings("unchecked")
+    void setUp() {
+        exporter = mock(TransferExporter.class);
+        scheduler = mock(BukkitScheduler.class);
+        plugin = mock(JavaPlugin.class);
+        sender = mock(CommandSender.class);
+        context = mock(CommandContext.class);
+        planStore = new TransferPlanStore();
+        plan = new TransferPlan("my-exporter", Set.of(), Set.of(), 0, ConflictPolicy.SKIP);
         when(context.sender()).thenReturn(sender);
         when(context.get("provider")).thenReturn(exporter);
-
-        new ExportPreviewCommandHandler().execute(context);
-
-        verify(exporter).preview();
-        verify(exporter, never()).execute(any());
-        verify(sender, atLeastOnce()).sendMessage(anyString());
+        when(context.get("policy")).thenReturn(ConflictPolicy.SKIP);
+        when(exporter.getName()).thenReturn("my-exporter");
+        when(exporter.createPlan(ConflictPolicy.SKIP)).thenReturn(plan);
+        when(sender.getName()).thenReturn("alice");
     }
 
     @Test
-    @SuppressWarnings("unchecked")
+    void execute_dispatches_preview_asynchronously() {
+        new ExportPreviewCommandHandler(planStore, scheduler, plugin).execute(context);
+
+        verify(scheduler).runTaskAsynchronously(eq(plugin), any(Runnable.class));
+    }
+
+    @Test
+    void execute_calls_preview_with_policy_from_context() {
+        doAnswer(inv -> { inv.getArgument(1, Runnable.class).run(); return null; })
+                .when(scheduler).runTaskAsynchronously(eq(plugin), any(Runnable.class));
+
+        new ExportPreviewCommandHandler(planStore, scheduler, plugin).execute(context);
+
+        verify(exporter).createPlan(ConflictPolicy.SKIP);
+    }
+
+    @Test
+    void execute_stores_plan_in_plan_store() {
+        doAnswer(inv -> { inv.getArgument(1, Runnable.class).run(); return null; })
+                .when(scheduler).runTaskAsynchronously(eq(plugin), any(Runnable.class));
+
+        new ExportPreviewCommandHandler(planStore, scheduler, plugin).execute(context);
+
+        assertTrue(planStore.get("alice", "my-exporter").isPresent());
+    }
+
+    @Test
+    void execute_sends_summary_on_main_thread() {
+        doAnswer(inv -> { inv.getArgument(1, Runnable.class).run(); return null; })
+                .when(scheduler).runTaskAsynchronously(eq(plugin), any(Runnable.class));
+
+        new ExportPreviewCommandHandler(planStore, scheduler, plugin).execute(context);
+
+        verify(scheduler).runTask(eq(plugin), any(Runnable.class));
+    }
+
+    @Test
     void execute_never_calls_execute_on_exporter() {
-        var exporter = mock(TransferExporter.class);
-        when(exporter.preview()).thenReturn(new TransferPreview(0, 0, 0, 0, Set.of()));
+        doAnswer(inv -> { inv.getArgument(1, Runnable.class).run(); return null; })
+                .when(scheduler).runTaskAsynchronously(eq(plugin), any(Runnable.class));
 
-        var sender = mock(CommandSender.class);
-        var context = mock(CommandContext.class);
-        when(context.sender()).thenReturn(sender);
-        when(context.get("provider")).thenReturn(exporter);
-
-        new ExportPreviewCommandHandler().execute(context);
+        new ExportPreviewCommandHandler(planStore, scheduler, plugin).execute(context);
 
         verify(exporter, never()).execute(any());
     }
