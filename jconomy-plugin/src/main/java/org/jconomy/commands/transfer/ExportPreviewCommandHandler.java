@@ -1,4 +1,4 @@
-﻿package org.jconomy.commands.transfer;
+package org.jconomy.commands.transfer;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;

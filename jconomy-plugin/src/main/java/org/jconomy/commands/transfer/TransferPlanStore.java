@@ -1,4 +1,4 @@
-﻿package org.jconomy.commands.transfer;
+package org.jconomy.commands.transfer;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-﻿package org.jconomy.config;
+package org.jconomy.config;
 
 public interface CacheConfig {
     int getLruLimit();

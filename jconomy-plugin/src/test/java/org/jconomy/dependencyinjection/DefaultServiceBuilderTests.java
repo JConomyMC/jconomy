@@ -1,4 +1,4 @@
-﻿package org.jconomy.dependencyinjection;
+package org.jconomy.dependencyinjection;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

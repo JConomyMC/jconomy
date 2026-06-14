@@ -1,4 +1,4 @@
-﻿package org.jconomy.accounts;
+package org.jconomy.accounts;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

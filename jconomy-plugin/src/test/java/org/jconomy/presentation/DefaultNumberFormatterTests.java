@@ -1,4 +1,4 @@
-﻿package org.jconomy.presentation;
+package org.jconomy.presentation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;

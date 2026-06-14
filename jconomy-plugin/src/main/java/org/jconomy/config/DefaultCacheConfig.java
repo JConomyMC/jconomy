@@ -1,4 +1,4 @@
-﻿package org.jconomy.config;
+package org.jconomy.config;
 
 public class DefaultCacheConfig implements CacheConfig {
     private final JConomyConfig config;

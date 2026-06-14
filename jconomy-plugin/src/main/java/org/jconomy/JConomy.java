@@ -1,4 +1,4 @@
-﻿package org.jconomy;
+package org.jconomy;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.plugin.ServicePriority;

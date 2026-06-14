@@ -1,4 +1,4 @@
-﻿package org.jconomy.expansions;
+package org.jconomy.expansions;
 
 import java.io.File;
 import java.lang.reflect.Modifier;

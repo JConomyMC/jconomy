@@ -1,4 +1,4 @@
-﻿package org.jconomy.commands;
+package org.jconomy.commands;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;

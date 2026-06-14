@@ -1,4 +1,4 @@
-﻿package org.jconomy;
+package org.jconomy;
 
 import java.util.logging.Logger;
 

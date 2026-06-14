@@ -1,4 +1,4 @@
-﻿package org.jconomy.adapters;
+package org.jconomy.adapters;
 
 import java.math.BigDecimal;
 import java.util.List;

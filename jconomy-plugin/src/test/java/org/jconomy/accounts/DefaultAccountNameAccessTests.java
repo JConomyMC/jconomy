@@ -1,4 +1,4 @@
-﻿package org.jconomy.accounts;
+package org.jconomy.accounts;
 
 import static org.junit.jupiter.api.Assertions.*;
 

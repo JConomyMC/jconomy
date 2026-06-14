@@ -1,4 +1,4 @@
-﻿package org.jconomy.adapters;
+package org.jconomy.adapters;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

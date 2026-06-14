@@ -1,4 +1,4 @@
-﻿package org.jconomy.listeners;
+package org.jconomy.listeners;
 
 import static org.mockito.Mockito.*;
 

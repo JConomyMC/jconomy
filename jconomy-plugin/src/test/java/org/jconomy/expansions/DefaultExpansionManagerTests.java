@@ -1,4 +1,4 @@
-﻿package org.jconomy.expansions;
+package org.jconomy.expansions;
 
 import static org.mockito.Mockito.*;
 

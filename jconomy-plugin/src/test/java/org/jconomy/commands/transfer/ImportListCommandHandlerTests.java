@@ -1,4 +1,4 @@
-﻿package org.jconomy.commands.transfer;
+package org.jconomy.commands.transfer;
 
 import static org.mockito.Mockito.*;
 

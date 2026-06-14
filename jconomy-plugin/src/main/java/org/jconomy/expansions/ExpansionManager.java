@@ -1,4 +1,4 @@
-﻿package org.jconomy.expansions;
+package org.jconomy.expansions;
 
 import org.jconomy.dependencyinjection.JConomyServiceBuilder;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
