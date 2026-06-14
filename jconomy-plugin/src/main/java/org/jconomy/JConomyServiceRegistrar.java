@@ -24,8 +24,10 @@ import org.jconomy.adapters.LegacyEconomyAdapter;
 import org.jconomy.adapters.PlayerResolver;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.config.DefaultCacheConfig;
+import org.jconomy.config.DefaultFeatureManager;
 import org.jconomy.config.DefaultJConomyConfig;
 import org.jconomy.config.DefaultVaultLegacyAdapterConfig;
+import org.jconomy.config.FeatureManager;
 import org.jconomy.config.JConomyConfig;
 import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.config.economy.EconomyConfig;
@@ -65,6 +67,7 @@ public class JConomyServiceRegistrar {
         builder.addSingleton(Logger.class, plugin.getLogger());
         builder.addSingleton(ConfigMigrator.class, DefaultConfigMigrator.class);
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
+        builder.addSingleton(FeatureManager.class, DefaultFeatureManager.class);
         builder.addSingleton(VaultLegacyAdapterConfig.class, DefaultVaultLegacyAdapterConfig.class);
         builder.addSingleton(AccountCache.class, LruAccountCache.class);
         builder.addSingleton(EconomyConfig.class, YamlEconomyConfig.class);

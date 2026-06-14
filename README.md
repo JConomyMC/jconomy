@@ -163,7 +163,6 @@ Examples include:
 
 - Additional storage backends
 - Custom integrations
-- Transfer and migration tooling
 - Supplemental services
 
 See the API documentation for more information.
