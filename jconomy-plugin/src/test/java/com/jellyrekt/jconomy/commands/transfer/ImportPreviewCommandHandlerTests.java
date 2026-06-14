@@ -41,7 +41,7 @@ class ImportPreviewCommandHandlerTests {
         when(context.get("provider")).thenReturn(importer);
         when(context.get("policy")).thenReturn(ConflictPolicy.SKIP);
         when(importer.getName()).thenReturn("my-importer");
-        when(importer.preview(ConflictPolicy.SKIP)).thenReturn(plan);
+        when(importer.createPlan(ConflictPolicy.SKIP)).thenReturn(plan);
         when(sender.getName()).thenReturn("alice");
     }
 
@@ -59,7 +59,7 @@ class ImportPreviewCommandHandlerTests {
 
         new ImportPreviewCommandHandler(planStore, scheduler, plugin).execute(context);
 
-        verify(importer).preview(ConflictPolicy.SKIP);
+        verify(importer).createPlan(ConflictPolicy.SKIP);
     }
 
     @Test

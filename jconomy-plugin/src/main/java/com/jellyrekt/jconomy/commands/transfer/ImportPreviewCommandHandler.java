@@ -27,7 +27,7 @@ class ImportPreviewCommandHandler {
         var sender = context.sender();
         sender.sendMessage("Generating import preview from '" + importer.getName() + "'...");
         scheduler.runTaskAsynchronously(plugin, () -> {
-            TransferPlan plan = importer.preview(policy);
+            TransferPlan plan = importer.createPlan(policy);
             planStore.store(sender.getName(), plan);
             scheduler.runTask(plugin, () -> sendSummary(sender, plan));
         });
