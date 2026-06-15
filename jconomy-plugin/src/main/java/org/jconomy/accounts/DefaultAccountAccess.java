@@ -6,10 +6,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jconomy.storage.Flushable;
 
 public class DefaultAccountAccess implements AccountAccess, Flushable {
+    private static final Logger logger = Logger.getLogger(DefaultAccountAccess.class.getName());
+
     private record AccountKey(UUID accountId, String world) {}
 
     private final AccountCache cache;
@@ -43,8 +47,11 @@ public class DefaultAccountAccess implements AccountAccess, Flushable {
 
     @Override
     public void save(Account account) {
+        var key = new AccountKey(account.getAccountId(), account.getWorldName());
         cache.put(account);
-        dirtyRecords.put(new AccountKey(account.getAccountId(), account.getWorldName()), account);
+        if (!account.equals(dirtyRecords.get(key))) {
+            dirtyRecords.put(key, account);
+        }
     }
 
     @Override
@@ -54,8 +61,8 @@ public class DefaultAccountAccess implements AccountAccess, Flushable {
         try {
             repository.upsertAll(new HashSet<>(snapshot.values()));
             snapshot.forEach((k, v) -> dirtyRecords.remove(k, v));
-        } catch (Exception ignored) {
-            // leave dirtyRecords intact so the next flush can retry
+        } catch (Exception e) {
+            logger.warning("Failed to flush dirty accounts: " + ExceptionUtils.getStackTrace(e));
         }
     }
 }

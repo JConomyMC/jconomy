@@ -12,6 +12,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -152,6 +156,24 @@ class DefaultAccountAccessTests {
     }
 
     @Test
+    void flush_logs_warning_when_repository_fails() {
+        var logger = Logger.getLogger(DefaultAccountAccess.class.getName());
+        var handler = new CapturingLogHandler();
+        logger.addHandler(handler);
+        try {
+            var account = new Account(UUID.randomUUID(), "world");
+            access.save(account);
+            repository.failOnUpsertAll = true;
+
+            access.flush();
+
+            assertTrue(handler.hasWarning());
+        } finally {
+            logger.removeHandler(handler);
+        }
+    }
+
+    @Test
     void evicted_dirty_account_is_still_flushed() {
         var evictingCache = new EvictingAccountCache();
         var evictingAccess = new DefaultAccountAccess(evictingCache, repository);
@@ -169,6 +191,22 @@ class DefaultAccountAccessTests {
     }
 
     // --- Fakes ---
+
+    private static class CapturingLogHandler extends Handler {
+        private boolean warningSeen = false;
+
+        @Override
+        public void publish(LogRecord record) {
+            if (record.getLevel().intValue() >= Level.WARNING.intValue()) {
+                warningSeen = true;
+            }
+        }
+
+        @Override public void flush() {}
+        @Override public void close() {}
+
+        boolean hasWarning() { return warningSeen; }
+    }
 
     private static class TrackingAccountCache implements AccountCache {
         private final Map<String, Account> store = new HashMap<>();
