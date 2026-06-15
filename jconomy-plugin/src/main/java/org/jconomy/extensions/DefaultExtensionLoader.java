@@ -1,4 +1,4 @@
-package org.jconomy.expansions;
+package org.jconomy.extensions;
 
 import java.io.File;
 import java.lang.reflect.Modifier;
@@ -10,14 +10,14 @@ import java.util.jar.JarFile;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-import org.jconomy.JConomyExpansion;
+import org.jconomy.JConomyExtension;
 
-public class DefaultExpansionLoader implements ExpansionLoader {
+public class DefaultExtensionLoader implements ExtensionLoader {
     private final JavaPlugin plugin;
     private final ClassLoader classLoader;
     private final File moduleFolder;
 
-    public DefaultExpansionLoader(JavaPlugin plugin, ClassLoader classLoader) {
+    public DefaultExtensionLoader(JavaPlugin plugin, ClassLoader classLoader) {
         this.plugin = plugin;
         this.classLoader = classLoader;
 
@@ -28,26 +28,26 @@ public class DefaultExpansionLoader implements ExpansionLoader {
     }
 
     @Override
-    public Set<LoadedExpansion> load() {
+    public Set<LoadedExtension> load() {
         var jars = moduleFolder.listFiles((dir, name) -> name.endsWith(".jar"));
         if (jars == null)
             return Set.of();
 
-        var loadedModules = new HashSet<LoadedExpansion>();
+        var loadedExtensions = new HashSet<LoadedExtension>();
 
         for (File jar : jars) {
             try {
-                var expansions = loadExpansion(jar);
-                loadedModules.addAll(expansions);
+                var extensions = loadExtension(jar);
+                loadedExtensions.addAll(extensions);
             } catch (Exception ex) {
-                plugin.getLogger().warning(String.format("Failed to load expansions from '%s': %s", jar.getName(), ex.getMessage()));
+                plugin.getLogger().warning(String.format("Failed to load extensions from '%s': %s", jar.getName(), ex.getMessage()));
             }
         }
 
-        return loadedModules;
+        return loadedExtensions;
     }
 
-    private Set<LoadedExpansion> loadExpansion(File jar) throws Exception {
+    private Set<LoadedExtension> loadExtension(File jar) throws Exception {
         try (
             var jarFile = new JarFile(jar);
         ) {
@@ -55,7 +55,7 @@ public class DefaultExpansionLoader implements ExpansionLoader {
 
             var entries = jarFile.entries();
 
-            var expansions = new HashSet<LoadedExpansion>();
+            var extensions = new HashSet<LoadedExtension>();
 
             while (entries.hasMoreElements()) {
                 var entry = entries.nextElement();
@@ -67,18 +67,18 @@ public class DefaultExpansionLoader implements ExpansionLoader {
                 var urlClassLoader = new URLClassLoader(new URL[] { jar.toURI().toURL() }, classLoader);
                 var clazz = urlClassLoader.loadClass(className);
 
-                if (isInstantiatableExpansion(clazz)) {
+                if (isInstantiatableExtension(clazz)) {
                     try {
-                        var expansion = createModule(clazz);
-                        plugin.getLogger().info("Loaded expansion: " + expansion.getName());
-                        expansions.add(new LoadedExpansion(expansion, urlClassLoader));
+                        var extension = createExtension(clazz);
+                        plugin.getLogger().info("Loaded extension: " + extension.getName());
+                        extensions.add(new LoadedExtension(extension, urlClassLoader));
                     } catch (Exception ex) {
-                        plugin.getLogger().warning(String.format("Failed to load expansion from '%s': %s", clazz.getName()));
+                        plugin.getLogger().warning(String.format("Failed to load extension from '%s': %s", clazz.getName()));
                     }
                 }
             }
 
-            return expansions;
+            return extensions;
         }
     }
 
@@ -88,14 +88,14 @@ public class DefaultExpansionLoader implements ExpansionLoader {
                 .substring(0, entry.getName().length() - 6);
         return className;
     }
-    
-    private static boolean isInstantiatableExpansion(Class<?> type) {
-        return JConomyExpansion.class.isAssignableFrom(type)
+
+    private static boolean isInstantiatableExtension(Class<?> type) {
+        return JConomyExtension.class.isAssignableFrom(type)
                 && !type.isInterface()
                 && !Modifier.isAbstract(type.getModifiers());
     }
-    
-    private static JConomyExpansion createModule(Class<?> type) throws Exception {
-        return (JConomyExpansion) type.getConstructor().newInstance();
+
+    private static JConomyExtension createExtension(Class<?> type) throws Exception {
+        return (JConomyExtension) type.getConstructor().newInstance();
     }
 }
