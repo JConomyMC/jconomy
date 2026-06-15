@@ -15,21 +15,21 @@ import org.jconomy.JConomyExtension;
 public class DefaultExtensionLoader implements ExtensionLoader {
     private final JavaPlugin plugin;
     private final ClassLoader classLoader;
-    private final File moduleFolder;
+    private final File extensionFolder;
 
     public DefaultExtensionLoader(JavaPlugin plugin, ClassLoader classLoader) {
         this.plugin = plugin;
         this.classLoader = classLoader;
 
-        this.moduleFolder = new File(plugin.getDataFolder(), "modules");
-        if (!moduleFolder.exists()) {
-            moduleFolder.mkdirs();
+        this.extensionFolder = new File(plugin.getDataFolder(), "extensions");
+        if (!extensionFolder.exists()) {
+            extensionFolder.mkdirs();
         }
     }
 
     @Override
     public Set<LoadedExtension> load() {
-        var jars = moduleFolder.listFiles((dir, name) -> name.endsWith(".jar"));
+        var jars = extensionFolder.listFiles((dir, name) -> name.endsWith(".jar"));
         if (jars == null)
             return Set.of();
 
@@ -51,7 +51,7 @@ public class DefaultExtensionLoader implements ExtensionLoader {
         try (
             var jarFile = new JarFile(jar);
         ) {
-            plugin.getLogger().info("Loading module: " + jar.getName());
+            plugin.getLogger().info("Loading extension: " + jar.getName());
 
             var entries = jarFile.entries();
 
