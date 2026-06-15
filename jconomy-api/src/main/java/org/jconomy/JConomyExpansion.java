@@ -14,7 +14,7 @@ public interface JConomyExpansion {
      * is built. The {@code builder} must not be used after this method returns.
      * </p>
      */
-    void configureServices(JConomyServiceBuilder builder);
+    default void configureServices(JConomyServiceBuilder builder) {}
 
     /**
      * Called after all expansions have finished configuring services and the
@@ -25,5 +25,5 @@ public interface JConomyExpansion {
      * before this method is invoked on any of them.
      * </p>
      */
-    void onServicesReady(JConomyServiceProvider provider);
+    default void onServicesReady(JConomyServiceProvider provider) {}
 }
