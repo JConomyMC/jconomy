@@ -1,4 +1,4 @@
-﻿package org.jconomy.dependencyinjection;
+package org.jconomy.dependencyinjection;
 
 import java.util.List;
 

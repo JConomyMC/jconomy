@@ -1,4 +1,4 @@
-﻿package org.jconomy.transfer;
+package org.jconomy.transfer;
 
 public enum ConflictPolicy {
     /** Preserve the existing account in the target when a conflict is detected. */

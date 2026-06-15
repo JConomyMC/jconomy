@@ -1,4 +1,4 @@
-﻿package org.jconomy.transfer;
+package org.jconomy.transfer;
 
 public interface TransferExporter {
 

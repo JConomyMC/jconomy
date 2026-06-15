@@ -1,4 +1,4 @@
-﻿package org.jconomy.storage;
+package org.jconomy.storage;
 
 public interface DatabaseMigrator {
     void migrate();
