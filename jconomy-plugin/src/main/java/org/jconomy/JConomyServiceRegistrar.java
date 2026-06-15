@@ -41,7 +41,9 @@ import org.jconomy.presentation.DefaultCurrencyFormatter;
 import org.jconomy.presentation.DefaultNumberFormatter;
 import org.jconomy.presentation.NumberFormatter;
 import org.jconomy.storage.DatabaseMigrator;
+import org.jconomy.storage.DefaultFlushRegistry;
 import org.jconomy.storage.Flushable;
+import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.SqlConnectionFactory;
 import org.jconomy.storage.SqliteConnectionFactory;
 import org.jconomy.storage.SqliteMigrator;
@@ -78,7 +80,12 @@ public class JConomyServiceRegistrar {
         builder.addSingleton(DatabaseMigrator.class, SqliteMigrator.class);
         builder.addSingleton(AccountRepository.class, SqliteAccountRepository.class);
         builder.addSingleton(AccountAccess.class, DefaultAccountAccess.class);
-        builder.addSingletonFactory(Flushable.class, sp -> (Flushable) sp.getRequiredService(AccountAccess.class));
+        builder.addSingleton(FlushRegistry.class, DefaultFlushRegistry.class);
+        builder.addSingletonFactory(Flushable.class, sp -> {
+            var flushable = (Flushable) sp.getRequiredService(AccountAccess.class);
+            sp.getRequiredService(FlushRegistry.class).register(flushable);
+            return flushable;
+        });
         builder.addSingleton(Economy.class, EconomyImp.class);
         builder.addSingleton(EconomyResponseMapper.class, DefaultResponseMapper.class);
         builder.addSingleton(PlayerResolver.class, BukkitPlayerResolver.class);
@@ -89,7 +96,11 @@ public class JConomyServiceRegistrar {
         builder.addSingleton(AccountNameCache.class, LruAccountNameCache.class);
         builder.addSingleton(AccountNameRepository.class, SqliteAccountNameRepository.class);
         builder.addSingleton(AccountNameAccess.class, DefaultAccountNameAccess.class);
-        builder.addSingletonFactory(Flushable.class, sp -> (Flushable) sp.getRequiredService(AccountNameAccess.class));
+        builder.addSingletonFactory(Flushable.class, sp -> {
+            var flushable = (Flushable) sp.getRequiredService(AccountNameAccess.class);
+            sp.getRequiredService(FlushRegistry.class).register(flushable);
+            return flushable;
+        });
         builder.addSingletonFactory(JConomyConfig.class, sp -> {
             var javaPlugin = sp.getRequiredService(JavaPlugin.class);
             return new DefaultJConomyConfig(() -> javaPlugin.getConfig());
