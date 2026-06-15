@@ -10,8 +10,6 @@ import org.incendo.cloud.paper.LegacyPaperCommandManager;
 import org.jconomy.commands.CommandManagerFactory;
 import org.jconomy.commands.transfer.TransferCommandRegistrar;
 import org.jconomy.commands.transfer.TransferPlanStore;
-import org.jconomy.FeatureManager;
-import org.jconomy.FeatureNames;
 import org.jconomy.dependencyinjection.DefaultServiceBuilder;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.expansions.DefaultExpansionLoader;
@@ -19,7 +17,10 @@ import org.jconomy.expansions.DefaultExpansionManager;
 import org.jconomy.expansions.ExpansionManager;
 import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.listeners.PlayerJoinListener;
+import org.jconomy.accounts.AccountAccess;
+import org.jconomy.accounts.AccountNameAccess;
 import org.jconomy.storage.DatabaseMigrator;
+import org.jconomy.storage.Flushable;
 import org.jconomy.storage.FlushRegistry;
 import org.jconomy.transfer.TransferExporter;
 import org.jconomy.transfer.TransferImporter;
@@ -56,10 +57,19 @@ public class JConomy extends JavaPlugin implements PluginContext {
 
         services.getRequiredService(ConfigMigrator.class).migrate();
         services.getRequiredService(DatabaseMigrator.class).migrate();
+        registerFlushables();
         expansionManager.notifyServicesReady(services);
         registerServices();
         registerEvents();
         registerCommands();
+    }
+
+    private void registerFlushables() {
+        var registry = services.getRequiredService(FlushRegistry.class);
+        var accountAccess = services.getRequiredService(AccountAccess.class);
+        if (accountAccess instanceof Flushable f) registry.register(f);
+        var accountNameAccess = services.getRequiredService(AccountNameAccess.class);
+        if (accountNameAccess instanceof Flushable f) registry.register(f);
     }
 
     private boolean isVaultUnlockedAPILoaded() {
