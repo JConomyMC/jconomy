@@ -34,7 +34,7 @@ import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.config.economy.YamlEconomyConfig;
 import org.jconomy.dependencyinjection.DefaultServiceBuilder;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
-import org.jconomy.expansions.ExpansionManager;
+import org.jconomy.extensions.ExtensionManager;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.presentation.CurrencyFormatter;
 import org.jconomy.presentation.DefaultCurrencyFormatter;
@@ -54,15 +54,15 @@ import net.milkbowl.vault2.economy.Economy;
 public class JConomyServiceRegistrar {
 
     public static JConomyServiceProvider buildServiceProvider(
-            JavaPlugin plugin, PluginContext pluginContext, ExpansionManager expansionManager) {
+            JavaPlugin plugin, PluginContext pluginContext, ExtensionManager extensionManager) {
         var builder = new DefaultServiceBuilder();
-        registerServices(builder, plugin, pluginContext, expansionManager);
+        registerServices(builder, plugin, pluginContext, extensionManager);
         return builder.build();
     }
 
     private static void registerServices(
             DefaultServiceBuilder builder,
-            JavaPlugin plugin, PluginContext pluginContext, ExpansionManager expansionManager) {
+            JavaPlugin plugin, PluginContext pluginContext, ExtensionManager extensionManager) {
         builder.addSingleton(JavaPlugin.class, plugin);
         builder.addSingleton(PluginContext.class, pluginContext);
         builder.addSingleton(Logger.class, plugin.getLogger());
@@ -101,6 +101,6 @@ public class JConomyServiceRegistrar {
                 throw new RuntimeException("Failed to create config provider", e);
             }
         });
-        expansionManager.configureServices(builder);
+        extensionManager.configureServices(builder);
     }
 }

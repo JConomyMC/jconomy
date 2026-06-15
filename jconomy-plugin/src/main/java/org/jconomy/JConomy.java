@@ -12,9 +12,9 @@ import org.jconomy.commands.transfer.TransferCommandRegistrar;
 import org.jconomy.commands.transfer.TransferPlanStore;
 import org.jconomy.dependencyinjection.DefaultServiceBuilder;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
-import org.jconomy.expansions.DefaultExpansionLoader;
-import org.jconomy.expansions.DefaultExpansionManager;
-import org.jconomy.expansions.ExpansionManager;
+import org.jconomy.extensions.DefaultExtensionLoader;
+import org.jconomy.extensions.DefaultExtensionManager;
+import org.jconomy.extensions.ExtensionManager;
 import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.accounts.AccountAccess;
@@ -29,13 +29,13 @@ import net.milkbowl.vault2.economy.Economy;
 
 public class JConomy extends JavaPlugin implements PluginContext {
     public static final int CONFIG_VERSION = 1;
-    private final ExpansionManager expansionManager = createExpansionManager();
+    private final ExtensionManager extensionManager = createExtensionManager();
 
     private JConomyServiceProvider services;
 
-    private ExpansionManager createExpansionManager() {
-        var loader = new DefaultExpansionLoader(this, getClassLoader());
-        return new DefaultExpansionManager(loader, getLogger());
+    private ExtensionManager createExtensionManager() {
+        var loader = new DefaultExtensionLoader(this, getClassLoader());
+        return new DefaultExtensionManager(loader, getLogger());
     }
 
     @Override
@@ -47,7 +47,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
         }
 
         try {
-            services = JConomyServiceRegistrar.buildServiceProvider(this, this, expansionManager);
+            services = JConomyServiceRegistrar.buildServiceProvider(this, this, extensionManager);
         } catch (Exception ex) {
             getLogger().severe("Some services could not be instantiated: " + ExceptionUtils.getStackTrace(ex));
             getLogger().severe("Disabling plugin.");
@@ -58,7 +58,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
         services.getRequiredService(ConfigMigrator.class).migrate();
         services.getRequiredService(DatabaseMigrator.class).migrate();
         registerFlushables();
-        expansionManager.notifyServicesReady(services);
+        extensionManager.notifyServicesReady(services);
         registerServices();
         registerEvents();
         registerCommands();
@@ -85,7 +85,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
     public void onDisable() {
         services.getRequiredService(FlushRegistry.class).flushAll();
 
-        expansionManager.close();
+        extensionManager.close();
     }
     
     private void registerServices() {
