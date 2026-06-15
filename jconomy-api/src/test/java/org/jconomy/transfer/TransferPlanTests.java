@@ -1,4 +1,4 @@
-﻿package org.jconomy.transfer;
+package org.jconomy.transfer;
 
 import static org.junit.jupiter.api.Assertions.*;
 

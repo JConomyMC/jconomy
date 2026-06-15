@@ -1,4 +1,4 @@
-﻿package org.jconomy.accounts;
+package org.jconomy.accounts;
 
 import java.math.BigDecimal;
 import java.util.HashMap;

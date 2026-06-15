@@ -20,7 +20,7 @@
     <version>1.0.0-SNAPSHOT</version>
 
     <name>JConomy API</name>
-    <description>Expansion API for JConomy plugin</description>
+    <description>Extension API for JConomy plugin</description>
     <url>https://github.com/merenze/JConomy</url>
 
     <scm>

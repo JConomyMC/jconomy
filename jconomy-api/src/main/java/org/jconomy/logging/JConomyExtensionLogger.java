@@ -1,16 +1,16 @@
-﻿package org.jconomy.logging;
+package org.jconomy.logging;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jconomy.JConomyExpansion;
+import org.jconomy.JConomyExtension;
 
-public class JConomyExpansionLogger<TExpansion extends JConomyExpansion> {
+public class JConomyExtensionLogger<TExtension extends JConomyExtension> {
     private final String prefix;
     private final Logger logger;
 
-    public JConomyExpansionLogger(TExpansion expansion, Logger logger) {
-        this.prefix = String.format("[%s] ", expansion.getName());
+    public JConomyExtensionLogger(TExtension extension, Logger logger) {
+        this.prefix = String.format("[%s] ", extension.getName());
         this.logger = logger;
     }
 
