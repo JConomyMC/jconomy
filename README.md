@@ -53,7 +53,7 @@ JConomy handles:
 - Optional Vault compatibility for legacy plugins
 - Shared account management
 - Storage backend abstraction
-- An expansion API for extending functionality without forking the plugin
+- An extension API for extending functionality without forking the plugin
 
 ## What it isn't
 
@@ -132,7 +132,7 @@ If you're building custom gameplay experiences, JConomy gives those systems a sh
 - **Optional Vault compatibility** — Expose a selected currency to legacy Vault plugins when explicitly enabled.
 - **Account caching** — Reduce disk access through configurable in-memory caching.
 - **Storage abstraction** — Separate gameplay logic from persistence concerns.
-- **Expansion API** — Extend JConomy with custom storage backends and integrations without forking the project.
+- **Extension API** — Extend JConomy with custom storage backends and integrations without forking the project.
 
 ## Installation
 
@@ -155,7 +155,7 @@ Key settings include:
 | `cache.lru-limit`      | Maximum number of cached accounts.                      |
 | `legacy-vault.enabled` | Whether to register the legacy Vault adapter.           |
 
-## Expansion API
+## Extension API
 
 JConomy provides an extension model for adding new capabilities without modifying the core plugin.
 
