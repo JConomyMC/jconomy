@@ -20,7 +20,7 @@ import org.jconomy.expansions.ExpansionManager;
 import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.storage.DatabaseMigrator;
-import org.jconomy.storage.Flushable;
+import org.jconomy.storage.FlushRegistry;
 import org.jconomy.transfer.TransferExporter;
 import org.jconomy.transfer.TransferImporter;
 
@@ -73,7 +73,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
 
     @Override
     public void onDisable() {
-        services.getServices(Flushable.class).forEach(Flushable::flush);
+        services.getRequiredService(FlushRegistry.class).flushAll();
 
         expansionManager.close();
     }
