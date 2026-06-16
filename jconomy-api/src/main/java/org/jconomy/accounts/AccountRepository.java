@@ -15,4 +15,8 @@ public interface AccountRepository {
     void upsertAll(Set<Account> accounts);
 
     void deleteBalance(UUID accountId, String world, String currency);
+
+    void createAccount(UUID accountId, String world);
+
+    void deleteAccount(UUID accountId, String world);
 }
