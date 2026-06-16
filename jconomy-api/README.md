@@ -42,3 +42,21 @@ public class MyExtension implements JConomyExtension {
 ```
 
 Package the class in a jar and drop it in `plugins/JConomy/extensions/`. JConomy will load it automatically on startup.
+
+## Snapshots
+
+> [!WARNING]
+> Snapshot builds are **unstable** and may change or break at any time. Do not use them in production.
+
+To resolve snapshot versions, add the Central snapshot repository to your project:
+
+```xml
+<repositories>
+    <repository>
+        <id>central-snapshots</id>
+        <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+        <snapshots><enabled>true</enabled></snapshots>
+        <releases><enabled>false</enabled></releases>
+    </repository>
+</repositories>
+```
