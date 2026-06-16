@@ -23,9 +23,11 @@ public class SqliteAccountRepository implements AccountRepository {
     @Override
     public List<Account> getAll() {
         var sql = """
-                select account_id, world, currency, amount
-                from account_balances
-                order by account_id, world
+                select a.account_id, a.world, ab.currency, ab.amount
+                from accounts a
+                left join account_balances ab
+                    on a.account_id = ab.account_id and a.world = ab.world
+                order by a.account_id, a.world
                 """;
 
         try (
@@ -51,9 +53,12 @@ public class SqliteAccountRepository implements AccountRepository {
             var account = new Account(accountId, world);
 
             do {
-                account.setBalance(rs.getString("currency"), rs.getBigDecimal("amount"));
-            } while (rs.next() 
-                    && accountId.equals(UUID.fromString(rs.getString("account_id"))) 
+                String currency = rs.getString("currency");
+                if (currency != null) {
+                    account.setBalance(currency, rs.getBigDecimal("amount"));
+                }
+            } while (rs.next()
+                    && accountId.equals(UUID.fromString(rs.getString("account_id")))
                     && world.equals(rs.getString("world")));
 
             accounts.add(account);
@@ -65,9 +70,11 @@ public class SqliteAccountRepository implements AccountRepository {
     @Override
     public Optional<Account> getByIdAndWorld(UUID accountId, String world) {
         var sql = """
-                select account_id, world, currency, amount
-                from account_balances
-                where account_id = ? and world = ?
+                select a.account_id, a.world, ab.currency, ab.amount
+                from accounts a
+                left join account_balances ab
+                    on a.account_id = ab.account_id and a.world = ab.world
+                where a.account_id = ? and a.world = ?
                 """;
         try (
                 var connection = connectionFactory.createConnection();
@@ -90,9 +97,12 @@ public class SqliteAccountRepository implements AccountRepository {
         var worldName = result.getString("world");
 
         var account = new Account(accountId, worldName);
-        
+
         do {
-            account.setBalance(result.getString("currency"), result.getBigDecimal("amount"));
+            String currency = result.getString("currency");
+            if (currency != null) {
+                account.setBalance(currency, result.getBigDecimal("amount"));
+            }
         } while (result.next());
 
         return Optional.of(account);
@@ -162,6 +172,75 @@ public class SqliteAccountRepository implements AccountRepository {
             statement.setString(2, world);
             statement.setString(3, currency);
             statement.executeUpdate();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public boolean hasAccount(UUID accountId, String world) {
+        var sql = """
+                select count(*) as c from accounts
+                where account_id = ? and world = ?
+                """;
+        try (
+                var connection = connectionFactory.createConnection();
+                var statement = connection.prepareStatement(sql)) {
+            statement.setString(1, accountId.toString());
+            statement.setString(2, world);
+            try (var rs = statement.executeQuery()) {
+                return rs.next() && rs.getInt("c") > 0;
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public void createAccount(UUID accountId, String world) {
+        var sql = """
+                insert into accounts (account_id, world)
+                values (?, ?)
+                on conflict (account_id, world) do nothing
+                """;
+        try (
+                var connection = connectionFactory.createConnection();
+                var statement = connection.prepareStatement(sql)) {
+            statement.setString(1, accountId.toString());
+            statement.setString(2, world);
+            statement.executeUpdate();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public void deleteAccount(UUID accountId, String world) {
+        var deleteBalances = """
+                delete from account_balances
+                where account_id = ? and world = ?
+                """;
+        var deleteAccount = """
+                delete from accounts
+                where account_id = ? and world = ?
+                """;
+        try (
+                var connection = connectionFactory.createConnection();
+                var balancesStmt = connection.prepareStatement(deleteBalances);
+                var accountStmt = connection.prepareStatement(deleteAccount)) {
+            connection.setAutoCommit(false);
+            try {
+                balancesStmt.setString(1, accountId.toString());
+                balancesStmt.setString(2, world);
+                balancesStmt.executeUpdate();
+                accountStmt.setString(1, accountId.toString());
+                accountStmt.setString(2, world);
+                accountStmt.executeUpdate();
+                connection.commit();
+            } catch (Exception ex) {
+                connection.rollback();
+                throw ex;
+            }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
