@@ -1,0 +1,29 @@
+name: Publish Snapshot
+
+on:
+  push:
+    branches:
+      - '**'
+
+permissions:
+  packages: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Deploy snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mvn --batch-mode deploy -pl jconomy-api -P snapshot
