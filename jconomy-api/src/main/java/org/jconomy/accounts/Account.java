@@ -35,6 +35,10 @@ public class Account {
         balances.put(currency, balance);
     }
 
+    public void removeBalance(String currency) {
+        balances.remove(currency);
+    }
+
     public Set<Map.Entry<String, BigDecimal>> getBalanceEntries() {
         return balances.entrySet();
     }

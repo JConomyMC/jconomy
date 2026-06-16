@@ -122,6 +122,36 @@ class SqliteAccountRepositoryTests {
         assertEquals(BigDecimal.valueOf(30), account2World1.get().getBalance("gold"));
     }
 
+    @Test
+    void deleteBalance_removes_the_specified_currency_row() throws Exception {
+        var id = UUID.randomUUID();
+        insertAccount(id, "world", "gold", BigDecimal.valueOf(100));
+
+        repository.deleteBalance(id, "world", "gold");
+
+        var result = repository.getByIdAndWorld(id, "world");
+        assertFalse(result.isPresent());
+    }
+
+    @Test
+    void deleteBalance_is_a_no_op_when_row_does_not_exist() {
+        assertDoesNotThrow(() -> repository.deleteBalance(UUID.randomUUID(), "world", "gold"));
+    }
+
+    @Test
+    void deleteBalance_removes_only_the_specified_currency() throws Exception {
+        var id = UUID.randomUUID();
+        insertAccount(id, "world", "gold", BigDecimal.valueOf(100));
+        insertAccount(id, "world", "silver", BigDecimal.valueOf(50));
+
+        repository.deleteBalance(id, "world", "gold");
+
+        var result = repository.getByIdAndWorld(id, "world");
+        assertTrue(result.isPresent());
+        assertEquals(BigDecimal.ZERO, result.get().getBalance("gold"));
+        assertEquals(BigDecimal.valueOf(50), result.get().getBalance("silver"));
+    }
+
     private void insertAccount(UUID id, String world, String currency, BigDecimal amount) throws Exception {
         try (Statement stmt = anchor.createStatement()) {
             stmt.executeUpdate(String.format(
