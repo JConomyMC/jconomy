@@ -19,9 +19,11 @@ import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.accounts.AccountAccess;
 import org.jconomy.accounts.AccountNameAccess;
+import org.jconomy.config.CacheConfig;
 import org.jconomy.storage.DatabaseMigrator;
 import org.jconomy.storage.Flushable;
 import org.jconomy.storage.FlushRegistry;
+import org.jconomy.storage.PeriodicFlushScheduler;
 import org.jconomy.transfer.TransferExporter;
 import org.jconomy.transfer.TransferImporter;
 
@@ -58,6 +60,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
         services.getRequiredService(ConfigMigrator.class).migrate();
         services.getRequiredService(DatabaseMigrator.class).migrate();
         registerFlushables();
+        startPeriodicFlushIfEnabled();
         extensionManager.notifyServicesReady(services);
         registerServices();
         registerEvents();
@@ -81,8 +84,15 @@ public class JConomy extends JavaPlugin implements PluginContext {
         }
     }
 
+    private void startPeriodicFlushIfEnabled() {
+        if (services.getRequiredService(CacheConfig.PeriodicFlushConfig.class).isEnabled()) {
+            services.getRequiredService(PeriodicFlushScheduler.class).start();
+        }
+    }
+
     @Override
     public void onDisable() {
+        services.getRequiredService(PeriodicFlushScheduler.class).stop();
         services.getRequiredService(FlushRegistry.class).flushAll();
 
         extensionManager.close();

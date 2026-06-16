@@ -123,3 +123,13 @@ cache:
   # For fine-tuning performance on very large servers.
   # Default: 10,000.
   lru-limit: 10000
+
+  periodic-flush:
+    # Periodically flush dirty cached data to reduce the risk of data loss on
+    # improper plugin shutdowns. Shutdown flushing always runs regardless of
+    # this setting. Set to false to disable the background flush task only.
+    # Default: true.
+    enabled: true
+    # How often dirty records are flushed, in ticks (20 ticks = 1 second).
+    # Default: 1200 (approximately every 1 minute at 20 TPS).
+    interval-ticks: 1200
