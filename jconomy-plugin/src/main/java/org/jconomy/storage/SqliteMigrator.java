@@ -49,6 +49,13 @@ public class SqliteMigrator implements DatabaseMigrator {
                     create table if not exists accounts (
                         account_id text not null,
                         world text not null,
+                        primary key(account_id, world)
+                    )
+                    """);
+            statement.executeUpdate("""
+                    create table if not exists account_balances (
+                        account_id text not null,
+                        world text not null,
                         currency text not null,
                         amount numeric,
                         primary key(account_id, world, currency)

@@ -24,7 +24,7 @@ public class SqliteAccountRepository implements AccountRepository {
     public List<Account> getAll() {
         var sql = """
                 select account_id, world, currency, amount
-                from accounts
+                from account_balances
                 order by account_id, world
                 """;
 
@@ -66,7 +66,7 @@ public class SqliteAccountRepository implements AccountRepository {
     public Optional<Account> getByIdAndWorld(UUID accountId, String world) {
         var sql = """
                 select account_id, world, currency, amount
-                from accounts
+                from account_balances
                 where account_id = ? and world = ?
                 """;
         try (
@@ -106,7 +106,7 @@ public class SqliteAccountRepository implements AccountRepository {
     @Override
     public void upsertAll(Set<Account> accounts) {
         var sqlUpsertAccount = """
-                    insert into accounts (account_id, world, currency, amount)
+                    insert into account_balances (account_id, world, currency, amount)
                     values (?, ?, ?, ?)
                     on conflict (account_id, world, currency)
                     do update set amount = excluded.amount
@@ -152,7 +152,7 @@ public class SqliteAccountRepository implements AccountRepository {
     @Override
     public void deleteBalance(UUID accountId, String world, String currency) {
         var sql = """
-                delete from accounts
+                delete from account_balances
                 where account_id = ? and world = ? and currency = ?
                 """;
         try (
