@@ -65,4 +65,20 @@ public class DefaultAccountAccess implements AccountAccess, Flushable {
             logger.warning("Failed to flush dirty accounts: " + ExceptionUtils.getStackTrace(e));
         }
     }
+
+    @Override
+    public void deleteBalance(UUID accountId, String world, String currency) {
+        var key = new AccountKey(accountId, world);
+        repository.deleteBalance(accountId, world, currency);
+        var account = dirtyRecords.get(key);
+        if (account == null) {
+            account = cache.get(accountId, world).orElse(null);
+        }
+        if (account == null) return;
+        account.removeBalance(currency);
+        if (account.getBalanceEntries().isEmpty()) {
+            cache.remove(accountId, world);
+            dirtyRecords.remove(key);
+        }
+    }
 }

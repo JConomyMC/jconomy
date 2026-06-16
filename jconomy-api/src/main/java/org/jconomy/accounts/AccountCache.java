@@ -13,5 +13,7 @@ public interface AccountCache {
 
     Set<Account> getAll();
 
+    void remove(UUID accountId, String world);
+
     default void setEvictionListener(Consumer<Account> listener) {}
 }

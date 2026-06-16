@@ -10,5 +10,7 @@ public interface AccountAccess {
     Optional<Account> getByIdAndWorld(UUID accountId, String world);
     
     void save(Account account);
-    
+
+    void deleteBalance(UUID accountId, String world, String currency);
+
 }
