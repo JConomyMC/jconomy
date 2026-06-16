@@ -9,8 +9,7 @@ on:
       - 'pom.xml'
       - '.github/workflows/snapshot.yml'
 
-permissions:
-  packages: write
+permissions: {}
 
 jobs:
   snapshot:
@@ -23,9 +22,9 @@ jobs:
         with:
           java-version: '21'
           distribution: temurin
-          server-id: github
-          server-username: GITHUB_ACTOR
-          server-password: GITHUB_TOKEN
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_TOKEN
 
       - name: Resolve snapshot version
         id: version
@@ -33,7 +32,6 @@ jobs:
           BASE=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -pl jconomy-api | sed 's/-SNAPSHOT$//')
           snapshot_version="${BASE}-SNAPSHOT"
           echo "snapshot_version=$snapshot_version" >> "$GITHUB_OUTPUT"
-          echo "::debug::Snapshot version: $snapshot_version"
 
       - name: Set snapshot version
         run: >-
@@ -44,5 +42,6 @@ jobs:
 
       - name: Deploy snapshot
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mvn --batch-mode deploy -pl jconomy-api -P snapshot
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_TOKEN: ${{ secrets.CENTRAL_TOKEN }}
+        run: mvn --batch-mode deploy -pl jconomy-api
