@@ -190,6 +190,61 @@ class DefaultAccountAccessTests {
         assertTrue(repository.lastUpsertAll.contains(account));
     }
 
+    @Test
+    void deleteBalance_delegates_to_repository() {
+        var id = UUID.randomUUID();
+
+        access.deleteBalance(id, "world", "gold");
+
+        assertTrue(repository.deleteBalanceCalled);
+        assertEquals(id, repository.lastDeletedId);
+        assertEquals("world", repository.lastDeletedWorld);
+        assertEquals("gold", repository.lastDeletedCurrency);
+    }
+
+    @Test
+    void deleteBalance_removes_currency_from_cached_account() {
+        var id = UUID.randomUUID();
+        var account = new Account(id, "world");
+        account.setBalance("gold", BigDecimal.valueOf(100));
+        account.setBalance("silver", BigDecimal.valueOf(50));
+        access.save(account);
+
+        access.deleteBalance(id, "world", "gold");
+
+        var cached = cache.get(id, "world");
+        assertTrue(cached.isPresent());
+        assertEquals(BigDecimal.ZERO, cached.get().getBalance("gold"));
+        assertEquals(BigDecimal.valueOf(50), cached.get().getBalance("silver"));
+    }
+
+    @Test
+    void deleteBalance_evicts_account_from_cache_when_last_currency_deleted() {
+        var id = UUID.randomUUID();
+        var account = new Account(id, "world");
+        account.setBalance("gold", BigDecimal.valueOf(100));
+        access.save(account);
+
+        access.deleteBalance(id, "world", "gold");
+
+        assertFalse(cache.get(id, "world").isPresent());
+    }
+
+    @Test
+    void deleteBalance_removes_dirty_record_when_last_currency_deleted() {
+        var id = UUID.randomUUID();
+        var account = new Account(id, "world");
+        account.setBalance("gold", BigDecimal.valueOf(100));
+        access.save(account);
+
+        access.deleteBalance(id, "world", "gold");
+
+        repository.lastUpsertAll = null;
+        access.flush();
+
+        assertNull(repository.lastUpsertAll);
+    }
+
     // --- Fakes ---
 
     private static class CapturingLogHandler extends Handler {
@@ -230,6 +285,11 @@ class DefaultAccountAccessTests {
         @Override
         public void setEvictionListener(Consumer<Account> listener) {
             this.evictionListener = listener;
+        }
+
+        @Override
+        public void remove(UUID accountId, String world) {
+            store.remove(key(accountId, world));
         }
 
         private static String key(UUID id, String world) {
@@ -273,6 +333,10 @@ class DefaultAccountAccessTests {
         boolean getByIdAndWorldCalled = false;
         Set<Account> lastUpsertAll = null;
         boolean failOnUpsertAll = false;
+        boolean deleteBalanceCalled = false;
+        UUID lastDeletedId = null;
+        String lastDeletedWorld = null;
+        String lastDeletedCurrency = null;
 
         void store(Account account) {
             store.put(account.getAccountId() + ":" + account.getWorldName(), account);
@@ -298,6 +362,14 @@ class DefaultAccountAccessTests {
         public void upsertAll(Set<Account> accounts) {
             if (failOnUpsertAll) throw new RuntimeException("simulated failure");
             lastUpsertAll = accounts;
+        }
+
+        @Override
+        public void deleteBalance(UUID accountId, String world, String currency) {
+            deleteBalanceCalled = true;
+            lastDeletedId = accountId;
+            lastDeletedWorld = world;
+            lastDeletedCurrency = currency;
         }
     }
 }
