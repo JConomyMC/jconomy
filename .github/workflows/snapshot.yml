@@ -34,9 +34,9 @@ jobs:
       - name: Set snapshot version
         run: >-
           mvn --batch-mode versions:set
-            -DnewVersion=${{ steps.version.outputs.snapshot_version }}
-            -DgenerateBackupPoms=false
-            -pl jconomy-api
+          -DnewVersion=${{ steps.version.outputs.snapshot_version }}
+          -DgenerateBackupPoms=false
+          -pl jconomy-api
 
       - name: Deploy snapshot
         env:
