@@ -197,7 +197,7 @@ public class SqliteAccountRepository implements AccountRepository {
     }
 
     @Override
-    public void createAccount(UUID accountId, String world) {
+    public boolean createAccount(UUID accountId, String world) {
         var sql = """
                 insert into accounts (account_id, world)
                 values (?, ?)
@@ -208,7 +208,7 @@ public class SqliteAccountRepository implements AccountRepository {
                 var statement = connection.prepareStatement(sql)) {
             statement.setString(1, accountId.toString());
             statement.setString(2, world);
-            statement.executeUpdate();
+            return statement.executeUpdate() > 0;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

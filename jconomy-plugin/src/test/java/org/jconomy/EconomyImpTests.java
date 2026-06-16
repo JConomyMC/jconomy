@@ -164,16 +164,33 @@ class EconomyImpTests {
     @Test
     void createAccount_returns_true_on_success() {
         var id = UUID.randomUUID();
+        when(accountAccess.createAccount(id, "world")).thenReturn(true);
 
         assertTrue(economy.createAccount(id, "Alice", "world"));
     }
 
     @Test
-    void createAccount_returns_false_when_save_throws() {
+    void createAccount_returns_false_when_account_already_exists() {
         var id = UUID.randomUUID();
-        doThrow(new RuntimeException("db error")).when(accountAccess).save(any());
+        when(accountAccess.createAccount(id, "world")).thenReturn(false);
 
         assertFalse(economy.createAccount(id, "Alice", "world"));
+    }
+
+    @Test
+    void hasAccount_returns_true_when_account_exists() {
+        var id = UUID.randomUUID();
+        when(accountAccess.getByIdAndWorld(eq(id), any())).thenReturn(Optional.of(new Account(id, "world")));
+
+        assertTrue(economy.hasAccount(id));
+    }
+
+    @Test
+    void hasAccount_returns_false_when_account_does_not_exist() {
+        var id = UUID.randomUUID();
+        when(accountAccess.getByIdAndWorld(eq(id), any())).thenReturn(Optional.empty());
+
+        assertFalse(economy.hasAccount(id));
     }
 
     @Test

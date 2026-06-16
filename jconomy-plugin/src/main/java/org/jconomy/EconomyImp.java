@@ -151,9 +151,7 @@ public class EconomyImp implements Economy {
     @Override
     public boolean createAccount(UUID accountId, String name, String worldName, boolean isPlayerAccount) {
         try {
-            var account = new Account(accountId, worldNameOrDefault(worldName));
-            accountRepository.save(account);
-            return true;
+            return accountRepository.createAccount(accountId, worldNameOrDefault(worldName));
         } catch (Exception ex) {
             var message = String.format("Unable to create account(accountId='%s',name='%s',world='%s'): %s",
                     accountId, name, worldName, ex.getMessage());
@@ -302,8 +300,14 @@ public class EconomyImp implements Economy {
     }
 
     @Override
-    public boolean deleteAccount(String arg0, UUID arg1) {
-        return accountsNotSupported(arg0, "deleteAccount");
+    public boolean deleteAccount(String pluginName, UUID accountId) {
+        try {
+            accountRepository.deleteAccount(accountId, config.getDefaultWorldName());
+            return true;
+        } catch (Exception ex) {
+            logger.warning(String.format("%s called deleteAccount but it failed: %s", pluginName, ex.getMessage()));
+            return false;
+        }
     }
 
     @Override
@@ -345,12 +349,12 @@ public class EconomyImp implements Economy {
 
     @Override
     public boolean hasAccount(UUID accountId) {
-        return accountsNotSupported("A plugin", "hasAccount");
+        return accountRepository.getByIdAndWorld(accountId, config.getDefaultWorldName()).isPresent();
     }
 
     @Override
     public boolean hasAccount(UUID accountId, String worldName) {
-        return accountsNotSupported("A plugin", "hasAccount");
+        return accountRepository.getByIdAndWorld(accountId, worldNameOrDefault(worldName)).isPresent();
     }
 
     @Override

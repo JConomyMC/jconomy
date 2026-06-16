@@ -81,4 +81,17 @@ public class DefaultAccountAccess implements AccountAccess, Flushable {
             dirtyRecords.remove(key);
         }
     }
+
+    @Override
+    public boolean createAccount(UUID accountId, String world) {
+        return repository.createAccount(accountId, world);
+    }
+
+    @Override
+    public void deleteAccount(UUID accountId, String world) {
+        var key = new AccountKey(accountId, world);
+        repository.deleteAccount(accountId, world);
+        cache.remove(accountId, world);
+        dirtyRecords.remove(key);
+    }
 }
