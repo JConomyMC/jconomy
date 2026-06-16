@@ -148,5 +148,23 @@ public class SqliteAccountRepository implements AccountRepository {
         accountStatement.executeBatch();
         accountStatement.clearBatch();
     }
-    
+
+    @Override
+    public void deleteBalance(UUID accountId, String world, String currency) {
+        var sql = """
+                delete from accounts
+                where account_id = ? and world = ? and currency = ?
+                """;
+        try (
+                var connection = connectionFactory.createConnection();
+                var statement = connection.prepareStatement(sql)) {
+            statement.setString(1, accountId.toString());
+            statement.setString(2, world);
+            statement.setString(3, currency);
+            statement.executeUpdate();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
 }
