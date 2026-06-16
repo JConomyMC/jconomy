@@ -38,6 +38,7 @@ class SqliteMigratorTests {
             }
 
             assertTrue(tableExists(stmt, "accounts"));
+            assertTrue(tableExists(stmt, "account_balances"));
             assertTrue(tableExists(stmt, "account_names"));
         }
     }

@@ -34,6 +34,7 @@ class SqliteAccountRepositoryTests {
     @AfterEach
     void tearDown() throws Exception {
         try (var stmt = anchor.createStatement()) {
+            stmt.executeUpdate("delete from account_balances");
             stmt.executeUpdate("delete from accounts");
             stmt.executeUpdate("delete from account_names");
         }
@@ -81,7 +82,7 @@ class SqliteAccountRepositoryTests {
 
         try (var stmt = anchor.createStatement();
              var rs = stmt.executeQuery(
-                     "select amount from accounts where account_id='" + id + "' and world='world'")) {
+                     "select amount from account_balances where account_id='" + id + "' and world='world' and currency='gold'")) {
             assertTrue(rs.next());
             assertEquals(200.0, rs.getDouble("amount"), 0.001);
         }
@@ -155,7 +156,7 @@ class SqliteAccountRepositoryTests {
     private void insertAccount(UUID id, String world, String currency, BigDecimal amount) throws Exception {
         try (Statement stmt = anchor.createStatement()) {
             stmt.executeUpdate(String.format(
-                    "insert into accounts (account_id, world, currency, amount) values ('%s', '%s', '%s', %s)",
+                    "insert into account_balances (account_id, world, currency, amount) values ('%s', '%s', '%s', %s)",
                     id, world, currency, amount.toPlainString()));
         }
     }
