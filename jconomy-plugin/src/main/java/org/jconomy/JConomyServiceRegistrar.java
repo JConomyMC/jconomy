@@ -43,6 +43,7 @@ import org.jconomy.presentation.NumberFormatter;
 import org.jconomy.storage.DatabaseMigrator;
 import org.jconomy.storage.DefaultFlushRegistry;
 import org.jconomy.storage.FlushRegistry;
+import org.jconomy.storage.PeriodicFlushScheduler;
 import org.jconomy.storage.SqlConnectionFactory;
 import org.jconomy.storage.SqliteConnectionFactory;
 import org.jconomy.storage.SqliteMigrator;
@@ -68,6 +69,9 @@ public class JConomyServiceRegistrar {
         builder.addSingleton(Logger.class, plugin.getLogger());
         builder.addSingleton(ConfigMigrator.class, DefaultConfigMigrator.class);
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
+        builder.addSingletonFactory(CacheConfig.PeriodicFlushConfig.class, sp ->
+                sp.getRequiredService(CacheConfig.class).getPeriodicFlushConfig());
+        builder.addSingleton(PeriodicFlushScheduler.class);
         builder.addSingleton(FeatureManager.class, DefaultFeatureManager.class);
         builder.addSingleton(VaultLegacyAdapterConfig.class, DefaultVaultLegacyAdapterConfig.class);
         builder.addSingleton(AccountCache.class, LruAccountCache.class);
