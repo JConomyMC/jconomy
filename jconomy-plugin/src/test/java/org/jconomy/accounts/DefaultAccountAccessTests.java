@@ -245,6 +245,50 @@ class DefaultAccountAccessTests {
         assertNull(repository.lastUpsertAll);
     }
 
+    @Test
+    void createAccount_delegates_to_repository_and_returns_result() {
+        var id = UUID.randomUUID();
+        repository.createAccountResult = true;
+
+        assertTrue(access.createAccount(id, "world"));
+        assertEquals(id, repository.lastCreatedId);
+        assertEquals("world", repository.lastCreatedWorld);
+    }
+
+    @Test
+    void createAccount_returns_false_when_repository_returns_false() {
+        var id = UUID.randomUUID();
+        repository.createAccountResult = false;
+
+        assertFalse(access.createAccount(id, "world"));
+    }
+
+    @Test
+    void deleteAccount_delegates_to_repository_and_evicts_cache() {
+        var id = UUID.randomUUID();
+        var account = new Account(id, "world");
+        access.save(account);
+
+        access.deleteAccount(id, "world");
+
+        assertTrue(repository.deleteAccountCalled);
+        assertFalse(cache.get(id, "world").isPresent());
+    }
+
+    @Test
+    void deleteAccount_removes_dirty_record() {
+        var id = UUID.randomUUID();
+        var account = new Account(id, "world");
+        access.save(account);
+
+        access.deleteAccount(id, "world");
+
+        repository.lastUpsertAll = null;
+        access.flush();
+
+        assertNull(repository.lastUpsertAll);
+    }
+
     // --- Fakes ---
 
     private static class CapturingLogHandler extends Handler {
@@ -337,6 +381,10 @@ class DefaultAccountAccessTests {
         UUID lastDeletedId = null;
         String lastDeletedWorld = null;
         String lastDeletedCurrency = null;
+        boolean createAccountResult = false;
+        UUID lastCreatedId = null;
+        String lastCreatedWorld = null;
+        boolean deleteAccountCalled = false;
 
         void store(Account account) {
             store.put(account.getAccountId() + ":" + account.getWorldName(), account);
@@ -370,6 +418,18 @@ class DefaultAccountAccessTests {
             lastDeletedId = accountId;
             lastDeletedWorld = world;
             lastDeletedCurrency = currency;
+        }
+
+        @Override
+        public boolean createAccount(UUID accountId, String world) {
+            lastCreatedId = accountId;
+            lastCreatedWorld = world;
+            return createAccountResult;
+        }
+
+        @Override
+        public void deleteAccount(UUID accountId, String world) {
+            deleteAccountCalled = true;
         }
     }
 }

@@ -16,7 +16,11 @@ public interface AccountRepository {
 
     void deleteBalance(UUID accountId, String world, String currency);
 
-    void createAccount(UUID accountId, String world);
+    /**
+     * @return true if a new account was created, false if an account with the same
+     *         id and world already exists
+     */
+    boolean createAccount(UUID accountId, String world);
 
     void deleteAccount(UUID accountId, String world);
 }
