@@ -31,7 +31,9 @@ jobs:
         id: version
         run: |
           BASE=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -pl jconomy-api | sed 's/-SNAPSHOT$//')
-          echo "snapshot_version=${BASE}-SNAPSHOT" >> "$GITHUB_OUTPUT"
+          snapshot_version="${BASE}-SNAPSHOT"
+          echo "snapshot_version=$snapshot_version" >> "$GITHUB_OUTPUT"
+          echo "::debug::Snapshot version: $snapshot_version"
 
       - name: Set snapshot version
         run: >-
