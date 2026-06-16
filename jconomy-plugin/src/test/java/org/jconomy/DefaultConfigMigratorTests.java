@@ -62,11 +62,57 @@ class DefaultConfigMigratorTests {
     }
 
     @Test
+    void migrate_sets_periodic_flush_enabled_default_when_absent_on_version_0_config() {
+        when(config.getInt("config-version", 0)).thenReturn(0);
+        when(config.contains("cache.periodic-flush.enabled")).thenReturn(false);
+
+        migrator.migrate();
+
+        verify(config).set("cache.periodic-flush.enabled", true);
+        verify(config).set("config-version", 1);
+    }
+
+    @Test
+    void migrate_sets_periodic_flush_interval_ticks_default_when_absent_on_version_0_config() {
+        when(config.getInt("config-version", 0)).thenReturn(0);
+        when(config.contains("cache.periodic-flush.interval-ticks")).thenReturn(false);
+
+        migrator.migrate();
+
+        verify(config).set("cache.periodic-flush.interval-ticks", 1200);
+        verify(config).set("config-version", 1);
+    }
+
+    @Test
+    void migrate_does_not_overwrite_existing_periodic_flush_enabled_on_version_0_config() {
+        when(config.getInt("config-version", 0)).thenReturn(0);
+        when(config.contains("cache.periodic-flush.enabled")).thenReturn(true);
+
+        migrator.migrate();
+
+        verify(config, never()).set(eq("cache.periodic-flush.enabled"), any());
+        verify(config).set("config-version", 1);
+    }
+
+    @Test
+    void migrate_does_not_overwrite_existing_periodic_flush_interval_ticks_on_version_0_config() {
+        when(config.getInt("config-version", 0)).thenReturn(0);
+        when(config.contains("cache.periodic-flush.interval-ticks")).thenReturn(true);
+
+        migrator.migrate();
+
+        verify(config, never()).set(eq("cache.periodic-flush.interval-ticks"), any());
+        verify(config).set("config-version", 1);
+    }
+
+    @Test
     void migrate_skips_version_1_migration_when_already_at_version_1() {
         when(config.getInt("config-version", 0)).thenReturn(1);
 
         migrator.migrate();
 
         verify(config, never()).set(eq("cache.lru-limit"), any());
+        verify(config, never()).set(eq("cache.periodic-flush.enabled"), any());
+        verify(config, never()).set(eq("cache.periodic-flush.interval-ticks"), any());
     }
 }

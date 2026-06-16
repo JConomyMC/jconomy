@@ -35,6 +35,14 @@ public class DefaultConfigMigrator implements ConfigMigrator {
             config.set("cache.lru-limit", 10000);
         }
 
+        if (!config.contains("cache.periodic-flush.enabled")) {
+            config.set("cache.periodic-flush.enabled", true);
+        }
+
+        if (!config.contains("cache.periodic-flush.interval-ticks")) {
+            config.set("cache.periodic-flush.interval-ticks", 1200);
+        }
+
         setVersion(config, 1);
     }
 }
