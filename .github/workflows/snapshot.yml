@@ -7,6 +7,7 @@ on:
     paths:
       - 'jconomy-api/**'
       - 'pom.xml'
+      - '.github/workflows/snapshot.yml'
 
 permissions:
   packages: write
