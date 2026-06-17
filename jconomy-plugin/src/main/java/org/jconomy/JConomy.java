@@ -5,12 +5,13 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import org.incendo.cloud.paper.LegacyPaperCommandManager;
-
+import org.jconomy.accounts.AccountAccess;
+import org.jconomy.adapters.PlayerResolver;
 import org.jconomy.commands.CommandManagerFactory;
+import org.jconomy.commands.admin.AdminCommandRegistrar;
 import org.jconomy.commands.transfer.TransferCommandRegistrar;
 import org.jconomy.commands.transfer.TransferPlanStore;
-import org.jconomy.dependencyinjection.DefaultServiceBuilder;
+import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.extensions.DefaultExtensionLoader;
 import org.jconomy.extensions.DefaultExtensionManager;
@@ -118,28 +119,29 @@ public class JConomy extends JavaPlugin implements PluginContext {
         pluginManager.registerEvents(services.getRequiredService(PlayerJoinListener.class), this);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     private void registerCommands() {
-        if (!services.getRequiredService(FeatureManager.class).isEnabled(FeatureNames.DATA_TRANSFER)) {
-            return;
-        }
+        var commandManager = new CommandManagerFactory(this).create();
 
-        var commandServiceBuilder = new DefaultServiceBuilder();
-        commandServiceBuilder.addSingletonFactory(
-                (Class) LegacyPaperCommandManager.class,
-                sp -> new CommandManagerFactory(this).create());
-        commandServiceBuilder.addSingletonFactory(TransferCommandRegistrar.class, sp -> {
+        new AdminCommandRegistrar(
+                commandManager,
+                services.getRequiredService(BalanceAccess.class),
+                services.getRequiredService(AccountAccess.class),
+                services.getRequiredService(EconomyConfig.class),
+                services.getRequiredService(PlayerResolver.class)
+        ).register();
+
+        if (services.getRequiredService(FeatureManager.class).isEnabled(FeatureNames.DATA_TRANSFER)) {
             var importers = services.getServices(TransferImporter.class);
             var exporters = services.getServices(TransferExporter.class);
-            return new TransferCommandRegistrar(
-                    sp.getRequiredService(LegacyPaperCommandManager.class),
+            new TransferCommandRegistrar(
+                    commandManager,
                     importers,
                     exporters,
                     services.getRequiredService(BukkitScheduler.class),
                     this,
-                    new TransferPlanStore());
-        });
-        commandServiceBuilder.build().getRequiredService(TransferCommandRegistrar.class).register();
+                    new TransferPlanStore()
+            ).register();
+        }
     }
 
 }

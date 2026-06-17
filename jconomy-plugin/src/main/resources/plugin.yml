@@ -22,3 +22,15 @@ permissions:
     description: Execute a previously previewed import operation
   jconomy.execute.export:
     description: Execute a previously previewed export operation
+  jconomy.admin.balance.get:
+    description: Get a player's balance for a given currency
+  jconomy.admin.balance.set:
+    description: Set a player's balance for a given currency
+  jconomy.admin.balance.add:
+    description: Add to a player's balance for a given currency
+  jconomy.admin.balance.remove:
+    description: Remove from a player's balance for a given currency
+  jconomy.admin.account.create:
+    description: Create an economy account for a player
+  jconomy.admin.account.delete:
+    description: Delete a player's economy account and all their balances
