@@ -5,13 +5,17 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import org.jconomy.accounts.AccountAccess;
-import org.jconomy.adapters.PlayerResolver;
 import org.jconomy.commands.CommandManagerFactory;
-import org.jconomy.commands.admin.AdminCommandRegistrar;
+import org.jconomy.commands.admin.AccountCommandRegistrar;
+import org.jconomy.commands.admin.AccountCreateCommandHandler;
+import org.jconomy.commands.admin.AccountDeleteCommandHandler;
+import org.jconomy.commands.admin.BalanceAddCommandHandler;
+import org.jconomy.commands.admin.BalanceCommandRegistrar;
+import org.jconomy.commands.admin.BalanceGetCommandHandler;
+import org.jconomy.commands.admin.BalanceRemoveCommandHandler;
+import org.jconomy.commands.admin.BalanceSetCommandHandler;
 import org.jconomy.commands.transfer.TransferCommandRegistrar;
 import org.jconomy.commands.transfer.TransferPlanStore;
-import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.extensions.DefaultExtensionLoader;
 import org.jconomy.extensions.DefaultExtensionManager;
@@ -122,12 +126,18 @@ public class JConomy extends JavaPlugin implements PluginContext {
     private void registerCommands() {
         var commandManager = new CommandManagerFactory(this).create();
 
-        new AdminCommandRegistrar(
+        new BalanceCommandRegistrar(
                 commandManager,
-                services.getRequiredService(BalanceAccess.class),
-                services.getRequiredService(AccountAccess.class),
-                services.getRequiredService(EconomyConfig.class),
-                services.getRequiredService(PlayerResolver.class)
+                services.getRequiredService(BalanceGetCommandHandler.class),
+                services.getRequiredService(BalanceSetCommandHandler.class),
+                services.getRequiredService(BalanceAddCommandHandler.class),
+                services.getRequiredService(BalanceRemoveCommandHandler.class)
+        ).register();
+
+        new AccountCommandRegistrar(
+                commandManager,
+                services.getRequiredService(AccountCreateCommandHandler.class),
+                services.getRequiredService(AccountDeleteCommandHandler.class)
         ).register();
 
         if (services.getRequiredService(FeatureManager.class).isEnabled(FeatureNames.DATA_TRANSFER)) {
