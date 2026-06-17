@@ -22,6 +22,12 @@ import org.jconomy.adapters.DefaultResponseMapper;
 import org.jconomy.adapters.EconomyResponseMapper;
 import org.jconomy.adapters.LegacyEconomyAdapter;
 import org.jconomy.adapters.PlayerResolver;
+import org.jconomy.commands.admin.AccountCreateCommandHandler;
+import org.jconomy.commands.admin.AccountDeleteCommandHandler;
+import org.jconomy.commands.admin.BalanceAddCommandHandler;
+import org.jconomy.commands.admin.BalanceGetCommandHandler;
+import org.jconomy.commands.admin.BalanceRemoveCommandHandler;
+import org.jconomy.commands.admin.BalanceSetCommandHandler;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.config.DefaultCacheConfig;
 import org.jconomy.config.DefaultFeatureManager;
@@ -93,6 +99,12 @@ public class JConomyServiceRegistrar {
         builder.addSingletonFactory(BukkitScheduler.class, sp ->
                 sp.getRequiredService(JavaPlugin.class).getServer().getScheduler());
         builder.addSingleton(PlayerJoinListener.class);
+        builder.addSingleton(BalanceGetCommandHandler.class);
+        builder.addSingleton(BalanceSetCommandHandler.class);
+        builder.addSingleton(BalanceAddCommandHandler.class);
+        builder.addSingleton(BalanceRemoveCommandHandler.class);
+        builder.addSingleton(AccountCreateCommandHandler.class);
+        builder.addSingleton(AccountDeleteCommandHandler.class);
         builder.addSingletonFactory(JConomyConfig.class, sp -> {
             var javaPlugin = sp.getRequiredService(JavaPlugin.class);
             return new DefaultJConomyConfig(() -> javaPlugin.getConfig());

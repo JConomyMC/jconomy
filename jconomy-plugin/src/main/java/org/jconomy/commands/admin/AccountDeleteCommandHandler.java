@@ -6,8 +6,9 @@ import org.incendo.cloud.context.CommandContext;
 import org.jconomy.accounts.AccountAccess;
 import org.jconomy.accounts.BalanceAccess;
 import org.jconomy.adapters.PlayerResolver;
+import org.jconomy.commands.CommandHandler;
 
-public class AccountDeleteCommandHandler {
+public class AccountDeleteCommandHandler implements CommandHandler {
 
     private final AccountAccess accountAccess;
     private final BalanceAccess balanceAccess;

@@ -6,9 +6,10 @@ import org.incendo.cloud.context.CommandContext;
 import org.jconomy.accounts.Balance;
 import org.jconomy.accounts.BalanceAccess;
 import org.jconomy.adapters.PlayerResolver;
+import org.jconomy.commands.CommandHandler;
 import org.jconomy.config.economy.EconomyConfig;
 
-public class BalanceSetCommandHandler {
+public class BalanceSetCommandHandler implements CommandHandler {
 
     private final BalanceAccess balanceAccess;
     private final EconomyConfig economyConfig;
