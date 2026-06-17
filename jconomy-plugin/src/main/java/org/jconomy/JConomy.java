@@ -18,7 +18,6 @@ import org.jconomy.extensions.ExtensionManager;
 import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.accounts.AccountAccess;
-import org.jconomy.accounts.AccountNameAccess;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.storage.DatabaseMigrator;
 import org.jconomy.storage.Flushable;
@@ -71,8 +70,6 @@ public class JConomy extends JavaPlugin implements PluginContext {
         var registry = services.getRequiredService(FlushRegistry.class);
         var accountAccess = services.getRequiredService(AccountAccess.class);
         if (accountAccess instanceof Flushable f) registry.register(f);
-        var accountNameAccess = services.getRequiredService(AccountNameAccess.class);
-        if (accountNameAccess instanceof Flushable f) registry.register(f);
     }
 
     private boolean isVaultUnlockedAPILoaded() {

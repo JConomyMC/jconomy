@@ -54,6 +54,11 @@ public class LruAccountCache implements AccountCache {
     }
 
     @Override
+    public void removeAll(UUID accountId) {
+        accounts.keySet().removeIf(k -> k.accountId().equals(accountId));
+    }
+
+    @Override
     public Set<Account> getAll() {
         return new HashSet<>(accounts.values());
     }

@@ -5,7 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -23,11 +25,11 @@ public class SqliteAccountRepository implements AccountRepository {
     @Override
     public List<Account> getAll() {
         var sql = """
-                select a.account_id, a.world, ab.currency, ab.amount
+                select a.account_id, ab.world, ab.currency, ab.amount
                 from accounts a
-                left join account_balances ab
-                    on a.account_id = ab.account_id and a.world = ab.world
-                order by a.account_id, a.world
+                join account_balances ab
+                    on a.account_id = ab.account_id
+                order by a.account_id, ab.world
                 """;
 
         try (
@@ -70,33 +72,31 @@ public class SqliteAccountRepository implements AccountRepository {
     @Override
     public Optional<Account> getByIdAndWorld(UUID accountId, String world) {
         var sql = """
-                select a.account_id, a.world, ab.currency, ab.amount
+                select a.account_id, ab.currency, ab.amount
                 from accounts a
                 left join account_balances ab
-                    on a.account_id = ab.account_id and a.world = ab.world
-                where a.account_id = ? and a.world = ?
+                    on a.account_id = ab.account_id and ab.world = ?
+                where a.account_id = ?
                 """;
         try (
                 var connection = connectionFactory.createConnection();
                 var statement = connection.prepareStatement(sql);) {
-            statement.setString(1, accountId.toString());
-            statement.setString(2, world);
+            statement.setString(1, world);
+            statement.setString(2, accountId.toString());
             try (var results = statement.executeQuery()) {
-                return map(results);
+                return map(results, accountId, world);
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    private static Optional<Account> map(ResultSet result) throws Exception {
+    private static Optional<Account> map(ResultSet result, UUID accountId, String world) throws Exception {
         if (!result.next()) {
             return Optional.empty();
         }
-        var accountId = UUID.fromString(result.getString("account_id"));
-        var worldName = result.getString("world");
 
-        var account = new Account(accountId, worldName);
+        var account = new Account(accountId, world);
 
         do {
             String currency = result.getString("currency");
@@ -178,36 +178,17 @@ public class SqliteAccountRepository implements AccountRepository {
     }
 
     @Override
-    public boolean hasAccount(UUID accountId, String world) {
+    public boolean createAccount(UUID accountId, String name) {
         var sql = """
-                select count(*) as c from accounts
-                where account_id = ? and world = ?
-                """;
-        try (
-                var connection = connectionFactory.createConnection();
-                var statement = connection.prepareStatement(sql)) {
-            statement.setString(1, accountId.toString());
-            statement.setString(2, world);
-            try (var rs = statement.executeQuery()) {
-                return rs.next() && rs.getInt("c") > 0;
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    @Override
-    public boolean createAccount(UUID accountId, String world) {
-        var sql = """
-                insert into accounts (account_id, world)
+                insert into accounts (account_id, account_name)
                 values (?, ?)
-                on conflict (account_id, world) do nothing
+                on conflict (account_id) do nothing
                 """;
         try (
                 var connection = connectionFactory.createConnection();
                 var statement = connection.prepareStatement(sql)) {
             statement.setString(1, accountId.toString());
-            statement.setString(2, world);
+            statement.setString(2, name);
             return statement.executeUpdate() > 0;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -215,14 +196,14 @@ public class SqliteAccountRepository implements AccountRepository {
     }
 
     @Override
-    public void deleteAccount(UUID accountId, String world) {
+    public void deleteAccount(UUID accountId) {
         var deleteBalances = """
                 delete from account_balances
-                where account_id = ? and world = ?
+                where account_id = ?
                 """;
         var deleteAccount = """
                 delete from accounts
-                where account_id = ? and world = ?
+                where account_id = ?
                 """;
         try (
                 var connection = connectionFactory.createConnection();
@@ -231,16 +212,60 @@ public class SqliteAccountRepository implements AccountRepository {
             connection.setAutoCommit(false);
             try {
                 balancesStmt.setString(1, accountId.toString());
-                balancesStmt.setString(2, world);
                 balancesStmt.executeUpdate();
                 accountStmt.setString(1, accountId.toString());
-                accountStmt.setString(2, world);
                 accountStmt.executeUpdate();
                 connection.commit();
             } catch (Exception ex) {
                 connection.rollback();
                 throw ex;
             }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public Map<UUID, String> getAllAccountNames() {
+        var sql = "select account_id, account_name from accounts";
+        try (
+                var connection = connectionFactory.createConnection();
+                var stmt = connection.prepareStatement(sql);
+                var rs = stmt.executeQuery()) {
+            var result = new HashMap<UUID, String>();
+            while (rs.next()) {
+                result.put(UUID.fromString(rs.getString("account_id")), rs.getString("account_name"));
+            }
+            return result;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public Optional<String> getAccountName(UUID accountId) {
+        var sql = "select account_name from accounts where account_id = ?";
+        try (
+                var connection = connectionFactory.createConnection();
+                var stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, accountId.toString());
+            try (var rs = stmt.executeQuery()) {
+                return rs.next() ? Optional.of(rs.getString("account_name")) : Optional.empty();
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public boolean renameAccount(UUID accountId, String name) {
+        var sql = "update accounts set account_name = ? where account_id = ?";
+        try (
+                var connection = connectionFactory.createConnection();
+                var stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, name);
+            stmt.setString(2, accountId.toString());
+            return stmt.executeUpdate() > 0;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

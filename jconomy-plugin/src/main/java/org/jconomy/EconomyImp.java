@@ -7,11 +7,8 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import org.jconomy.accounts.Account;
-import org.jconomy.accounts.AccountName;
-import org.jconomy.accounts.AccountNameAccess;
 import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.accounts.AccountAccess;
 import org.jconomy.presentation.CurrencyFormatter;
@@ -27,16 +24,14 @@ public class EconomyImp implements Economy {
     private final CurrencyFormatter currencyFormatter;
     private final EconomyConfig config;
     private final AccountAccess accountRepository;
-    private final AccountNameAccess accountNameAccess;
 
     public EconomyImp(PluginContext plugin, Logger logger, CurrencyFormatter currencyFormatter, EconomyConfig config,
-            AccountAccess accountRepository, AccountNameAccess accountNameRepository) {
+            AccountAccess accountRepository) {
         this.plugin = plugin;
         this.logger = logger;
         this.currencyFormatter = currencyFormatter;
         this.config = config;
         this.accountRepository = accountRepository;
-        this.accountNameAccess = accountNameRepository;
     }
     
     private Account getAccountOrThrow(UUID accountId, String world) {
@@ -151,10 +146,10 @@ public class EconomyImp implements Economy {
     @Override
     public boolean createAccount(UUID accountId, String name, String worldName, boolean isPlayerAccount) {
         try {
-            return accountRepository.createAccount(accountId, worldNameOrDefault(worldName));
+            return accountRepository.createAccount(accountId, name);
         } catch (Exception ex) {
-            var message = String.format("Unable to create account(accountId='%s',name='%s',world='%s'): %s",
-                    accountId, name, worldName, ex.getMessage());
+            var message = String.format("Unable to create account(accountId='%s',name='%s'): %s",
+                    accountId, name, ex.getMessage());
             logger.warning(message);
             return false;
         }
@@ -162,13 +157,12 @@ public class EconomyImp implements Economy {
 
     @Override
     public Map<UUID, String> getUUIDNameMap() {
-        return accountNameAccess.getAll().stream()
-                .collect(Collectors.toMap(AccountName::getAccountId, AccountName::getName));
+        return accountRepository.getAllAccountNames();
     }
 
     @Override
     public Optional<String> getAccountName(UUID accountId) {
-        return accountNameAccess.getByAccountId(accountId).map(AccountName::getName);
+        return accountRepository.getAccountName(accountId);
     }
 
     @Override
@@ -302,7 +296,7 @@ public class EconomyImp implements Economy {
     @Override
     public boolean deleteAccount(String pluginName, UUID accountId) {
         try {
-            accountRepository.deleteAccount(accountId, config.getDefaultWorldName());
+            accountRepository.deleteAccount(accountId);
             return true;
         } catch (Exception ex) {
             logger.warning(String.format("%s called deleteAccount but it failed: %s", pluginName, ex.getMessage()));
@@ -364,16 +358,11 @@ public class EconomyImp implements Economy {
 
     @Override
     public boolean renameAccount(String pluginName, UUID accountId, String name) {
-        var result = accountNameAccess.getByAccountId(accountId);
-        if (result.isPresent()) {
-            var accountName = result.get();
-            accountName.setName(name);
-            accountNameAccess.save(accountName);
-            return true;
+        var renamed = accountRepository.renameAccount(accountId, name);
+        if (!renamed) {
+            logger.warning("Account(accountId='%s') does not exist");
         }
-
-        logger.warning("Account(accountId='%s') does not exist");
-        return false;
+        return renamed;
     }
 
     @Override

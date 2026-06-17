@@ -250,9 +250,9 @@ class DefaultAccountAccessTests {
         var id = UUID.randomUUID();
         repository.createAccountResult = true;
 
-        assertTrue(access.createAccount(id, "world"));
+        assertTrue(access.createAccount(id, "Player"));
         assertEquals(id, repository.lastCreatedId);
-        assertEquals("world", repository.lastCreatedWorld);
+        assertEquals("Player", repository.lastCreatedName);
     }
 
     @Test
@@ -260,7 +260,7 @@ class DefaultAccountAccessTests {
         var id = UUID.randomUUID();
         repository.createAccountResult = false;
 
-        assertFalse(access.createAccount(id, "world"));
+        assertFalse(access.createAccount(id, "Player"));
     }
 
     @Test
@@ -269,7 +269,7 @@ class DefaultAccountAccessTests {
         var account = new Account(id, "world");
         access.save(account);
 
-        access.deleteAccount(id, "world");
+        access.deleteAccount(id);
 
         assertTrue(repository.deleteAccountCalled);
         assertFalse(cache.get(id, "world").isPresent());
@@ -281,7 +281,7 @@ class DefaultAccountAccessTests {
         var account = new Account(id, "world");
         access.save(account);
 
-        access.deleteAccount(id, "world");
+        access.deleteAccount(id);
 
         repository.lastUpsertAll = null;
         access.flush();
@@ -336,6 +336,11 @@ class DefaultAccountAccessTests {
             store.remove(key(accountId, world));
         }
 
+        @Override
+        public void removeAll(UUID accountId) {
+            store.keySet().removeIf(k -> k.startsWith(accountId + ":"));
+        }
+
         private static String key(UUID id, String world) {
             return id + ":" + world;
         }
@@ -366,6 +371,16 @@ class DefaultAccountAccessTests {
             this.evictionListener = listener;
         }
 
+        @Override
+        public void remove(UUID accountId, String world) {
+            store.remove(accountId + ":" + world);
+        }
+
+        @Override
+        public void removeAll(UUID accountId) {
+            store.keySet().removeIf(k -> k.startsWith(accountId + ":"));
+        }
+
         void evict(Account account) {
             store.remove(account.getAccountId() + ":" + account.getWorldName());
             evictionListener.accept(account);
@@ -383,7 +398,7 @@ class DefaultAccountAccessTests {
         String lastDeletedCurrency = null;
         boolean createAccountResult = false;
         UUID lastCreatedId = null;
-        String lastCreatedWorld = null;
+        String lastCreatedName = null;
         boolean deleteAccountCalled = false;
 
         void store(Account account) {
@@ -421,15 +436,30 @@ class DefaultAccountAccessTests {
         }
 
         @Override
-        public boolean createAccount(UUID accountId, String world) {
+        public boolean createAccount(UUID accountId, String name) {
             lastCreatedId = accountId;
-            lastCreatedWorld = world;
+            lastCreatedName = name;
             return createAccountResult;
         }
 
         @Override
-        public void deleteAccount(UUID accountId, String world) {
+        public void deleteAccount(UUID accountId) {
             deleteAccountCalled = true;
+        }
+
+        @Override
+        public Map<UUID, String> getAllAccountNames() {
+            return Map.of();
+        }
+
+        @Override
+        public Optional<String> getAccountName(UUID accountId) {
+            return Optional.empty();
+        }
+
+        @Override
+        public boolean renameAccount(UUID accountId, String name) {
+            return false;
         }
     }
 }

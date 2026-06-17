@@ -1,6 +1,7 @@
 package org.jconomy.accounts;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -18,9 +19,15 @@ public interface AccountRepository {
 
     /**
      * @return true if a new account was created, false if an account with the same
-     *         id and world already exists
+     *         id already exists
      */
-    boolean createAccount(UUID accountId, String world);
+    boolean createAccount(UUID accountId, String name);
 
-    void deleteAccount(UUID accountId, String world);
+    void deleteAccount(UUID accountId);
+
+    Map<UUID, String> getAllAccountNames();
+
+    Optional<String> getAccountName(UUID accountId);
+
+    boolean renameAccount(UUID accountId, String name);
 }
