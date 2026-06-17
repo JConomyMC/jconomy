@@ -5,8 +5,9 @@ import org.incendo.cloud.context.CommandContext;
 
 import org.jconomy.accounts.AccountAccess;
 import org.jconomy.adapters.PlayerResolver;
+import org.jconomy.commands.CommandHandler;
 
-public class AccountCreateCommandHandler {
+public class AccountCreateCommandHandler implements CommandHandler {
 
     private final AccountAccess accountAccess;
     private final PlayerResolver playerResolver;
