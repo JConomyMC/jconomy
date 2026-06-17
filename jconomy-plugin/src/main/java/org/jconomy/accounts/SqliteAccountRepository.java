@@ -1,4 +1,4 @@
-﻿package org.jconomy.accounts;
+package org.jconomy.accounts;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

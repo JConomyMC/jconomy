@@ -36,7 +36,7 @@ class ImportExecuteCommandHandlerTests {
         sender = mock(CommandSender.class);
         context = mock(CommandContext.class);
         planStore = new TransferPlanStore();
-        plan = new TransferPlan("my-importer", Set.of(), Set.of(), 0, ConflictPolicy.SKIP);
+        plan = new TransferPlan("my-importer", Set.of(), 0, ConflictPolicy.SKIP);
         when(context.sender()).thenReturn(sender);
         when(context.get("provider")).thenReturn(importer);
         when(importer.getName()).thenReturn("my-importer");

@@ -45,8 +45,6 @@ public class PlayerJoinListener implements Listener {
     }
 
     private void scheduleCache(UUID playerId, String worldName) {
-        scheduler.runTaskAsynchronously(plugin, () -> {
-            accountAccess.getByIdAndWorld(playerId, worldName);
-        });
+        // no-op: pre-caching removed; balances are fetched on demand
     }
 }

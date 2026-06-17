@@ -8,33 +8,27 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 import org.jconomy.accounts.Account;
-import org.jconomy.accounts.AccountName;
 
 class TransferPlanTests {
 
     @Test
     void constructor_captures_all_fields() {
-        var account = new Account(UUID.randomUUID(), "world");
-        var accountName = new AccountName(UUID.randomUUID());
-        accountName.setName("Steve");
+        var account = new Account(UUID.randomUUID(), "Steve");
         var accounts = Set.of(account);
-        var accountNames = Set.of(accountName);
 
-        var plan = new TransferPlan("my-importer", accounts, accountNames, 3, ConflictPolicy.SKIP);
+        var plan = new TransferPlan("my-importer", accounts, 3, ConflictPolicy.SKIP);
 
         assertEquals("my-importer", plan.providerName());
         assertEquals(accounts, plan.accountsToTransfer());
-        assertEquals(accountNames, plan.accountNamesToTransfer());
         assertEquals(3, plan.conflicts());
         assertEquals(ConflictPolicy.SKIP, plan.policy());
     }
 
     @Test
-    void constructor_accepts_empty_sets() {
-        var plan = new TransferPlan("provider", Set.of(), Set.of(), 0, ConflictPolicy.OVERWRITE);
+    void constructor_accepts_empty_set() {
+        var plan = new TransferPlan("provider", Set.of(), 0, ConflictPolicy.OVERWRITE);
 
         assertTrue(plan.accountsToTransfer().isEmpty());
-        assertTrue(plan.accountNamesToTransfer().isEmpty());
         assertEquals(ConflictPolicy.OVERWRITE, plan.policy());
     }
 }
