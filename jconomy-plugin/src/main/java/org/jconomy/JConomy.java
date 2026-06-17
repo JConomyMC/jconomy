@@ -7,13 +7,7 @@ import org.bukkit.scheduler.BukkitScheduler;
 
 import org.jconomy.commands.CommandManagerFactory;
 import org.jconomy.commands.admin.AccountCommandRegistrar;
-import org.jconomy.commands.admin.AccountCreateCommandHandler;
-import org.jconomy.commands.admin.AccountDeleteCommandHandler;
-import org.jconomy.commands.admin.BalanceAddCommandHandler;
 import org.jconomy.commands.admin.BalanceCommandRegistrar;
-import org.jconomy.commands.admin.BalanceGetCommandHandler;
-import org.jconomy.commands.admin.BalanceRemoveCommandHandler;
-import org.jconomy.commands.admin.BalanceSetCommandHandler;
 import org.jconomy.commands.transfer.TransferCommandRegistrar;
 import org.jconomy.commands.transfer.TransferPlanStore;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
@@ -124,23 +118,14 @@ public class JConomy extends JavaPlugin implements PluginContext {
     }
 
     private void registerCommands() {
-        var commandManager = new CommandManagerFactory(this).create();
+        services.getRequiredService(BalanceCommandRegistrar.class).register();
+        services.getRequiredService(AccountCommandRegistrar.class).register();
 
-        new BalanceCommandRegistrar(
-                commandManager,
-                services.getRequiredService(BalanceGetCommandHandler.class),
-                services.getRequiredService(BalanceSetCommandHandler.class),
-                services.getRequiredService(BalanceAddCommandHandler.class),
-                services.getRequiredService(BalanceRemoveCommandHandler.class)
-        ).register();
-
-        new AccountCommandRegistrar(
-                commandManager,
-                services.getRequiredService(AccountCreateCommandHandler.class),
-                services.getRequiredService(AccountDeleteCommandHandler.class)
-        ).register();
-
+        // TODO: migrate TransferCommandRegistrar into the service provider (same pattern as
+        // BalanceCommandRegistrar / AccountCommandRegistrar). Deferred — data transfer is
+        // not planned for release 1.0.
         if (services.getRequiredService(FeatureManager.class).isEnabled(FeatureNames.DATA_TRANSFER)) {
+            var commandManager = new CommandManagerFactory(this).create();
             var importers = services.getServices(TransferImporter.class);
             var exporters = services.getServices(TransferExporter.class);
             new TransferCommandRegistrar(

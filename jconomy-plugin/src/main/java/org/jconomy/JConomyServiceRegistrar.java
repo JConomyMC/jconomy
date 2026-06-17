@@ -22,12 +22,15 @@ import org.jconomy.adapters.DefaultResponseMapper;
 import org.jconomy.adapters.EconomyResponseMapper;
 import org.jconomy.adapters.LegacyEconomyAdapter;
 import org.jconomy.adapters.PlayerResolver;
+import org.jconomy.commands.admin.AccountCommandRegistrar;
 import org.jconomy.commands.admin.AccountCreateCommandHandler;
 import org.jconomy.commands.admin.AccountDeleteCommandHandler;
 import org.jconomy.commands.admin.BalanceAddCommandHandler;
+import org.jconomy.commands.admin.BalanceCommandRegistrar;
 import org.jconomy.commands.admin.BalanceGetCommandHandler;
 import org.jconomy.commands.admin.BalanceRemoveCommandHandler;
 import org.jconomy.commands.admin.BalanceSetCommandHandler;
+import org.jconomy.commands.CommandManagerFactory;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.config.DefaultCacheConfig;
 import org.jconomy.config.DefaultFeatureManager;
@@ -40,6 +43,7 @@ import org.jconomy.config.economy.YamlEconomyConfig;
 import org.jconomy.dependencyinjection.DefaultServiceBuilder;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.extensions.ExtensionManager;
+import org.incendo.cloud.paper.LegacyPaperCommandManager;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.presentation.CurrencyFormatter;
 import org.jconomy.presentation.DefaultCurrencyFormatter;
@@ -105,6 +109,18 @@ public class JConomyServiceRegistrar {
         builder.addSingleton(BalanceRemoveCommandHandler.class);
         builder.addSingleton(AccountCreateCommandHandler.class);
         builder.addSingleton(AccountDeleteCommandHandler.class);
+        builder.addSingletonFactory(LegacyPaperCommandManager.class, sp ->
+                new CommandManagerFactory(sp.getRequiredService(JavaPlugin.class)).create());
+        builder.addSingletonFactory(BalanceCommandRegistrar.class, sp -> new BalanceCommandRegistrar(
+                sp.getRequiredService(LegacyPaperCommandManager.class),
+                sp.getRequiredService(BalanceGetCommandHandler.class),
+                sp.getRequiredService(BalanceSetCommandHandler.class),
+                sp.getRequiredService(BalanceAddCommandHandler.class),
+                sp.getRequiredService(BalanceRemoveCommandHandler.class)));
+        builder.addSingletonFactory(AccountCommandRegistrar.class, sp -> new AccountCommandRegistrar(
+                sp.getRequiredService(LegacyPaperCommandManager.class),
+                sp.getRequiredService(AccountCreateCommandHandler.class),
+                sp.getRequiredService(AccountDeleteCommandHandler.class)));
         builder.addSingletonFactory(JConomyConfig.class, sp -> {
             var javaPlugin = sp.getRequiredService(JavaPlugin.class);
             return new DefaultJConomyConfig(() -> javaPlugin.getConfig());
