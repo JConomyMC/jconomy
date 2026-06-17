@@ -1,13 +1,12 @@
-package org.jconomy.accounts;
+﻿package org.jconomy.accounts;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
-import java.util.Set;
 import java.util.UUID;
+
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,160 +39,68 @@ class SqliteAccountRepositoryTests {
         anchor.close();
     }
 
-    @Test
-    void getByIdAndWorld_returns_empty_for_empty_database() {
-        var result = repository.getByIdAndWorld(UUID.randomUUID(), "world");
+    // --- getAccount ---
 
-        assertFalse(result.isPresent());
+    @Test
+    void getAccount_returns_empty_for_unknown_id() {
+        assertFalse(repository.getAccount(UUID.randomUUID()).isPresent());
     }
 
     @Test
-    void getByIdAndWorld_returns_account_with_balance() throws Exception {
+    void getAccount_returns_account_with_correct_name() throws Exception {
         var id = UUID.randomUUID();
-        insertAccount(id, "world", "gold", BigDecimal.valueOf(100));
+        insertAccount(id, "Alice");
 
-        var result = repository.getByIdAndWorld(id, "world");
+        var result = repository.getAccount(id);
 
         assertTrue(result.isPresent());
-        assertEquals(BigDecimal.valueOf(100), result.get().getBalance("gold"));
-        assertEquals("world", result.get().getWorldName());
+        assertEquals("Alice", result.get().getName());
+        assertEquals(id, result.get().getAccountId());
+    }
+
+    // --- getAllAccounts ---
+
+    @Test
+    void getAllAccounts_returns_empty_list_for_empty_database() {
+        assertTrue(repository.getAllAccounts().isEmpty());
     }
 
     @Test
-    void getAll_returns_all_accounts_across_worlds() throws Exception {
+    void getAllAccounts_returns_all_rows() throws Exception {
         var id1 = UUID.randomUUID();
         var id2 = UUID.randomUUID();
-        insertAccount(id1, "world1", "gold", BigDecimal.valueOf(100));
-        insertAccount(id2, "world2", "silver", BigDecimal.valueOf(50));
+        insertAccount(id1, "Alice");
+        insertAccount(id2, "Bob");
 
-        var all = repository.getAll();
+        var all = repository.getAllAccounts();
 
         assertEquals(2, all.size());
     }
 
+    // --- upsert ---
+
     @Test
-    void upsertAll_inserts_new_accounts() throws Exception {
+    void upsert_inserts_new_account() {
         var id = UUID.randomUUID();
-        var account = new Account(id, "world");
-        account.setBalance("gold", BigDecimal.valueOf(200));
+        repository.upsert(new Account(id, "Alice"));
 
-        repository.upsertAll(Set.of(account));
-
-        try (var stmt = anchor.createStatement();
-             var rs = stmt.executeQuery(
-                     "select amount from account_balances where account_id='" + id + "' and world='world' and currency='gold'")) {
-            assertTrue(rs.next());
-            assertEquals(200.0, rs.getDouble("amount"), 0.001);
-        }
+        assertTrue(accountEntityExists(id));
     }
 
     @Test
-    void upsertAll_with_empty_set_does_not_throw() {
-        assertDoesNotThrow(() -> repository.upsertAll(Set.of()));
-    }
-
-    @Test
-    void getAll_cursor_logic_returns_multiple_accounts_in_different_worlds() throws Exception {
-        var id1 = UUID.randomUUID();
-        var id2 = UUID.randomUUID();
-        insertAccount(id1, "world1", "gold", BigDecimal.valueOf(10));
-        insertAccount(id1, "world2", "silver", BigDecimal.valueOf(20));
-        insertAccount(id2, "world1", "gold", BigDecimal.valueOf(30));
-
-        var all = repository.getAll();
-
-        assertEquals(3, all.size());
-
-        var account1World1 = all.stream()
-                .filter(a -> a.getAccountId().equals(id1) && a.getWorldName().equals("world1"))
-                .findFirst();
-        var account1World2 = all.stream()
-                .filter(a -> a.getAccountId().equals(id1) && a.getWorldName().equals("world2"))
-                .findFirst();
-        var account2World1 = all.stream()
-                .filter(a -> a.getAccountId().equals(id2) && a.getWorldName().equals("world1"))
-                .findFirst();
-
-        assertTrue(account1World1.isPresent());
-        assertTrue(account1World2.isPresent());
-        assertTrue(account2World1.isPresent());
-        assertEquals(BigDecimal.valueOf(10), account1World1.get().getBalance("gold"));
-        assertEquals(BigDecimal.valueOf(20), account1World2.get().getBalance("silver"));
-        assertEquals(BigDecimal.valueOf(30), account2World1.get().getBalance("gold"));
-    }
-
-    @Test
-    void deleteBalance_removes_the_specified_currency_row() throws Exception {
+    void upsert_updates_name_for_existing_account() throws Exception {
         var id = UUID.randomUUID();
-        insertAccount(id, "world", "gold", BigDecimal.valueOf(100));
+        insertAccount(id, "Alice");
 
-        repository.deleteBalance(id, "world", "gold");
+        repository.upsert(new Account(id, "Bob"));
 
-        var result = repository.getByIdAndWorld(id, "world");
-        assertTrue(result.isPresent());
-        assertEquals(BigDecimal.ZERO, result.get().getBalance("gold"));
+        assertEquals("Bob", repository.getAccount(id).get().getName());
     }
+
+    // --- createAccount ---
 
     @Test
-    void deleteBalance_is_a_no_op_when_row_does_not_exist() {
-        assertDoesNotThrow(() -> repository.deleteBalance(UUID.randomUUID(), "world", "gold"));
-    }
-
-    @Test
-    void deleteBalance_removes_only_the_specified_currency() throws Exception {
-        var id = UUID.randomUUID();
-        insertAccount(id, "world", "gold", BigDecimal.valueOf(100));
-        insertAccount(id, "world", "silver", BigDecimal.valueOf(50));
-
-        repository.deleteBalance(id, "world", "gold");
-
-        var result = repository.getByIdAndWorld(id, "world");
-        assertTrue(result.isPresent());
-        assertEquals(BigDecimal.ZERO, result.get().getBalance("gold"));
-        assertEquals(BigDecimal.valueOf(50), result.get().getBalance("silver"));
-    }
-
-    private void insertAccount(UUID id, String world, String currency, BigDecimal amount) throws Exception {
-        try (Statement stmt = anchor.createStatement()) {
-            stmt.executeUpdate(String.format(
-                    "insert or ignore into accounts (account_id, account_name) values ('%s', 'Player')",
-                    id));
-            stmt.executeUpdate(String.format(
-                    "insert into account_balances (account_id, world, currency, amount) values ('%s', '%s', '%s', %s)",
-                    id, world, currency, amount.toPlainString()));
-        }
-    }
-
-    private void insertAccountEntity(UUID id) throws Exception {
-        try (Statement stmt = anchor.createStatement()) {
-            stmt.executeUpdate(String.format(
-                    "insert into accounts (account_id, account_name) values ('%s', 'Player')",
-                    id));
-        }
-    }
-
-    private boolean accountEntityExists(UUID id) throws Exception {
-        try (var stmt = anchor.createStatement();
-             var rs = stmt.executeQuery(String.format(
-                     "select count(*) as c from accounts where account_id='%s'",
-                     id))) {
-            return rs.next() && rs.getInt("c") > 0;
-        }
-    }
-
-    @Test
-    void getByIdAndWorld_returns_present_with_empty_balances_when_account_has_no_balances() throws Exception {
-        var id = UUID.randomUUID();
-        insertAccountEntity(id);
-
-        var result = repository.getByIdAndWorld(id, "world");
-
-        assertTrue(result.isPresent());
-        assertEquals(BigDecimal.ZERO, result.get().getBalance("gold"));
-    }
-
-    @Test
-    void createAccount_inserts_account_row() throws Exception {
+    void createAccount_inserts_account_row() {
         var id = UUID.randomUUID();
 
         repository.createAccount(id, "Player");
@@ -202,18 +109,33 @@ class SqliteAccountRepositoryTests {
     }
 
     @Test
+    void createAccount_returns_true_for_new_account() {
+        assertTrue(repository.createAccount(UUID.randomUUID(), "Player"));
+    }
+
+    @Test
+    void createAccount_returns_false_for_existing_account() throws Exception {
+        var id = UUID.randomUUID();
+        insertAccount(id, "Player");
+
+        assertFalse(repository.createAccount(id, "Player"));
+    }
+
+    @Test
     void createAccount_is_idempotent() throws Exception {
         var id = UUID.randomUUID();
-        insertAccountEntity(id);
+        insertAccount(id, "Player");
 
         assertDoesNotThrow(() -> repository.createAccount(id, "Player"));
         assertTrue(accountEntityExists(id));
     }
 
+    // --- deleteAccount ---
+
     @Test
     void deleteAccount_removes_account_row() throws Exception {
         var id = UUID.randomUUID();
-        insertAccountEntity(id);
+        insertAccount(id, "Player");
 
         repository.deleteAccount(id);
 
@@ -221,19 +143,57 @@ class SqliteAccountRepositoryTests {
     }
 
     @Test
-    void deleteAccount_removes_all_balance_rows_for_account() throws Exception {
+    void deleteAccount_removes_associated_balance_rows() throws Exception {
         var id = UUID.randomUUID();
-        insertAccountEntity(id);
-        insertAccount(id, "world", "gold", BigDecimal.valueOf(100));
-        insertAccount(id, "world", "silver", BigDecimal.valueOf(50));
+        insertAccount(id, "Player");
+        insertBalance(id, "world", "gold");
 
         repository.deleteAccount(id);
 
-        assertFalse(repository.getByIdAndWorld(id, "world").isPresent());
+        assertFalse(balanceExists(id, "world", "gold"));
     }
 
     @Test
     void deleteAccount_is_a_no_op_when_account_does_not_exist() {
         assertDoesNotThrow(() -> repository.deleteAccount(UUID.randomUUID()));
+    }
+
+    // --- helpers ---
+
+    private void insertAccount(UUID id, String name) throws Exception {
+        try (Statement stmt = anchor.createStatement()) {
+            stmt.executeUpdate(String.format(
+                    "insert into accounts (account_id, account_name) values ('%s', '%s')",
+                    id, name));
+        }
+    }
+
+    private void insertBalance(UUID id, String world, String currency) throws Exception {
+        try (Statement stmt = anchor.createStatement()) {
+            stmt.executeUpdate(String.format(
+                    "insert into account_balances (account_id, world, currency, amount) values ('%s', '%s', '%s', 0)",
+                    id, world, currency));
+        }
+    }
+
+    private boolean accountEntityExists(UUID id) {
+        try (var stmt = anchor.createStatement();
+             var rs = stmt.executeQuery(String.format(
+                     "select count(*) as c from accounts where account_id='%s'", id))) {
+            return rs.next() && rs.getInt("c") > 0;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private boolean balanceExists(UUID id, String world, String currency) {
+        try (var stmt = anchor.createStatement();
+             var rs = stmt.executeQuery(String.format(
+                     "select count(*) as c from account_balances where account_id='%s' and world='%s' and currency='%s'",
+                     id, world, currency))) {
+            return rs.next() && rs.getInt("c") > 0;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

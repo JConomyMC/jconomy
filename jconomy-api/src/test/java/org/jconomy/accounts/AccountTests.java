@@ -2,7 +2,6 @@ package org.jconomy.accounts;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -10,77 +9,59 @@ import org.junit.jupiter.api.Test;
 class AccountTests {
 
     @Test
-    void getBalance_returns_zero_for_currency_with_no_balance() {
-        var account = new Account(UUID.randomUUID(), "world");
-
-        assertEquals(BigDecimal.ZERO, account.getBalance("gold"));
-    }
-
-    @Test
-    void getBalance_returns_stored_balance() {
-        var account = new Account(UUID.randomUUID(), "world");
-        account.setBalance("gold", BigDecimal.valueOf(100));
-
-        assertEquals(BigDecimal.valueOf(100), account.getBalance("gold"));
-    }
-
-    @Test
-    void equals_returns_true_for_same_id_world_and_balances() {
+    void getAccountId_returns_constructor_value() {
         var id = UUID.randomUUID();
-        var a = new Account(id, "world");
-        a.setBalance("gold", BigDecimal.TEN);
-        var b = new Account(id, "world");
-        b.setBalance("gold", BigDecimal.TEN);
+        var account = new Account(id, "Alice");
+
+        assertEquals(id, account.getAccountId());
+    }
+
+    @Test
+    void getName_returns_constructor_value() {
+        var account = new Account(UUID.randomUUID(), "Alice");
+
+        assertEquals("Alice", account.getName());
+    }
+
+    @Test
+    void setName_updates_name() {
+        var account = new Account(UUID.randomUUID(), "Alice");
+        account.setName("Bob");
+
+        assertEquals("Bob", account.getName());
+    }
+
+    @Test
+    void equals_returns_true_for_same_id_and_name() {
+        var id = UUID.randomUUID();
+        var a = new Account(id, "Alice");
+        var b = new Account(id, "Alice");
 
         assertEquals(a, b);
     }
 
     @Test
     void equals_returns_false_for_different_id() {
-        var a = new Account(UUID.randomUUID(), "world");
-        var b = new Account(UUID.randomUUID(), "world");
+        var a = new Account(UUID.randomUUID(), "Alice");
+        var b = new Account(UUID.randomUUID(), "Alice");
 
         assertNotEquals(a, b);
     }
 
     @Test
-    void equals_returns_false_for_different_world() {
+    void equals_returns_false_for_different_name() {
         var id = UUID.randomUUID();
-        var a = new Account(id, "world1");
-        var b = new Account(id, "world2");
+        var a = new Account(id, "Alice");
+        var b = new Account(id, "Bob");
 
         assertNotEquals(a, b);
-    }
-
-    @Test
-    void equals_returns_false_for_different_balance() {
-        var id = UUID.randomUUID();
-        var a = new Account(id, "world");
-        a.setBalance("gold", BigDecimal.ONE);
-        var b = new Account(id, "world");
-        b.setBalance("gold", BigDecimal.TEN);
-
-        assertNotEquals(a, b);
-    }
-
-    @Test
-    void equals_is_scale_insensitive_for_balances() {
-        var id = UUID.randomUUID();
-        var a = new Account(id, "world");
-        a.setBalance("gold", new BigDecimal("10.0"));
-        var b = new Account(id, "world");
-        b.setBalance("gold", new BigDecimal("10.00"));
-
-        assertEquals(a, b);
     }
 
     @Test
     void hashCode_is_consistent_with_equals() {
         var id = UUID.randomUUID();
-        var a = new Account(id, "world");
-        a.setBalance("gold", BigDecimal.TEN);
-        var b = new Account(id, "world");
-        b.setBalance("gold", BigDecimal.TEN);
+        var a = new Account(id, "Alice");
+        var b = new Account(id, "Alice");
 
         assertEquals(a.hashCode(), b.hashCode());
     }

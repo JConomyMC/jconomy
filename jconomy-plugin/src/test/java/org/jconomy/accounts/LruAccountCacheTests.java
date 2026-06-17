@@ -3,7 +3,6 @@ package org.jconomy.accounts;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -23,46 +22,40 @@ class LruAccountCacheTests {
     void get_returns_empty_for_unknown_account() {
         var cache = cacheWithLimit(10);
 
-        assertFalse(cache.get(UUID.randomUUID(), "world").isPresent());
+        assertFalse(cache.get(UUID.randomUUID()).isPresent());
     }
 
     @Test
     void get_returns_account_after_put() {
         var cache = cacheWithLimit(10);
         var id = UUID.randomUUID();
-        var account = new Account(id, "world");
+        var account = new Account(id, "Alice");
 
         cache.put(account);
 
-        assertEquals(account, cache.get(id, "world").orElse(null));
+        assertEquals(account, cache.get(id).orElse(null));
+    }
+
+    @Test
+    void remove_evicts_the_entry() {
+        var cache = cacheWithLimit(10);
+        var id = UUID.randomUUID();
+        cache.put(new Account(id, "Alice"));
+
+        cache.remove(id);
+
+        assertFalse(cache.get(id).isPresent());
     }
 
     @Test
     void evicts_eldest_entry_when_limit_is_exceeded() {
         var cache = cacheWithLimit(3);
-        var oldest = accountIn(cache, "world1");
-        accountIn(cache, "world2");
-        accountIn(cache, "world3");
-        var newest = accountIn(cache, "world4");
+        var oldest = accountIn(cache);
+        accountIn(cache);
+        accountIn(cache);
+        accountIn(cache); // evicts oldest
 
-        assertFalse(cache.get(oldest.getAccountId(), oldest.getWorldName()).isPresent());
-        assertTrue(cache.get(newest.getAccountId(), newest.getWorldName()).isPresent());
-    }
-
-    @Test
-    void getAll_returns_all_non_evicted_entries() {
-        var cache = cacheWithLimit(3);
-        accountIn(cache, "world1");
-        var a2 = accountIn(cache, "world2");
-        var a3 = accountIn(cache, "world3");
-        var a4 = accountIn(cache, "world4");
-
-        var all = cache.getAll();
-
-        assertEquals(3, all.size());
-        assertTrue(all.contains(a2));
-        assertTrue(all.contains(a3));
-        assertTrue(all.contains(a4));
+        assertFalse(cache.get(oldest.getAccountId()).isPresent());
     }
 
     @Test
@@ -71,10 +64,10 @@ class LruAccountCacheTests {
         var evicted = new ArrayList<Account>();
         cache.setEvictionListener(evicted::add);
 
-        var oldest = accountIn(cache, "world1");
-        accountIn(cache, "world2");
-        accountIn(cache, "world3");
-        accountIn(cache, "world4"); // triggers eviction of oldest
+        var oldest = accountIn(cache);
+        accountIn(cache);
+        accountIn(cache);
+        accountIn(cache); // triggers eviction of oldest
 
         assertEquals(1, evicted.size());
         assertEquals(oldest, evicted.get(0));
@@ -86,16 +79,16 @@ class LruAccountCacheTests {
         var evicted = new ArrayList<Account>();
         cache.setEvictionListener(evicted::add);
 
-        accountIn(cache, "world1");
-        accountIn(cache, "world2");
+        accountIn(cache);
+        accountIn(cache);
 
         assertTrue(evicted.isEmpty());
     }
 
-    private static Account accountIn(LruAccountCache cache, String world) {
-        var account = new Account(UUID.randomUUID(), world);
-        account.setBalance("gold", BigDecimal.ZERO);
+    private static Account accountIn(LruAccountCache cache) {
+        var account = new Account(UUID.randomUUID(), "Player");
         cache.put(account);
         return account;
     }
 }
+
