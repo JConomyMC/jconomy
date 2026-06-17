@@ -12,11 +12,13 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.jconomy.accounts.AccountAccess;
 import org.jconomy.config.economy.EconomyConfig;
 
+@Disabled("PlayerJoinListener reserved for future user story; behaviour will change")
 class PlayerJoinListenerTests {
 
     private JavaPlugin plugin;

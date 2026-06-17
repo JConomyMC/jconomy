@@ -15,9 +15,9 @@ import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.extensions.DefaultExtensionLoader;
 import org.jconomy.extensions.DefaultExtensionManager;
 import org.jconomy.extensions.ExtensionManager;
-import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.listeners.PlayerJoinListener;
-import org.jconomy.accounts.AccountAccess;
+import org.jconomy.config.VaultLegacyAdapterConfig;
+import org.jconomy.accounts.BalanceAccess;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.storage.DatabaseMigrator;
 import org.jconomy.storage.Flushable;
@@ -68,8 +68,8 @@ public class JConomy extends JavaPlugin implements PluginContext {
 
     private void registerFlushables() {
         var registry = services.getRequiredService(FlushRegistry.class);
-        var accountAccess = services.getRequiredService(AccountAccess.class);
-        if (accountAccess instanceof Flushable f) registry.register(f);
+        var balanceAccess = services.getRequiredService(BalanceAccess.class);
+        if (balanceAccess instanceof Flushable f) registry.register(f);
     }
 
     private boolean isVaultUnlockedAPILoaded() {
