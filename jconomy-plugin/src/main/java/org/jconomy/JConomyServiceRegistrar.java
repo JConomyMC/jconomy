@@ -7,15 +7,9 @@ import org.bukkit.scheduler.BukkitScheduler;
 
 import org.jconomy.accounts.AccountAccess;
 import org.jconomy.accounts.AccountCache;
-import org.jconomy.accounts.AccountNameAccess;
-import org.jconomy.accounts.AccountNameCache;
-import org.jconomy.accounts.AccountNameRepository;
 import org.jconomy.accounts.AccountRepository;
 import org.jconomy.accounts.DefaultAccountAccess;
-import org.jconomy.accounts.DefaultAccountNameAccess;
 import org.jconomy.accounts.LruAccountCache;
-import org.jconomy.accounts.LruAccountNameCache;
-import org.jconomy.accounts.SqliteAccountNameRepository;
 import org.jconomy.accounts.SqliteAccountRepository;
 import org.jconomy.adapters.BukkitPlayerResolver;
 import org.jconomy.adapters.DefaultResponseMapper;
@@ -91,9 +85,6 @@ public class JConomyServiceRegistrar {
         builder.addSingletonFactory(BukkitScheduler.class, sp ->
                 sp.getRequiredService(JavaPlugin.class).getServer().getScheduler());
         builder.addSingleton(PlayerJoinListener.class);
-        builder.addSingleton(AccountNameCache.class, LruAccountNameCache.class);
-        builder.addSingleton(AccountNameRepository.class, SqliteAccountNameRepository.class);
-        builder.addSingleton(AccountNameAccess.class, DefaultAccountNameAccess.class);
         builder.addSingletonFactory(JConomyConfig.class, sp -> {
             var javaPlugin = sp.getRequiredService(JavaPlugin.class);
             return new DefaultJConomyConfig(() -> javaPlugin.getConfig());

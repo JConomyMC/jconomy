@@ -3,6 +3,7 @@ package org.jconomy.accounts;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -83,15 +84,29 @@ public class DefaultAccountAccess implements AccountAccess, Flushable {
     }
 
     @Override
-    public boolean createAccount(UUID accountId, String world) {
-        return repository.createAccount(accountId, world);
+    public boolean createAccount(UUID accountId, String name) {
+        return repository.createAccount(accountId, name);
     }
 
     @Override
-    public void deleteAccount(UUID accountId, String world) {
-        var key = new AccountKey(accountId, world);
-        repository.deleteAccount(accountId, world);
-        cache.remove(accountId, world);
-        dirtyRecords.remove(key);
+    public void deleteAccount(UUID accountId) {
+        repository.deleteAccount(accountId);
+        cache.removeAll(accountId);
+        dirtyRecords.keySet().removeIf(k -> k.accountId().equals(accountId));
+    }
+
+    @Override
+    public Map<UUID, String> getAllAccountNames() {
+        return repository.getAllAccountNames();
+    }
+
+    @Override
+    public Optional<String> getAccountName(UUID accountId) {
+        return repository.getAccountName(accountId);
+    }
+
+    @Override
+    public boolean renameAccount(UUID accountId, String name) {
+        return repository.renameAccount(accountId, name);
     }
 }

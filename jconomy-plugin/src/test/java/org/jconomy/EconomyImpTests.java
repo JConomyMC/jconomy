@@ -14,8 +14,6 @@ import org.junit.jupiter.api.Test;
 
 import org.jconomy.accounts.Account;
 import org.jconomy.accounts.AccountAccess;
-import org.jconomy.accounts.AccountName;
-import org.jconomy.accounts.AccountNameAccess;
 import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.presentation.CurrencyFormatter;
 
@@ -28,7 +26,6 @@ class EconomyImpTests {
     private CurrencyFormatter currencyFormatter;
     private EconomyConfig config;
     private AccountAccess accountAccess;
-    private AccountNameAccess accountNameAccess;
     private EconomyImp economy;
 
     @BeforeEach
@@ -38,8 +35,7 @@ class EconomyImpTests {
         currencyFormatter = mock(CurrencyFormatter.class);
         config = mock(EconomyConfig.class);
         accountAccess = mock(AccountAccess.class);
-        accountNameAccess = mock(AccountNameAccess.class);
-        economy = new EconomyImp(pluginContext, logger, currencyFormatter, config, accountAccess, accountNameAccess);
+        economy = new EconomyImp(pluginContext, logger, currencyFormatter, config, accountAccess);
     }
 
     @Test
@@ -164,7 +160,7 @@ class EconomyImpTests {
     @Test
     void createAccount_returns_true_on_success() {
         var id = UUID.randomUUID();
-        when(accountAccess.createAccount(id, "world")).thenReturn(true);
+        when(accountAccess.createAccount(id, "Alice")).thenReturn(true);
 
         assertTrue(economy.createAccount(id, "Alice", "world"));
     }
@@ -172,7 +168,7 @@ class EconomyImpTests {
     @Test
     void createAccount_returns_false_when_account_already_exists() {
         var id = UUID.randomUUID();
-        when(accountAccess.createAccount(id, "world")).thenReturn(false);
+        when(accountAccess.createAccount(id, "Alice")).thenReturn(false);
 
         assertFalse(economy.createAccount(id, "Alice", "world"));
     }
@@ -224,18 +220,15 @@ class EconomyImpTests {
     @Test
     void renameAccount_renames_and_returns_true_when_account_exists() {
         var id = UUID.randomUUID();
-        var accountName = new AccountName(id);
-        accountName.setName("OldName");
-        when(accountNameAccess.getByAccountId(id)).thenReturn(Optional.of(accountName));
+        when(accountAccess.renameAccount(id, "NewName")).thenReturn(true);
 
         assertTrue(economy.renameAccount(id, "NewName"));
-        assertEquals("NewName", accountName.getName());
     }
 
     @Test
     void renameAccount_returns_false_when_account_not_found() {
         var id = UUID.randomUUID();
-        when(accountNameAccess.getByAccountId(id)).thenReturn(Optional.empty());
+        when(accountAccess.renameAccount(id, "NewName")).thenReturn(false);
 
         assertFalse(economy.renameAccount(id, "NewName"));
     }

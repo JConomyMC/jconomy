@@ -48,8 +48,8 @@ public class SqliteMigrator implements DatabaseMigrator {
             statement.executeUpdate("""
                     create table if not exists accounts (
                         account_id text not null,
-                        world text not null,
-                        primary key(account_id, world)
+                        account_name text not null,
+                        primary key(account_id)
                     )
                     """);
             statement.executeUpdate("""
@@ -59,13 +59,6 @@ public class SqliteMigrator implements DatabaseMigrator {
                         currency text not null,
                         amount numeric,
                         primary key(account_id, world, currency)
-                    )
-                    """);
-            statement.executeUpdate("""
-                    create table if not exists account_names(
-                        account_id text not null,
-                        account_name text not null,
-                        primary key(account_id)
                     )
                     """);
             statement.executeUpdate("update database_meta set version = 1");
