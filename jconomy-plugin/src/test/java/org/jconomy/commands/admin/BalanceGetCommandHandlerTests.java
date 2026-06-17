@@ -15,14 +15,14 @@ import org.incendo.cloud.context.CommandContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.jconomy.accounts.Account;
-import org.jconomy.accounts.AccountAccess;
+import org.jconomy.accounts.Balance;
+import org.jconomy.accounts.BalanceAccess;
 import org.jconomy.adapters.PlayerResolver;
 import org.jconomy.config.economy.EconomyConfig;
 
 class BalanceGetCommandHandlerTests {
 
-    private AccountAccess accountAccess;
+    private BalanceAccess balanceAccess;
     private EconomyConfig economyConfig;
     private PlayerResolver playerResolver;
     private CommandSender sender;
@@ -32,7 +32,7 @@ class BalanceGetCommandHandlerTests {
     @BeforeEach
     @SuppressWarnings("unchecked")
     void setUp() {
-        accountAccess = mock(AccountAccess.class);
+        balanceAccess = mock(BalanceAccess.class);
         economyConfig = mock(EconomyConfig.class);
         playerResolver = mock(PlayerResolver.class);
         sender = mock(CommandSender.class);
@@ -40,7 +40,7 @@ class BalanceGetCommandHandlerTests {
         when(context.sender()).thenReturn(sender);
         when(economyConfig.getDefaultWorldName()).thenReturn("world");
         when(economyConfig.getAllCurrencyNames()).thenReturn(Set.of("gold"));
-        handler = new BalanceGetCommandHandler(accountAccess, economyConfig, playerResolver);
+        handler = new BalanceGetCommandHandler(balanceAccess, economyConfig, playerResolver);
     }
 
     @Test
@@ -52,9 +52,9 @@ class BalanceGetCommandHandlerTests {
         when(context.get("player")).thenReturn("Steve");
         when(context.get("currency")).thenReturn("gold");
 
-        var account = new Account(playerId, "world");
-        account.setBalance("gold", BigDecimal.valueOf(100));
-        when(accountAccess.getByIdAndWorld(playerId, "world")).thenReturn(Optional.of(account));
+        var balance = new Balance(playerId, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.of(balance));
 
         handler.execute(context);
 
@@ -70,9 +70,9 @@ class BalanceGetCommandHandlerTests {
         when(context.get("player")).thenReturn("Steve");
         when(context.get("currency")).thenReturn("gold");
 
-        var account = new Account(playerId, "world");
-        account.setBalance("gold", BigDecimal.valueOf(50));
-        when(accountAccess.getByIdAndWorld(playerId, "world")).thenReturn(Optional.of(account));
+        var balance = new Balance(playerId, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(50));
+        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.of(balance));
 
         handler.execute(context);
 
@@ -81,7 +81,7 @@ class BalanceGetCommandHandlerTests {
     }
 
     @Test
-    void execute_sends_error_and_does_not_query_account_when_player_unknown() {
+    void execute_sends_error_and_does_not_query_balance_when_player_unknown() {
         when(context.get("player")).thenReturn("Ghost");
         when(context.get("currency")).thenReturn("gold");
         when(playerResolver.resolve("Ghost")).thenThrow(new NoSuchElementException());
@@ -89,11 +89,11 @@ class BalanceGetCommandHandlerTests {
         handler.execute(context);
 
         verify(sender).sendMessage(anyString());
-        verify(accountAccess, never()).getByIdAndWorld(any(), any());
+        verify(balanceAccess, never()).get(any(), any(), any());
     }
 
     @Test
-    void execute_sends_error_and_does_not_query_account_when_currency_unknown() {
+    void execute_sends_error_and_does_not_query_balance_when_currency_unknown() {
         var player = mock(OfflinePlayer.class);
         when(player.getUniqueId()).thenReturn(UUID.randomUUID());
         when(playerResolver.resolve("Steve")).thenReturn(player);
@@ -103,18 +103,18 @@ class BalanceGetCommandHandlerTests {
         handler.execute(context);
 
         verify(sender).sendMessage(anyString());
-        verify(accountAccess, never()).getByIdAndWorld(any(), any());
+        verify(balanceAccess, never()).get(any(), any(), any());
     }
 
     @Test
-    void execute_sends_zero_balance_when_no_account_found() {
+    void execute_sends_zero_balance_when_no_balance_record_found() {
         var playerId = UUID.randomUUID();
         var player = mock(OfflinePlayer.class);
         when(player.getUniqueId()).thenReturn(playerId);
         when(playerResolver.resolve("Steve")).thenReturn(player);
         when(context.get("player")).thenReturn("Steve");
         when(context.get("currency")).thenReturn("gold");
-        when(accountAccess.getByIdAndWorld(playerId, "world")).thenReturn(Optional.empty());
+        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.empty());
 
         handler.execute(context);
 

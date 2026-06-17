@@ -18,7 +18,7 @@ class TransferPlanStoreTests {
     @BeforeEach
     void setUp() {
         store = new TransferPlanStore();
-        plan = new TransferPlan("my-importer", Set.of(), Set.of(), 0, ConflictPolicy.SKIP);
+        plan = new TransferPlan("my-importer", Set.of(), 0, ConflictPolicy.SKIP);
     }
 
     @Test
@@ -50,7 +50,7 @@ class TransferPlanStoreTests {
     @Test
     void invalidateAll_clears_all_stored_plans() {
         store.store("alice", plan);
-        store.store("bob", new TransferPlan("other", Set.of(), Set.of(), 0, ConflictPolicy.SKIP));
+        store.store("bob", new TransferPlan("other", Set.of(), 0, ConflictPolicy.SKIP));
 
         store.invalidateAll();
 
@@ -61,7 +61,7 @@ class TransferPlanStoreTests {
     @Test
     void store_overwrites_existing_plan_for_same_sender_and_provider() {
         store.store("alice", plan);
-        var updated = new TransferPlan("my-importer", Set.of(), Set.of(), 2, ConflictPolicy.OVERWRITE);
+        var updated = new TransferPlan("my-importer", Set.of(), 2, ConflictPolicy.OVERWRITE);
         store.store("alice", updated);
 
         assertEquals(updated, store.get("alice", "my-importer").orElseThrow());

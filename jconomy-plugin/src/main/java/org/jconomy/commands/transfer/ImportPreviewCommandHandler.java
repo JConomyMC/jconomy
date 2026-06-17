@@ -36,7 +36,6 @@ class ImportPreviewCommandHandler {
     private void sendSummary(CommandSender sender, TransferPlan plan) {
         sender.sendMessage("=== Import Preview ===");
         sender.sendMessage("Accounts to transfer: " + plan.accountsToTransfer().size());
-        sender.sendMessage("Account names to transfer: " + plan.accountNamesToTransfer().size());
         sender.sendMessage("Conflicts: " + plan.conflicts());
         sender.sendMessage("Conflict policy: " + plan.policy());
         sender.sendMessage("Run '/jconomy import " + plan.providerName() + " execute' to apply this plan.");

@@ -3,12 +3,14 @@ package org.jconomy;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.jconomy.accounts.Account;
+import org.jconomy.accounts.Balance;
+import org.jconomy.accounts.BalanceAccess;
 import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.accounts.AccountAccess;
 import org.jconomy.presentation.CurrencyFormatter;
@@ -23,25 +25,19 @@ public class EconomyImp implements Economy {
     private final Logger logger;
     private final CurrencyFormatter currencyFormatter;
     private final EconomyConfig config;
-    private final AccountAccess accountRepository;
+    private final AccountAccess accountAccess;
+    private final BalanceAccess balanceAccess;
 
     public EconomyImp(PluginContext plugin, Logger logger, CurrencyFormatter currencyFormatter, EconomyConfig config,
-            AccountAccess accountRepository) {
+            AccountAccess accountAccess, BalanceAccess balanceAccess) {
         this.plugin = plugin;
         this.logger = logger;
         this.currencyFormatter = currencyFormatter;
         this.config = config;
-        this.accountRepository = accountRepository;
+        this.accountAccess = accountAccess;
+        this.balanceAccess = balanceAccess;
     }
-    
-    private Account getAccountOrThrow(UUID accountId, String world) {
-        return accountRepository.getByIdAndWorld(accountId, worldNameOrDefault(world))
-            .orElseThrow(() -> {
-                var message = String.format("Account (accountId='%s',world='%s') not found", accountId, world);
-                throw new NoSuchElementException(message);
-            });
-    }
-    
+
     private String currencyOrDefault(String currency) {
         if (currency == null) {
             return config.getDefaultCurrency();
@@ -146,7 +142,7 @@ public class EconomyImp implements Economy {
     @Override
     public boolean createAccount(UUID accountId, String name, String worldName, boolean isPlayerAccount) {
         try {
-            return accountRepository.createAccount(accountId, name);
+            return accountAccess.createAccount(accountId, name);
         } catch (Exception ex) {
             var message = String.format("Unable to create account(accountId='%s',name='%s'): %s",
                     accountId, name, ex.getMessage());
@@ -157,12 +153,13 @@ public class EconomyImp implements Economy {
 
     @Override
     public Map<UUID, String> getUUIDNameMap() {
-        return accountRepository.getAllAccountNames();
+        return accountAccess.getAllAccounts().stream()
+                .collect(Collectors.toMap(Account::getAccountId, Account::getName));
     }
 
     @Override
     public Optional<String> getAccountName(UUID accountId) {
-        return accountRepository.getAccountName(accountId);
+        return accountAccess.getAccount(accountId).map(Account::getName);
     }
 
     @Override
@@ -188,8 +185,9 @@ public class EconomyImp implements Economy {
 
     @Override
     public BigDecimal getBalance(String pluginName, UUID accountId, String world, String currency) {
-        return getAccountOrThrow(accountId, world).getBalance(
-                currency != null ? currency : config.getDefaultCurrency());
+        return balanceAccess.get(accountId, worldNameOrDefault(world), currencyOrDefault(currency))
+                .map(Balance::getAmount)
+                .orElse(BigDecimal.ZERO);
     }
 
     @Override
@@ -221,14 +219,16 @@ public class EconomyImp implements Economy {
     @Override
     public EconomyResponse set(String pluginName, UUID accountID, String worldName, String currency, BigDecimal amount) {
         try {
-            var account = getAccountOrThrow(accountID, worldName);
-            account.setBalance(currencyOrDefault(currency), amount);
-            accountRepository.save(account);
-
-            currency = currencyOrDefault(currency);
-            var balance = account.getBalance(currency);
-
-            return new EconomyResponse(amount, balance, ResponseType.SUCCESS, "");
+            if (accountAccess.getAccount(accountID).isEmpty()) {
+                return new EconomyResponse(BigDecimal.ZERO, null, ResponseType.FAILURE, "Account not found");
+            }
+            var resolvedWorld = worldNameOrDefault(worldName);
+            var resolvedCurrency = currencyOrDefault(currency);
+            var balance = balanceAccess.get(accountID, resolvedWorld, resolvedCurrency)
+                    .orElse(new Balance(accountID, resolvedWorld, resolvedCurrency));
+            balance.setAmount(amount);
+            balanceAccess.save(balance);
+            return new EconomyResponse(amount, amount, ResponseType.SUCCESS, "");
         } catch (Exception ex) {
             return new EconomyResponse(BigDecimal.ZERO, null, ResponseType.FAILURE, ex.getMessage());
         }
@@ -296,7 +296,8 @@ public class EconomyImp implements Economy {
     @Override
     public boolean deleteAccount(String pluginName, UUID accountId) {
         try {
-            accountRepository.deleteAccount(accountId);
+            accountAccess.deleteAccount(accountId);
+            balanceAccess.deleteByAccount(accountId);
             return true;
         } catch (Exception ex) {
             logger.warning(String.format("%s called deleteAccount but it failed: %s", pluginName, ex.getMessage()));
@@ -343,12 +344,12 @@ public class EconomyImp implements Economy {
 
     @Override
     public boolean hasAccount(UUID accountId) {
-        return accountRepository.getByIdAndWorld(accountId, config.getDefaultWorldName()).isPresent();
+        return accountAccess.getAccount(accountId).isPresent();
     }
 
     @Override
     public boolean hasAccount(UUID accountId, String worldName) {
-        return accountRepository.getByIdAndWorld(accountId, worldNameOrDefault(worldName)).isPresent();
+        return accountAccess.getAccount(accountId).isPresent();
     }
 
     @Override
@@ -358,11 +359,14 @@ public class EconomyImp implements Economy {
 
     @Override
     public boolean renameAccount(String pluginName, UUID accountId, String name) {
-        var renamed = accountRepository.renameAccount(accountId, name);
-        if (!renamed) {
-            logger.warning("Account(accountId='%s') does not exist");
+        var opt = accountAccess.getAccount(accountId);
+        if (opt.isEmpty()) {
+            logger.warning(String.format("Account(accountId='%s') does not exist", accountId));
+            return false;
         }
-        return renamed;
+        opt.get().setName(name);
+        accountAccess.save(opt.get());
+        return true;
     }
 
     @Override

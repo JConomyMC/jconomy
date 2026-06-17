@@ -1,9 +1,11 @@
 package org.jconomy;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -14,6 +16,8 @@ import org.junit.jupiter.api.Test;
 
 import org.jconomy.accounts.Account;
 import org.jconomy.accounts.AccountAccess;
+import org.jconomy.accounts.Balance;
+import org.jconomy.accounts.BalanceAccess;
 import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.presentation.CurrencyFormatter;
 
@@ -26,6 +30,7 @@ class EconomyImpTests {
     private CurrencyFormatter currencyFormatter;
     private EconomyConfig config;
     private AccountAccess accountAccess;
+    private BalanceAccess balanceAccess;
     private EconomyImp economy;
 
     @BeforeEach
@@ -35,94 +40,68 @@ class EconomyImpTests {
         currencyFormatter = mock(CurrencyFormatter.class);
         config = mock(EconomyConfig.class);
         accountAccess = mock(AccountAccess.class);
-        economy = new EconomyImp(pluginContext, logger, currencyFormatter, config, accountAccess);
+        balanceAccess = mock(BalanceAccess.class);
+        economy = new EconomyImp(pluginContext, logger, currencyFormatter, config, accountAccess, balanceAccess);
     }
 
+    // --- getBalance ---
+
     @Test
-    void getBalance_returns_account_balance() {
+    void getBalance_returns_balance_amount() {
         var id = UUID.randomUUID();
-        var account = accountWithBalance(id, "world", "gold", BigDecimal.valueOf(100));
-        when(accountAccess.getByIdAndWorld(id, "world")).thenReturn(Optional.of(account));
+        when(balanceAccess.get(id, "world", "gold")).thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(100))));
 
         assertEquals(BigDecimal.valueOf(100), economy.getBalance("plugin", id, "world", "gold"));
     }
 
     @Test
+    void getBalance_returns_zero_when_no_balance_record_exists() {
+        when(balanceAccess.get(any(), any(), any())).thenReturn(Optional.empty());
+
+        assertEquals(BigDecimal.ZERO, economy.getBalance("plugin", UUID.randomUUID(), "world", "gold"));
+    }
+
+    @Test
     void getBalance_uses_default_world_when_world_is_null() {
         var id = UUID.randomUUID();
-        var account = accountWithBalance(id, "default", "gold", BigDecimal.valueOf(50));
         when(config.getDefaultWorldName()).thenReturn("default");
-        when(accountAccess.getByIdAndWorld(id, "default")).thenReturn(Optional.of(account));
+        when(balanceAccess.get(id, "default", "gold")).thenReturn(Optional.empty());
 
-        assertEquals(BigDecimal.valueOf(50), economy.getBalance("plugin", id, null, "gold"));
+        economy.getBalance("plugin", id, null, "gold");
+
+        verify(balanceAccess).get(id, "default", "gold");
     }
 
     @Test
     void getBalance_uses_default_currency_when_currency_is_null() {
         var id = UUID.randomUUID();
-        var account = accountWithBalance(id, "world", "gold", BigDecimal.valueOf(75));
         when(config.getDefaultCurrency()).thenReturn("gold");
-        when(accountAccess.getByIdAndWorld(id, "world")).thenReturn(Optional.of(account));
+        when(balanceAccess.get(id, "world", "gold")).thenReturn(Optional.empty());
 
-        assertEquals(BigDecimal.valueOf(75), economy.getBalance("plugin", id, "world", null));
+        economy.getBalance("plugin", id, "world", null);
+
+        verify(balanceAccess).get(id, "world", "gold");
     }
 
-    @Test
-    void deposit_increases_balance_and_returns_success() {
-        var id = UUID.randomUUID();
-        var account = accountWithBalance(id, "world", "gold", BigDecimal.valueOf(100));
-        when(config.getDefaultCurrency()).thenReturn("gold");
-        when(accountAccess.getByIdAndWorld(id, "world")).thenReturn(Optional.of(account));
-
-        var response = economy.deposit("plugin", id, "world", "gold", BigDecimal.valueOf(50));
-
-        assertEquals(ResponseType.SUCCESS, response.type);
-        assertEquals(BigDecimal.valueOf(150), response.amount);
-    }
+    // --- set ---
 
     @Test
-    void withdraw_decreases_balance_and_returns_success() {
+    void set_saves_balance_and_returns_success() {
         var id = UUID.randomUUID();
-        var account = accountWithBalance(id, "world", "gold", BigDecimal.valueOf(100));
-        when(config.getDefaultCurrency()).thenReturn("gold");
-        when(accountAccess.getByIdAndWorld(id, "world")).thenReturn(Optional.of(account));
-
-        var response = economy.withdraw("plugin", id, "world", "gold", BigDecimal.valueOf(30));
-
-        assertEquals(ResponseType.SUCCESS, response.type);
-        assertEquals(BigDecimal.valueOf(70), response.amount);
-    }
-
-    @Test
-    void set_returns_success_response_with_new_balance() {
-        var id = UUID.randomUUID();
-        var account = accountWithBalance(id, "world", "gold", BigDecimal.ZERO);
-        when(accountAccess.getByIdAndWorld(id, "world")).thenReturn(Optional.of(account));
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+        when(balanceAccess.get(id, "world", "gold")).thenReturn(Optional.empty());
 
         var response = economy.set("plugin", id, "world", "gold", BigDecimal.valueOf(500));
 
         assertEquals(ResponseType.SUCCESS, response.type);
         assertEquals(BigDecimal.valueOf(500), response.amount);
-    }
-
-    @Test
-    void set_response_balance_reflects_new_balance_when_currency_is_null() {
-        var id = UUID.randomUUID();
-        var account = accountWithBalance(id, "world", "gold", BigDecimal.ZERO);
-        when(config.getDefaultCurrency()).thenReturn("gold");
-        when(config.getDefaultWorldName()).thenReturn("world");
-        when(accountAccess.getByIdAndWorld(id, "world")).thenReturn(Optional.of(account));
-
-        var response = economy.set("plugin", id, "world", null, BigDecimal.valueOf(250));
-
-        assertEquals(ResponseType.SUCCESS, response.type);
-        assertEquals(BigDecimal.valueOf(250), response.balance);
+        verify(balanceAccess).save(any(Balance.class));
     }
 
     @Test
     void set_returns_failure_when_account_not_found() {
         var id = UUID.randomUUID();
-        when(accountAccess.getByIdAndWorld(eq(id), any())).thenReturn(Optional.empty());
+        when(accountAccess.getAccount(id)).thenReturn(Optional.empty());
 
         var response = economy.set("plugin", id, "world", "gold", BigDecimal.valueOf(100));
 
@@ -131,10 +110,57 @@ class EconomyImpTests {
     }
 
     @Test
+    void set_response_balance_reflects_new_balance_when_currency_is_null() {
+        var id = UUID.randomUUID();
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+        when(config.getDefaultCurrency()).thenReturn("gold");
+        when(balanceAccess.get(id, "world", "gold")).thenReturn(Optional.empty());
+
+        var response = economy.set("plugin", id, "world", null, BigDecimal.valueOf(250));
+
+        assertEquals(ResponseType.SUCCESS, response.type);
+        assertEquals(BigDecimal.valueOf(250), response.balance);
+    }
+
+    // --- deposit ---
+
+    @Test
+    void deposit_increases_balance_and_returns_success() {
+        var id = UUID.randomUUID();
+        when(config.getDefaultCurrency()).thenReturn("gold");
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+        when(balanceAccess.get(id, "world", "gold"))
+                .thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(100))));
+
+        var response = economy.deposit("plugin", id, "world", "gold", BigDecimal.valueOf(50));
+
+        assertEquals(ResponseType.SUCCESS, response.type);
+        assertEquals(BigDecimal.valueOf(150), response.amount);
+    }
+
+    // --- withdraw ---
+
+    @Test
+    void withdraw_decreases_balance_and_returns_success() {
+        var id = UUID.randomUUID();
+        when(config.getDefaultCurrency()).thenReturn("gold");
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+        when(balanceAccess.get(id, "world", "gold"))
+                .thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(100))));
+
+        var response = economy.withdraw("plugin", id, "world", "gold", BigDecimal.valueOf(30));
+
+        assertEquals(ResponseType.SUCCESS, response.type);
+        assertEquals(BigDecimal.valueOf(70), response.amount);
+    }
+
+    // --- has ---
+
+    @Test
     void has_returns_true_when_balance_exceeds_amount() {
         var id = UUID.randomUUID();
-        var account = accountWithBalance(id, "world", "gold", BigDecimal.valueOf(100));
-        when(accountAccess.getByIdAndWorld(id, "world")).thenReturn(Optional.of(account));
+        when(balanceAccess.get(id, "world", "gold"))
+                .thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(100))));
 
         assertTrue(economy.has("plugin", id, "world", "gold", BigDecimal.valueOf(50)));
     }
@@ -142,8 +168,8 @@ class EconomyImpTests {
     @Test
     void has_returns_true_when_balance_equals_amount() {
         var id = UUID.randomUUID();
-        var account = accountWithBalance(id, "world", "gold", BigDecimal.valueOf(100));
-        when(accountAccess.getByIdAndWorld(id, "world")).thenReturn(Optional.of(account));
+        when(balanceAccess.get(id, "world", "gold"))
+                .thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(100))));
 
         assertTrue(economy.has("plugin", id, "world", "gold", BigDecimal.valueOf(100)));
     }
@@ -151,11 +177,13 @@ class EconomyImpTests {
     @Test
     void has_returns_false_when_balance_is_less_than_amount() {
         var id = UUID.randomUUID();
-        var account = accountWithBalance(id, "world", "gold", BigDecimal.valueOf(50));
-        when(accountAccess.getByIdAndWorld(id, "world")).thenReturn(Optional.of(account));
+        when(balanceAccess.get(id, "world", "gold"))
+                .thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(50))));
 
         assertFalse(economy.has("plugin", id, "world", "gold", BigDecimal.valueOf(100)));
     }
+
+    // --- createAccount ---
 
     @Test
     void createAccount_returns_true_on_success() {
@@ -173,10 +201,12 @@ class EconomyImpTests {
         assertFalse(economy.createAccount(id, "Alice", "world"));
     }
 
+    // --- hasAccount ---
+
     @Test
     void hasAccount_returns_true_when_account_exists() {
         var id = UUID.randomUUID();
-        when(accountAccess.getByIdAndWorld(eq(id), any())).thenReturn(Optional.of(new Account(id, "world")));
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
 
         assertTrue(economy.hasAccount(id));
     }
@@ -184,10 +214,79 @@ class EconomyImpTests {
     @Test
     void hasAccount_returns_false_when_account_does_not_exist() {
         var id = UUID.randomUUID();
-        when(accountAccess.getByIdAndWorld(eq(id), any())).thenReturn(Optional.empty());
+        when(accountAccess.getAccount(id)).thenReturn(Optional.empty());
 
         assertFalse(economy.hasAccount(id));
     }
+
+    // --- renameAccount ---
+
+    @Test
+    void renameAccount_renames_and_returns_true_when_account_exists() {
+        var id = UUID.randomUUID();
+        var account = new Account(id, "OldName");
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(account));
+
+        assertTrue(economy.renameAccount(id, "NewName"));
+        assertEquals("NewName", account.getName());
+        verify(accountAccess).save(account);
+    }
+
+    @Test
+    void renameAccount_returns_false_when_account_not_found() {
+        var id = UUID.randomUUID();
+        when(accountAccess.getAccount(id)).thenReturn(Optional.empty());
+
+        assertFalse(economy.renameAccount(id, "NewName"));
+        verify(accountAccess, never()).save(any());
+    }
+
+    // --- deleteAccount ---
+
+    @Test
+    void deleteAccount_removes_account_and_all_balances() {
+        var id = UUID.randomUUID();
+
+        assertTrue(economy.deleteAccount("plugin", id));
+        verify(accountAccess).deleteAccount(id);
+        verify(balanceAccess).deleteByAccount(id);
+    }
+
+    // --- getUUIDNameMap ---
+
+    @Test
+    void getUUIDNameMap_returns_name_map_of_all_accounts() {
+        var id1 = UUID.randomUUID();
+        var id2 = UUID.randomUUID();
+        when(accountAccess.getAllAccounts()).thenReturn(List.of(
+                new Account(id1, "Alice"),
+                new Account(id2, "Bob")));
+
+        var map = economy.getUUIDNameMap();
+
+        assertEquals("Alice", map.get(id1));
+        assertEquals("Bob", map.get(id2));
+    }
+
+    // --- getAccountName ---
+
+    @Test
+    void getAccountName_returns_name_when_account_exists() {
+        var id = UUID.randomUUID();
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+
+        assertEquals(Optional.of("Alice"), economy.getAccountName(id));
+    }
+
+    @Test
+    void getAccountName_returns_empty_when_account_not_found() {
+        var id = UUID.randomUUID();
+        when(accountAccess.getAccount(id)).thenReturn(Optional.empty());
+
+        assertTrue(economy.getAccountName(id).isEmpty());
+    }
+
+    // --- config delegation ---
 
     @Test
     void currencies_delegates_to_config() {
@@ -217,25 +316,11 @@ class EconomyImpTests {
         assertFalse(economy.accountSupportsCurrency("plugin", UUID.randomUUID(), "diamonds", "world"));
     }
 
-    @Test
-    void renameAccount_renames_and_returns_true_when_account_exists() {
-        var id = UUID.randomUUID();
-        when(accountAccess.renameAccount(id, "NewName")).thenReturn(true);
+    // --- helpers ---
 
-        assertTrue(economy.renameAccount(id, "NewName"));
-    }
-
-    @Test
-    void renameAccount_returns_false_when_account_not_found() {
-        var id = UUID.randomUUID();
-        when(accountAccess.renameAccount(id, "NewName")).thenReturn(false);
-
-        assertFalse(economy.renameAccount(id, "NewName"));
-    }
-
-    private static Account accountWithBalance(UUID id, String world, String currency, BigDecimal amount) {
-        var account = new Account(id, world);
-        account.setBalance(currency, amount);
-        return account;
+    private static Balance balanceOf(UUID id, String world, String currency, BigDecimal amount) {
+        var balance = new Balance(id, world, currency);
+        balance.setAmount(amount);
+        return balance;
     }
 }

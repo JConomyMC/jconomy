@@ -36,7 +36,7 @@ class ExportExecuteCommandHandlerTests {
         sender = mock(CommandSender.class);
         context = mock(CommandContext.class);
         planStore = new TransferPlanStore();
-        plan = new TransferPlan("my-exporter", Set.of(), Set.of(), 0, ConflictPolicy.SKIP);
+        plan = new TransferPlan("my-exporter", Set.of(), 0, ConflictPolicy.SKIP);
         when(context.sender()).thenReturn(sender);
         when(context.get("provider")).thenReturn(exporter);
         when(exporter.getName()).thenReturn("my-exporter");

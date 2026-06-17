@@ -1,26 +1,25 @@
 package org.jconomy.commands.admin;
 
 import java.math.BigDecimal;
-import java.util.NoSuchElementException;
 
 import org.bukkit.command.CommandSender;
 import org.incendo.cloud.context.CommandContext;
 
-import org.jconomy.accounts.AccountAccess;
+import org.jconomy.accounts.BalanceAccess;
 import org.jconomy.adapters.PlayerResolver;
 import org.jconomy.config.economy.EconomyConfig;
 
 public class BalanceGetCommandHandler {
 
-    private final AccountAccess accountAccess;
+    private final BalanceAccess balanceAccess;
     private final EconomyConfig economyConfig;
     private final PlayerResolver playerResolver;
 
     public BalanceGetCommandHandler(
-            AccountAccess accountAccess,
+            BalanceAccess balanceAccess,
             EconomyConfig economyConfig,
             PlayerResolver playerResolver) {
-        this.accountAccess = accountAccess;
+        this.balanceAccess = balanceAccess;
         this.economyConfig = economyConfig;
         this.playerResolver = playerResolver;
     }
@@ -36,8 +35,8 @@ public class BalanceGetCommandHandler {
         if (!AdminCommandUtil.validateCurrency(sender, currency, economyConfig)) return;
 
         var world = economyConfig.getDefaultWorldName();
-        var balance = accountAccess.getByIdAndWorld(player.getUniqueId(), world)
-                .map(a -> a.getBalance(currency))
+        var balance = balanceAccess.get(player.getUniqueId(), world, currency)
+                .map(b -> b.getAmount())
                 .orElse(BigDecimal.ZERO);
 
         sender.sendMessage(playerName + "'s " + currency + " balance: " + balance.toPlainString());
