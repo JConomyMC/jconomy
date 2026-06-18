@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.jconomy.accounts.AccountAccess;
-import org.jconomy.accounts.BalanceAccess;
+import org.jconomy.balances.BalanceAccess;
 import org.jconomy.adapters.PlayerResolver;
 
 class AccountDeleteCommandHandlerTests {

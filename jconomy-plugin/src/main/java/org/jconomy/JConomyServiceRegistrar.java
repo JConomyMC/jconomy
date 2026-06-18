@@ -5,10 +5,6 @@ import java.util.logging.Logger;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import org.jconomy.accounts.AccountRepository;
-import org.jconomy.accounts.BalanceRepository;
-import org.jconomy.accounts.SqliteAccountRepository;
-import org.jconomy.accounts.SqliteBalanceRepository;
 import org.jconomy.adapters.BukkitPlayerResolver;
 import org.jconomy.adapters.DefaultResponseMapper;
 import org.jconomy.adapters.EconomyResponseMapper;

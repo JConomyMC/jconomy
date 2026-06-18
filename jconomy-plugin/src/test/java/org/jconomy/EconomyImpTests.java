@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 
 import org.jconomy.accounts.Account;
 import org.jconomy.accounts.AccountAccess;
-import org.jconomy.accounts.Balance;
-import org.jconomy.accounts.BalanceAccess;
+import org.jconomy.balances.Balance;
+import org.jconomy.balances.BalanceAccess;
 import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.presentation.CurrencyFormatter;
 

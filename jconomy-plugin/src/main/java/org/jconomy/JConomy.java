@@ -16,7 +16,7 @@ import org.jconomy.extensions.DefaultExtensionManager;
 import org.jconomy.extensions.ExtensionManager;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.config.VaultLegacyAdapterConfig;
-import org.jconomy.accounts.BalanceAccess;
+import org.jconomy.balances.BalanceAccess;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.storage.DatabaseMigrator;
 import org.jconomy.storage.Flushable;
