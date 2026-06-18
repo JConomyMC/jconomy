@@ -19,6 +19,10 @@ import org.jconomy.accounts.AccountCache;
 import org.jconomy.accounts.BalanceCache;
 import org.jconomy.accounts.LruAccountCache;
 import org.jconomy.accounts.LruBalanceCache;
+import org.jconomy.FeatureManager;
+import org.jconomy.config.CacheConfig;
+import org.jconomy.config.DefaultCacheConfig;
+import org.jconomy.config.DefaultFeatureManager;
 
 public final class JConomyImplRegistrar {
 
@@ -39,5 +43,7 @@ public final class JConomyImplRegistrar {
         builder.addSingleton(FlushRegistry.class, DefaultFlushRegistry.class);
         builder.addSingleton(SqlConnectionFactory.class, SqliteConnectionFactory.class);
         builder.addSingleton(DatabaseMigrator.class, SqliteMigrator.class);
+        builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
+        builder.addSingleton(FeatureManager.class, DefaultFeatureManager.class);
     }
 }
