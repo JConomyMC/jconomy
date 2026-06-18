@@ -23,6 +23,8 @@ import org.jconomy.FeatureManager;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.config.DefaultCacheConfig;
 import org.jconomy.config.DefaultFeatureManager;
+import org.jconomy.config.DefaultVaultLegacyAdapterConfig;
+import org.jconomy.config.VaultLegacyAdapterConfig;
 
 public final class JConomyImplRegistrar {
 
@@ -45,5 +47,6 @@ public final class JConomyImplRegistrar {
         builder.addSingleton(DatabaseMigrator.class, SqliteMigrator.class);
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
         builder.addSingleton(FeatureManager.class, DefaultFeatureManager.class);
+        builder.addSingleton(VaultLegacyAdapterConfig.class, DefaultVaultLegacyAdapterConfig.class);
     }
 }
