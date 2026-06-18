@@ -53,16 +53,25 @@ currencies:
     number-formatter:
       fractional:
         places: 0
+    # If globally disabled in the root cache settings,
+    # currency-level cache settings have no effect.
+    cache:
+      warm-on-teleport: false
+      warm-on-join: true
 
 # Player balance cache settings.
 cache:
+  # Maximum number of accounts held in memory. When exceeded, least recently
+  # accessed accounts are evicted and read from disk on next access.
   lru-limit: 10000
 
-  # Per-currency overrides are available at currencies.<name>.cache.*
+  # Preload player balances when they join the server.
   warm-on-join: true
 
+  # Preload player balances when they teleport to a different world.
   warm-on-teleport: true
 
+  # Periodically write dirty cache records to the storage backend.
   periodic-flush:
     # Disabling this turns off only background flushes.
     # Dirty records are still flushed on clean shutdown.
