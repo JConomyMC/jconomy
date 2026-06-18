@@ -27,6 +27,8 @@ import org.jconomy.accounts.AccountRepository;
 import org.jconomy.accounts.SqliteAccountRepository;
 import org.jconomy.accounts.BalanceRepository;
 import org.jconomy.accounts.SqliteBalanceRepository;
+import org.jconomy.storage.SqlConnectionFactory;
+import org.jconomy.storage.DatabaseMigrator;
 
 class JConomyImplRegistrarTests {
 
@@ -73,6 +75,16 @@ class JConomyImplRegistrarTests {
         assertEquals(SqliteBalanceRepository.class, builder.singletonImplementations.get(BalanceRepository.class));
         assertTrue(builder.singletonImplementations.containsKey(BalanceAccess.class));
         assertEquals(DefaultBalanceAccess.class, builder.singletonImplementations.get(BalanceAccess.class));
+    }
+
+    @Test
+    void registerServices_registers_storage_implementations() {
+        var builder = new NoopBuilder();
+
+        JConomyImplRegistrar.registerServices(builder);
+
+        assertTrue(builder.singletonImplementations.containsKey(SqlConnectionFactory.class));
+        assertTrue(builder.singletonImplementations.containsKey(DatabaseMigrator.class));
     }
 
     private static final class NoopBuilder implements JConomyServiceBuilder {

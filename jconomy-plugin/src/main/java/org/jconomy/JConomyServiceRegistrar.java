@@ -42,12 +42,8 @@ import org.jconomy.presentation.CurrencyFormatter;
 import org.jconomy.presentation.DefaultCurrencyFormatter;
 import org.jconomy.presentation.DefaultNumberFormatter;
 import org.jconomy.presentation.NumberFormatter;
-import org.jconomy.storage.DatabaseMigrator;
 import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.PeriodicFlushScheduler;
-import org.jconomy.storage.SqlConnectionFactory;
-import org.jconomy.storage.SqliteConnectionFactory;
-import org.jconomy.storage.SqliteMigrator;
 import com.jellyrekt.storage.configuration.file.FileConfigurationProvider;
 import com.jellyrekt.storage.configuration.file.javaplugin.JavaPluginConfigurationProvider;
 
@@ -78,9 +74,6 @@ public class JConomyServiceRegistrar {
         builder.addSingleton(EconomyConfig.class, YamlEconomyConfig.class);
         builder.addSingleton(NumberFormatter.class, DefaultNumberFormatter.class);
         builder.addSingleton(CurrencyFormatter.class, DefaultCurrencyFormatter.class);
-        builder.addSingleton(SqlConnectionFactory.class,
-                new SqliteConnectionFactory(plugin.getDataFolder().toPath().resolve("jconomy.db")));
-        builder.addSingleton(DatabaseMigrator.class, SqliteMigrator.class);
         JConomyImplRegistrar.registerServices(builder);
         builder.addSingleton(Economy.class, EconomyImp.class);
         builder.addSingleton(EconomyResponseMapper.class, DefaultResponseMapper.class);
