@@ -24,8 +24,6 @@ import org.jconomy.commands.admin.BalanceRemoveCommandHandler;
 import org.jconomy.commands.admin.BalanceSetCommandHandler;
 import org.jconomy.commands.CommandManagerFactory;
 import org.jconomy.config.CacheConfig;
-import org.jconomy.config.DefaultCacheConfig;
-import org.jconomy.config.DefaultFeatureManager;
 import org.jconomy.config.DefaultJConomyConfig;
 import org.jconomy.config.DefaultVaultLegacyAdapterConfig;
 import org.jconomy.config.JConomyConfig;
@@ -65,11 +63,9 @@ public class JConomyServiceRegistrar {
         builder.addSingleton(PluginContext.class, pluginContext);
         builder.addSingleton(Logger.class, plugin.getLogger());
         builder.addSingleton(ConfigMigrator.class, DefaultConfigMigrator.class);
-        builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
         builder.addSingletonFactory(CacheConfig.PeriodicFlushConfig.class, sp ->
                 sp.getRequiredService(CacheConfig.class).getPeriodicFlushConfig());
         builder.addSingleton(PeriodicFlushScheduler.class);
-        builder.addSingleton(FeatureManager.class, DefaultFeatureManager.class);
         builder.addSingleton(VaultLegacyAdapterConfig.class, DefaultVaultLegacyAdapterConfig.class);
         builder.addSingleton(EconomyConfig.class, YamlEconomyConfig.class);
         builder.addSingleton(NumberFormatter.class, DefaultNumberFormatter.class);
