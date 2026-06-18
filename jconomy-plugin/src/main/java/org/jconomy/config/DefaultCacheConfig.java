@@ -19,6 +19,16 @@ public class DefaultCacheConfig implements CacheConfig {
         return config.getSection("cache").getInt("lru-limit", 10000);
     }
 
+    @Override
+    public boolean isWarmOnJoinEnabled() {
+        return config.getSection("cache").getBoolean("warm-on-join", true);
+    }
+
+    @Override
+    public boolean isWarmOnTeleportEnabled() {
+        return config.getSection("cache").getBoolean("warm-on-teleport", true);
+    }
+
     public class DefaultPeriodicFlushConfig implements PeriodicFlushConfig {
         private static final String SECTION = "cache.periodic-flush.";
 

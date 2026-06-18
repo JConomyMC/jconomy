@@ -32,4 +32,56 @@ class DefaultCacheConfigTests {
 
         assertEquals(10000, config.getLruLimit());
     }
+
+    @Test
+    void isWarmOnJoinEnabled_reads_from_cache_section() {
+        var cacheSection = mock(JConomyConfig.class);
+        when(cacheSection.getBoolean("warm-on-join", true)).thenReturn(false);
+
+        var root = mock(JConomyConfig.class);
+        when(root.getSection("cache")).thenReturn(cacheSection);
+
+        var config = new DefaultCacheConfig(root);
+
+        assertFalse(config.isWarmOnJoinEnabled());
+    }
+
+    @Test
+    void isWarmOnJoinEnabled_returns_true_by_default() {
+        var cacheSection = mock(JConomyConfig.class);
+        when(cacheSection.getBoolean("warm-on-join", true)).thenReturn(true);
+
+        var root = mock(JConomyConfig.class);
+        when(root.getSection("cache")).thenReturn(cacheSection);
+
+        var config = new DefaultCacheConfig(root);
+
+        assertTrue(config.isWarmOnJoinEnabled());
+    }
+
+    @Test
+    void isWarmOnTeleportEnabled_reads_from_cache_section() {
+        var cacheSection = mock(JConomyConfig.class);
+        when(cacheSection.getBoolean("warm-on-teleport", true)).thenReturn(false);
+
+        var root = mock(JConomyConfig.class);
+        when(root.getSection("cache")).thenReturn(cacheSection);
+
+        var config = new DefaultCacheConfig(root);
+
+        assertFalse(config.isWarmOnTeleportEnabled());
+    }
+
+    @Test
+    void isWarmOnTeleportEnabled_returns_true_by_default() {
+        var cacheSection = mock(JConomyConfig.class);
+        when(cacheSection.getBoolean("warm-on-teleport", true)).thenReturn(true);
+
+        var root = mock(JConomyConfig.class);
+        when(root.getSection("cache")).thenReturn(cacheSection);
+
+        var config = new DefaultCacheConfig(root);
+
+        assertTrue(config.isWarmOnTeleportEnabled());
+    }
 }
