@@ -43,5 +43,13 @@ public interface EconomyConfig {
         String getFormatString();
 
         NumberFormatterOptions getNumberFormatterOptions();
+
+        CurrencyCacheOptions getCacheOptions();
+
+        public interface CurrencyCacheOptions {
+            boolean isWarmOnJoinEnabled();
+
+            boolean isWarmOnTeleportEnabled();
+        }
     }
 }

@@ -39,7 +39,8 @@ public class YamlEconomyConfig implements EconomyConfig {
     public CurrencyOptions getCurrencyOptions(String currencyName) {
         var key = "currencies." + currencyName;
         if (config.isSet(key)) {
-            return new YamlCurrencyOptions(config.getSection(key), getDefaultNumberFormatterOptions());
+            var isDefaultCurrency = currencyName.equals(getDefaultCurrency());
+            return new YamlCurrencyOptions(config.getSection(key), getDefaultNumberFormatterOptions(), isDefaultCurrency);
         }
         return null;
     }
@@ -169,15 +170,21 @@ public class YamlEconomyConfig implements EconomyConfig {
     public class YamlCurrencyOptions implements CurrencyOptions {
         private final JConomyConfig config;
         private final NumberFormatterOptions defaultNumberFormatterOptions;
+        private final boolean defaultWarmOnJoinEnabled;
 
         public YamlCurrencyOptions(JConomyConfig config) {
-            this(config, null);
+            this(config, null, false);
         }
 
-        public YamlCurrencyOptions(JConomyConfig config, NumberFormatterOptions defaultNumberFormatterOptions)
+        public YamlCurrencyOptions(
+            JConomyConfig config,
+            NumberFormatterOptions defaultNumberFormatterOptions,
+            boolean defaultWarmOnJoinEnabled
+        )
         {
             this.config = config;
             this.defaultNumberFormatterOptions = defaultNumberFormatterOptions;
+            this.defaultWarmOnJoinEnabled = defaultWarmOnJoinEnabled;
         }
 
         @Override
@@ -213,6 +220,31 @@ public class YamlEconomyConfig implements EconomyConfig {
                 return new YamlNumberFormatterOptions(config.getSection(key), defaultNumberFormatterOptions);
             }
             return defaultNumberFormatterOptions;
+        }
+
+        @Override
+        public CurrencyCacheOptions getCacheOptions() {
+            return new YamlCurrencyCacheOptions(config, defaultWarmOnJoinEnabled);
+        }
+
+        public class YamlCurrencyCacheOptions implements CurrencyCacheOptions {
+            private final JConomyConfig config;
+            private final boolean defaultWarmOnJoinEnabled;
+
+            public YamlCurrencyCacheOptions(JConomyConfig config, boolean defaultWarmOnJoinEnabled) {
+                this.config = config;
+                this.defaultWarmOnJoinEnabled = defaultWarmOnJoinEnabled;
+            }
+
+            @Override
+            public boolean isWarmOnJoinEnabled() {
+                return config.getBoolean("cache.warm-on-join", defaultWarmOnJoinEnabled);
+            }
+
+            @Override
+            public boolean isWarmOnTeleportEnabled() {
+                return config.getBoolean("cache.warm-on-teleport", false);
+            }
         }
 
     }

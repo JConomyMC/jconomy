@@ -1,11 +1,14 @@
 package org.jconomy.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -219,6 +222,62 @@ public class YamlJConomyConfigTests {
       boolean expectedFractionalRound,
       int expectedFractionalPlaces,
       String expectedFractionalSeparator) {
+  }
+
+  @Test
+  void currencyCacheOptions_use_smart_defaults_based_on_default_currency() {
+    var config = getStringYamlJConomyConfig(
+        """
+            default-currency: gold
+            currencies:
+              gold:
+                display-name-singular: Gold
+              tokens:
+                display-name-singular: Tokens
+            """);
+
+    var defaultCurrencyOptions = config.getCurrencyOptions("gold");
+    var nonDefaultCurrencyOptions = config.getCurrencyOptions("tokens");
+
+    assertNotNull(defaultCurrencyOptions);
+    assertNotNull(nonDefaultCurrencyOptions);
+
+    assertTrue(defaultCurrencyOptions.getCacheOptions().isWarmOnJoinEnabled());
+    assertFalse(defaultCurrencyOptions.getCacheOptions().isWarmOnTeleportEnabled());
+
+    assertFalse(nonDefaultCurrencyOptions.getCacheOptions().isWarmOnJoinEnabled());
+    assertFalse(nonDefaultCurrencyOptions.getCacheOptions().isWarmOnTeleportEnabled());
+  }
+
+  @Test
+  void currencyCacheOptions_read_explicit_overrides() {
+    var config = getStringYamlJConomyConfig(
+        """
+            default-currency: gold
+            currencies:
+              gold:
+                display-name-singular: Gold
+                cache:
+                  warm-on-join: false
+                  warm-on-teleport: true
+              tokens:
+                display-name-singular: Tokens
+                cache:
+                  warm-on-join: true
+                  warm-on-teleport: true
+            """);
+
+    var gold = config.getCurrencyOptions("gold");
+    var tokens = config.getCurrencyOptions("tokens");
+
+    assertNotNull(gold);
+    assertNotNull(tokens);
+
+    assertFalse(gold.getCacheOptions().isWarmOnJoinEnabled());
+    assertTrue(gold.getCacheOptions().isWarmOnTeleportEnabled());
+
+    assertTrue(tokens.getCacheOptions().isWarmOnJoinEnabled());
+    assertTrue(tokens.getCacheOptions().isWarmOnTeleportEnabled());
   }
 
   YamlEconomyConfig getStringYamlJConomyConfig(String yaml) {
