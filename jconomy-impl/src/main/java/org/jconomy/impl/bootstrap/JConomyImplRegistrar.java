@@ -3,6 +3,18 @@ package org.jconomy.impl.bootstrap;
 import org.jconomy.dependencyinjection.JConomyServiceBuilder;
 import org.jconomy.storage.DefaultFlushRegistry;
 import org.jconomy.storage.FlushRegistry;
+import org.jconomy.accounts.AccountAccess;
+import org.jconomy.accounts.DefaultAccountAccess;
+import org.jconomy.accounts.BalanceAccess;
+import org.jconomy.accounts.DefaultBalanceAccess;
+import org.jconomy.accounts.AccountRepository;
+import org.jconomy.accounts.BalanceRepository;
+import org.jconomy.accounts.SqliteAccountRepository;
+import org.jconomy.accounts.SqliteBalanceRepository;
+import org.jconomy.accounts.AccountCache;
+import org.jconomy.accounts.BalanceCache;
+import org.jconomy.accounts.LruAccountCache;
+import org.jconomy.accounts.LruBalanceCache;
 
 public final class JConomyImplRegistrar {
 
@@ -14,6 +26,12 @@ public final class JConomyImplRegistrar {
             throw new IllegalArgumentException("builder cannot be null");
         }
 
+        builder.addSingleton(AccountCache.class, LruAccountCache.class);
+        builder.addSingleton(BalanceCache.class, LruBalanceCache.class);
+        builder.addSingleton(AccountRepository.class, SqliteAccountRepository.class);
+        builder.addSingleton(BalanceRepository.class, SqliteBalanceRepository.class);
+        builder.addSingleton(AccountAccess.class, DefaultAccountAccess.class);
+        builder.addSingleton(BalanceAccess.class, DefaultBalanceAccess.class);
         builder.addSingleton(FlushRegistry.class, DefaultFlushRegistry.class);
     }
 }
