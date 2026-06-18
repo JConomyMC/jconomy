@@ -1,4 +1,4 @@
-package org.jconomy.accounts;
+package org.jconomy.balances;
 
 import java.math.BigDecimal;
 import java.util.Objects;

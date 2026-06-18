@@ -1,4 +1,4 @@
-package org.jconomy.accounts;
+package org.jconomy.balances;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

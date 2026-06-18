@@ -17,8 +17,8 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.jconomy.accounts.Balance;
-import org.jconomy.accounts.BalanceAccess;
+import org.jconomy.balances.Balance;
+import org.jconomy.balances.BalanceAccess;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.config.economy.EconomyConfig;
 

@@ -13,7 +13,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import org.jconomy.accounts.BalanceAccess;
+import org.jconomy.balances.BalanceAccess;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.config.economy.EconomyConfig;
 
