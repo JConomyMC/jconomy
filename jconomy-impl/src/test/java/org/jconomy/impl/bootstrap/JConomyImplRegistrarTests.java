@@ -31,6 +31,8 @@ import org.jconomy.storage.SqlConnectionFactory;
 import org.jconomy.storage.DatabaseMigrator;
 import org.jconomy.FeatureManager;
 import org.jconomy.config.CacheConfig;
+import org.jconomy.config.DefaultVaultLegacyAdapterConfig;
+import org.jconomy.config.VaultLegacyAdapterConfig;
 
 class JConomyImplRegistrarTests {
 
@@ -97,6 +99,9 @@ class JConomyImplRegistrarTests {
 
         assertTrue(builder.singletonImplementations.containsKey(CacheConfig.class));
         assertTrue(builder.singletonImplementations.containsKey(FeatureManager.class));
+        assertTrue(builder.singletonImplementations.containsKey(VaultLegacyAdapterConfig.class));
+        assertEquals(DefaultVaultLegacyAdapterConfig.class,
+            builder.singletonImplementations.get(VaultLegacyAdapterConfig.class));
     }
 
     private static final class NoopBuilder implements JConomyServiceBuilder {
