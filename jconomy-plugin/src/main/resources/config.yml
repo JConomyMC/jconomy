@@ -107,6 +107,18 @@ currencies:
   #       # String or symbol used to separate the integer part from the fractional part.
   #       # Default: '.'
   #       separator: '.'
+  #
+  #   # Cache warming controls for this currency.
+  #   cache:
+  #     # Whether to preload this currency's balance when a player joins the server.
+  #     # Only takes effect when cache.warm-on-join is true.
+  #     # Default: true for the default currency, false for all other currencies.
+  #     warm-on-join: true
+  #
+  #     # Whether to preload this currency's balance when a player teleports to another world.
+  #     # Only takes effect when cache.warm-on-teleport is true.
+  #     # Default: false.
+  #     warm-on-teleport: false
 
   gold:
     display-name-singular: Gold Coin
@@ -123,6 +135,16 @@ cache:
   # For fine-tuning performance on very large servers.
   # Default: 10,000.
   lru-limit: 10000
+
+  # Whether to preload player balances when they join the server.
+  # Per-currency control is available via currencies.<name>.cache.warm-on-join.
+  # Default: true.
+  warm-on-join: true
+
+  # Whether to preload player balances when they teleport to another world.
+  # Per-currency control is available via currencies.<name>.cache.warm-on-teleport.
+  # Default: true.
+  warm-on-teleport: true
 
   periodic-flush:
     # Periodically flush dirty cached data to reduce the risk of data loss on
