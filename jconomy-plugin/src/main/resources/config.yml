@@ -1,3 +1,7 @@
+# --------------------------------------------------------
+# Full reference: https://docs.jconomy.org/configuration/
+# --------------------------------------------------------
+
 # Required for automatically migrating the config.
 # Don't change this value.
 config-version: 1
@@ -8,7 +12,6 @@ vault-legacy-adapter:
   enabled: false
 
 # The name of the world to use for a player's default account.
-# Default: 'world'
 default-world: world
 
 # The name of the primary currency.
@@ -16,36 +19,23 @@ default-world: world
 # Legacy economy providers will always use this currency.
 default-currency: gold
 
-# Default format rules to apply to currencies.
-# These can be overridden as individual currencies.
+# Default format rules for all currencies.
+# Individual currencies can override these values.
 default-number-formatter:
-  # How digits are grouped before the decimal 
   grouping:
-    # Amount of digits per group.
-    # Set to 0 for no grouping.
-    # Default: 3
     group-size: 3
-    
-    # String or symbol used to separate a group.
-    # Setting to empty string ('') effectively means no grouping.
-    # Default: ''
+
+    # Set to '' for no visible separator.
     separator: ','
-  
-  # How the fractional part should be displayed.
-  # Does not affect how it is stored.
+
+  # Display-only settings (storage is unaffected).
   fractional:
-    # Whether the displayed amount should round to the nearest place it can show.
-    # If false, will always round down.
-    # Default: true
+    # If false, decimals are truncated.
     round: true
 
-    # How many places to show after the decimal.
-    # If 0, the formatter will drop any separator.
-    # Default: 2
+    # If 0, the fractional separator is removed.
     places: 2
 
-    # String or symbol used to separate the integer part from the fractional part.
-    # Default: '.'
     separator: '.'
 
 # ---------------------------
@@ -53,105 +43,29 @@ default-number-formatter:
 # ---------------------------
 
 currencies:
-  # # Begin a currency section. You can use any string as a key in place of 'currency-name'.
-  # currency-name:
-  #   # Singular form of the display name.
-  #   # If not provided, JConomy will attempt to fallback to the plural name.
-  #   display-name-singular: Jelly Coin
-  #   
-  #   # Plural form of the display name.
-  #   # If not provided, JConomy will attempt to fallback to the singlular name.
-  #   display-name-plural: Jelly Coins
-  #
-  #   # Symbol to use next to the currency.
-  #   # Can use '' for no symbol.
-  #   # Default: ''
-  #   symbol: '$'
-  #
-  #   # How the currency display string is assembled.
-  #   # The following placeholders are supported:
-  #   # - %amount_raw% : The absolute value unformatted. Could be ugly
-  #   # - %amount_formatted% : The absolute value formatted by the number-formatter. Usually recommended for showing amounts.
-  #   # - %symbol% : The currency symbol
-  #   # - %display_name% : The display-name-singular, if the rounded amount is 1; else, the display-name-plural.
-  #   # - %sign% : If positive, nothing; if negative, '-'
-  #   # Default: '%sign%%symbol%%amount_formatted%'
-  #   format-string: '%sign%%symbol%%amount_formatted%'
-  #
-  #   # Format rules for how this currency is displayed.
-  #   # You can omit any of these rules if you would like to use the defaults configured above.
-  #   number-formatter:
-  #     # How digits are grouped before the decimal 
-  #     grouping:
-  #       # Amount of digits per group.
-  #       # Set to 0 for no grouping.
-  #       # Default: 3
-  #       group-size: 3
-  #
-  #       # String or symbol used to separate a group.
-  #       # Setting to empty string ('') effectively means no grouping.
-  #       # Default: ''
-  #       separator: ''
-  #     
-  #     # How the fractional part should be displayed.
-  #     # Does not affect how it is stored.
-  #     fractional:
-  #       # Whether the displayed amount should round to the nearest place it can show.
-  #       # If false, will always round down.
-  #       # Default: true
-  #       round: true
-  #       # How many places to show after the decimal.
-  #       # If 0, the formatter will drop any separator.
-  #       # Default: 2
-  #       places: 2
-  #       # String or symbol used to separate the integer part from the fractional part.
-  #       # Default: '.'
-  #       separator: '.'
-  #
-  #   # Cache warming controls for this currency.
-  #   cache:
-  #     # Whether to preload this currency's balance when a player joins the server.
-  #     # Only takes effect when cache.warm-on-join is true.
-  #     # Default: true for the default currency, false for all other currencies.
-  #     warm-on-join: true
-  #
-  #     # Whether to preload this currency's balance when a player teleports to another world.
-  #     # Only takes effect when cache.warm-on-teleport is true.
-  #     # Default: false.
-  #     warm-on-teleport: false
-
+  # Add any amount of currencies here.
+  # Use any key (e.g., 'gold' below) to begin a currency section.
   gold:
-    display-name-singular: Gold Coin
-    display-name-plural: Gold Coins
-    symbol: '&6🪙ɢᴏʟᴅ'
-    format-string: '%amount% %symbol%'
+    display-name-singular: '&6ɢᴏʟᴅ ᴄᴏɪɴs'
+    display-name-plural: '&6ɢᴏʟᴅ ᴄᴏɪɴ'
+    symbol: '&🪙ɢᴏʟᴅ'
+    format-string: '%sign%%symbol%%amount_formatted% %display_name%'
     number-formatter:
       fractional:
         places: 0
 
 # Player balance cache settings.
 cache:
-  # Configures how many of the most recently accessed players to cache.
-  # For fine-tuning performance on very large servers.
-  # Default: 10,000.
   lru-limit: 10000
 
-  # Whether to preload player balances when they join the server.
-  # Per-currency control is available via currencies.<name>.cache.warm-on-join.
-  # Default: true.
+  # Per-currency overrides are available at currencies.<name>.cache.*
   warm-on-join: true
 
-  # Whether to preload player balances when they teleport to another world.
-  # Per-currency control is available via currencies.<name>.cache.warm-on-teleport.
-  # Default: true.
   warm-on-teleport: true
 
   periodic-flush:
-    # Periodically flush dirty cached data to reduce the risk of data loss on
-    # improper plugin shutdowns. Shutdown flushing always runs regardless of
-    # this setting. Set to false to disable the background flush task only.
-    # Default: true.
+    # Disabling this turns off only background flushes.
+    # Dirty records are still flushed on clean shutdown.
     enabled: true
-    # How often dirty records are flushed, in ticks (20 ticks = 1 second).
-    # Default: 1200 (approximately every 1 minute at 20 TPS).
+    # Flush interval in ticks (20 ticks = 1 second).
     interval-ticks: 1200
