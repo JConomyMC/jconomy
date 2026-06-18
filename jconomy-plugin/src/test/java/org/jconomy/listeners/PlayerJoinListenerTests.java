@@ -284,6 +284,45 @@ class PlayerJoinListenerTests {
         verify(account, times(1)).getBalance(anyString());
     }
 
+    @Test
+    void cacheDefaultWorldBalance_continues_when_balance_resolution_fails_for_one_currency() {
+        var playerId = UUID.randomUUID();
+        var player = playerInWorld(playerId, "world");
+        var event = new PlayerJoinEvent(player, "");
+        var account = mock(Account.class);
+
+        var goldOptions = mock(EconomyConfig.CurrencyOptions.class);
+        var goldCacheOptions = mock(EconomyConfig.CurrencyOptions.CurrencyCacheOptions.class);
+        when(goldOptions.getCacheOptions()).thenReturn(goldCacheOptions);
+        when(goldCacheOptions.isWarmOnJoinEnabled()).thenReturn(true);
+
+        var tokensOptions = mock(EconomyConfig.CurrencyOptions.class);
+        var tokensCacheOptions = mock(EconomyConfig.CurrencyOptions.CurrencyCacheOptions.class);
+        when(tokensOptions.getCacheOptions()).thenReturn(tokensCacheOptions);
+        when(tokensCacheOptions.isWarmOnJoinEnabled()).thenReturn(true);
+
+        when(cacheConfig.isWarmOnJoinEnabled()).thenReturn(true);
+        when(config.getDefaultWorldName()).thenReturn("world");
+        when(config.getAllCurrencyNames()).thenReturn(Set.of("gold", "tokens"));
+        when(config.getCurrencyOptions("gold")).thenReturn(goldOptions);
+        when(config.getCurrencyOptions("tokens")).thenReturn(tokensOptions);
+        when(accountAccess.getByIdAndWorld(playerId, "world")).thenReturn(Optional.of(account));
+
+        doThrow(new RuntimeException("balance resolution failure")).when(account).getBalance("gold");
+
+        doAnswer(invocation -> {
+            Runnable task = invocation.getArgument(1);
+            task.run();
+            return null;
+        }).when(scheduler).runTaskAsynchronously(eq(plugin), any(Runnable.class));
+
+        assertDoesNotThrow(() -> listener.cacheDefaultWorldBalance(event));
+
+        verify(scheduler, times(2)).runTaskAsynchronously(eq(plugin), any(Runnable.class));
+        verify(account).getBalance("gold");
+        verify(account).getBalance("tokens");
+    }
+
     // --- Helpers ---
 
     private static Player playerInWorld(UUID id, String worldName) {
