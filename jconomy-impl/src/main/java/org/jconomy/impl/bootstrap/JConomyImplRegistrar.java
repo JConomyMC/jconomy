@@ -25,6 +25,8 @@ import org.jconomy.config.DefaultCacheConfig;
 import org.jconomy.config.DefaultFeatureManager;
 import org.jconomy.config.DefaultVaultLegacyAdapterConfig;
 import org.jconomy.config.VaultLegacyAdapterConfig;
+import org.jconomy.config.economy.EconomyConfig;
+import org.jconomy.config.economy.YamlEconomyConfig;
 import org.jconomy.presentation.CurrencyFormatter;
 import org.jconomy.presentation.DefaultCurrencyFormatter;
 import org.jconomy.presentation.DefaultNumberFormatter;
@@ -52,6 +54,7 @@ public final class JConomyImplRegistrar {
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
         builder.addSingleton(FeatureManager.class, DefaultFeatureManager.class);
         builder.addSingleton(VaultLegacyAdapterConfig.class, DefaultVaultLegacyAdapterConfig.class);
+        builder.addSingleton(EconomyConfig.class, YamlEconomyConfig.class);
         builder.addSingleton(NumberFormatter.class, DefaultNumberFormatter.class);
         builder.addSingleton(CurrencyFormatter.class, DefaultCurrencyFormatter.class);
     }

@@ -15,7 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.jconomy.config.economy.YamlEconomyConfig;
 import com.jellyrekt.storage.configuration.file.yaml.StringYamlConfigurationProvider;
 
-public class YamlJConomyConfigTests {
+public class YamlEconomyConfigTests {
 
   private static final String TEST_CURRENCY = "testcur";
 

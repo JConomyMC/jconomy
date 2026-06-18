@@ -28,7 +28,6 @@ import org.jconomy.config.DefaultJConomyConfig;
 import org.jconomy.config.JConomyConfig;
 import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.config.economy.EconomyConfig;
-import org.jconomy.config.economy.YamlEconomyConfig;
 import org.jconomy.dependencyinjection.DefaultServiceBuilder;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.extensions.ExtensionManager;
@@ -63,7 +62,6 @@ public class JConomyServiceRegistrar {
         builder.addSingletonFactory(CacheConfig.PeriodicFlushConfig.class, sp ->
                 sp.getRequiredService(CacheConfig.class).getPeriodicFlushConfig());
         builder.addSingleton(PeriodicFlushScheduler.class);
-        builder.addSingleton(EconomyConfig.class, YamlEconomyConfig.class);
         JConomyImplRegistrar.registerServices(builder);
         builder.addSingleton(Economy.class, EconomyImp.class);
         builder.addSingleton(EconomyResponseMapper.class, DefaultResponseMapper.class);

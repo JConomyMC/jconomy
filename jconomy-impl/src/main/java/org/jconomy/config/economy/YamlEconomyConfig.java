@@ -29,7 +29,7 @@ public class YamlEconomyConfig implements EconomyConfig {
         }
         return null;
     }
-    
+
     @Override
     public Set<String> getAllCurrencyNames() {
         return config.getSection("currencies").getKeys(false);
@@ -44,7 +44,7 @@ public class YamlEconomyConfig implements EconomyConfig {
         }
         return null;
     }
-    
+
     public class YamlNumberFormatterOptions implements NumberFormatterOptions {
         private final JConomyConfig config;
         private final NumberFormatterOptions defaultNumberFormatterOptions;

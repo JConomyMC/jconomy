@@ -21,6 +21,13 @@
         <maven.compiler.target>21</maven.compiler.target>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.jconomy</groupId>
@@ -35,9 +42,29 @@
         </dependency>
 
         <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>1.21.5-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
             <version>2.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jellyrekt.storage</groupId>
+            <artifactId>file-configuration-storage</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jellyrekt.storage</groupId>
+            <artifactId>file-configuration-storage-test</artifactId>
+            <version>1.0.1</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

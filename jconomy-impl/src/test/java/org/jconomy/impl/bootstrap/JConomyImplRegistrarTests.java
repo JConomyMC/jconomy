@@ -33,6 +33,8 @@ import org.jconomy.FeatureManager;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.config.DefaultVaultLegacyAdapterConfig;
 import org.jconomy.config.VaultLegacyAdapterConfig;
+import org.jconomy.config.economy.EconomyConfig;
+import org.jconomy.config.economy.YamlEconomyConfig;
 import org.jconomy.presentation.CurrencyFormatter;
 import org.jconomy.presentation.DefaultCurrencyFormatter;
 import org.jconomy.presentation.DefaultNumberFormatter;
@@ -106,6 +108,8 @@ class JConomyImplRegistrarTests {
         assertTrue(builder.singletonImplementations.containsKey(VaultLegacyAdapterConfig.class));
         assertEquals(DefaultVaultLegacyAdapterConfig.class,
             builder.singletonImplementations.get(VaultLegacyAdapterConfig.class));
+        assertTrue(builder.singletonImplementations.containsKey(EconomyConfig.class));
+        assertEquals(YamlEconomyConfig.class, builder.singletonImplementations.get(EconomyConfig.class));
         assertTrue(builder.singletonImplementations.containsKey(NumberFormatter.class));
         assertTrue(builder.singletonImplementations.containsKey(CurrencyFormatter.class));
         assertEquals(DefaultNumberFormatter.class, builder.singletonImplementations.get(NumberFormatter.class));
