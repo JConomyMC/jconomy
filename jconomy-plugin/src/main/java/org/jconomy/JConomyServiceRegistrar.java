@@ -5,16 +5,8 @@ import java.util.logging.Logger;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import org.jconomy.accounts.AccountAccess;
-import org.jconomy.accounts.AccountCache;
 import org.jconomy.accounts.AccountRepository;
-import org.jconomy.accounts.BalanceAccess;
-import org.jconomy.accounts.BalanceCache;
 import org.jconomy.accounts.BalanceRepository;
-import org.jconomy.accounts.DefaultAccountAccess;
-import org.jconomy.accounts.DefaultBalanceAccess;
-import org.jconomy.accounts.LruAccountCache;
-import org.jconomy.accounts.LruBalanceCache;
 import org.jconomy.accounts.SqliteAccountRepository;
 import org.jconomy.accounts.SqliteBalanceRepository;
 import org.jconomy.adapters.BukkitPlayerResolver;
@@ -83,18 +75,12 @@ public class JConomyServiceRegistrar {
         builder.addSingleton(PeriodicFlushScheduler.class);
         builder.addSingleton(FeatureManager.class, DefaultFeatureManager.class);
         builder.addSingleton(VaultLegacyAdapterConfig.class, DefaultVaultLegacyAdapterConfig.class);
-        builder.addSingleton(AccountCache.class, LruAccountCache.class);
-        builder.addSingleton(BalanceCache.class, LruBalanceCache.class);
         builder.addSingleton(EconomyConfig.class, YamlEconomyConfig.class);
         builder.addSingleton(NumberFormatter.class, DefaultNumberFormatter.class);
         builder.addSingleton(CurrencyFormatter.class, DefaultCurrencyFormatter.class);
         builder.addSingleton(SqlConnectionFactory.class,
                 new SqliteConnectionFactory(plugin.getDataFolder().toPath().resolve("jconomy.db")));
         builder.addSingleton(DatabaseMigrator.class, SqliteMigrator.class);
-        builder.addSingleton(AccountRepository.class, SqliteAccountRepository.class);
-        builder.addSingleton(BalanceRepository.class, SqliteBalanceRepository.class);
-        builder.addSingleton(AccountAccess.class, DefaultAccountAccess.class);
-        builder.addSingleton(BalanceAccess.class, DefaultBalanceAccess.class);
         JConomyImplRegistrar.registerServices(builder);
         builder.addSingleton(Economy.class, EconomyImp.class);
         builder.addSingleton(EconomyResponseMapper.class, DefaultResponseMapper.class);

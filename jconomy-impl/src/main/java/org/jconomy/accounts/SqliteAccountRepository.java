@@ -122,4 +122,3 @@ public class SqliteAccountRepository implements AccountRepository {
         return accounts;
     }
 }
-
