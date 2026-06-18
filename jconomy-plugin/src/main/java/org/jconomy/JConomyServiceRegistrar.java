@@ -36,8 +36,6 @@ import org.jconomy.impl.bootstrap.JConomyImplRegistrar;
 import org.incendo.cloud.paper.LegacyPaperCommandManager;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.presentation.CurrencyFormatter;
-import org.jconomy.presentation.DefaultCurrencyFormatter;
-import org.jconomy.presentation.DefaultNumberFormatter;
 import org.jconomy.presentation.NumberFormatter;
 import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.PeriodicFlushScheduler;
@@ -66,8 +64,6 @@ public class JConomyServiceRegistrar {
                 sp.getRequiredService(CacheConfig.class).getPeriodicFlushConfig());
         builder.addSingleton(PeriodicFlushScheduler.class);
         builder.addSingleton(EconomyConfig.class, YamlEconomyConfig.class);
-        builder.addSingleton(NumberFormatter.class, DefaultNumberFormatter.class);
-        builder.addSingleton(CurrencyFormatter.class, DefaultCurrencyFormatter.class);
         JConomyImplRegistrar.registerServices(builder);
         builder.addSingleton(Economy.class, EconomyImp.class);
         builder.addSingleton(EconomyResponseMapper.class, DefaultResponseMapper.class);

@@ -33,6 +33,10 @@ import org.jconomy.FeatureManager;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.config.DefaultVaultLegacyAdapterConfig;
 import org.jconomy.config.VaultLegacyAdapterConfig;
+import org.jconomy.presentation.CurrencyFormatter;
+import org.jconomy.presentation.DefaultCurrencyFormatter;
+import org.jconomy.presentation.DefaultNumberFormatter;
+import org.jconomy.presentation.NumberFormatter;
 
 class JConomyImplRegistrarTests {
 
@@ -102,6 +106,10 @@ class JConomyImplRegistrarTests {
         assertTrue(builder.singletonImplementations.containsKey(VaultLegacyAdapterConfig.class));
         assertEquals(DefaultVaultLegacyAdapterConfig.class,
             builder.singletonImplementations.get(VaultLegacyAdapterConfig.class));
+        assertTrue(builder.singletonImplementations.containsKey(NumberFormatter.class));
+        assertTrue(builder.singletonImplementations.containsKey(CurrencyFormatter.class));
+        assertEquals(DefaultNumberFormatter.class, builder.singletonImplementations.get(NumberFormatter.class));
+        assertEquals(DefaultCurrencyFormatter.class, builder.singletonImplementations.get(CurrencyFormatter.class));
     }
 
     private static final class NoopBuilder implements JConomyServiceBuilder {
