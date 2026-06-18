@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>jconomy-api</module>
+        <module>jconomy-impl</module>
         <module>jconomy-plugin</module>
     </modules>
 
