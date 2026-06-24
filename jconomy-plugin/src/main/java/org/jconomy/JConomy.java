@@ -5,10 +5,10 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import com.jellyrekt.configuration.migration.ConfigMigration;
 import com.jellyrekt.configuration.migration.ConfigMigrator;
 
 import org.jconomy.commands.CommandManagerFactory;
+import org.jconomy.config.migrations.ConfigMigrationV1;
 import org.jconomy.commands.admin.AccountCommandRegistrar;
 import org.jconomy.commands.admin.BalanceCommandRegistrar;
 import org.jconomy.commands.transfer.TransferCommandRegistrar;
@@ -19,6 +19,7 @@ import org.jconomy.extensions.DefaultExtensionManager;
 import org.jconomy.extensions.ExtensionManager;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.config.VaultLegacyAdapterConfig;
+import org.jconomy.config.migrations.*;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.storage.DatabaseMigrator;
@@ -72,14 +73,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
 
     private static ConfigMigrator buildConfigMigrator() {
         return ConfigMigrator.builder("config-version")
-                .addNext(config -> {
-                    if (!config.contains("cache.lru-limit"))
-                        config.set("cache.lru-limit", 10000);
-                    if (!config.contains("cache.periodic-flush.enabled"))
-                        config.set("cache.periodic-flush.enabled", true);
-                    if (!config.contains("cache.periodic-flush.interval-ticks"))
-                        config.set("cache.periodic-flush.interval-ticks", 1200);
-                })
+                .addNext(new ConfigMigrationV1())
                 .build();
     }
 
