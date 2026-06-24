@@ -5,6 +5,9 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
+import com.jellyrekt.configuration.migration.ConfigMigration;
+import com.jellyrekt.configuration.migration.ConfigMigrator;
+
 import org.jconomy.commands.CommandManagerFactory;
 import org.jconomy.commands.admin.AccountCommandRegistrar;
 import org.jconomy.commands.admin.BalanceCommandRegistrar;
@@ -55,7 +58,9 @@ public class JConomy extends JavaPlugin implements PluginContext {
             return;
         }
 
-        services.getRequiredService(ConfigMigrator.class).migrate();
+        saveDefaultConfig();
+        buildConfigMigrator().migrate(getConfig());
+        saveConfig();
         services.getRequiredService(DatabaseMigrator.class).migrate();
         registerFlushables();
         startPeriodicFlushIfEnabled();
@@ -63,6 +68,19 @@ public class JConomy extends JavaPlugin implements PluginContext {
         registerServices();
         registerEvents();
         registerCommands();
+    }
+
+    private static ConfigMigrator buildConfigMigrator() {
+        return ConfigMigrator.builder("config-version")
+                .addNext(config -> {
+                    if (!config.contains("cache.lru-limit"))
+                        config.set("cache.lru-limit", 10000);
+                    if (!config.contains("cache.periodic-flush.enabled"))
+                        config.set("cache.periodic-flush.enabled", true);
+                    if (!config.contains("cache.periodic-flush.interval-ticks"))
+                        config.set("cache.periodic-flush.interval-ticks", 1200);
+                })
+                .build();
     }
 
     private void registerFlushables() {
