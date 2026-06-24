@@ -188,17 +188,19 @@ class EconomyImpTests {
     @Test
     void createAccount_returns_true_on_success() {
         var id = UUID.randomUUID();
-        when(accountAccess.createAccount(id, "Alice")).thenReturn(true);
+        when(accountAccess.getAccount(id)).thenReturn(Optional.empty());
 
         assertTrue(economy.createAccount(id, "Alice", "world"));
+        verify(accountAccess).save(new Account(id, "Alice"));
     }
 
     @Test
     void createAccount_returns_false_when_account_already_exists() {
         var id = UUID.randomUUID();
-        when(accountAccess.createAccount(id, "Alice")).thenReturn(false);
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
 
         assertFalse(economy.createAccount(id, "Alice", "world"));
+        verify(accountAccess, never()).save(any());
     }
 
     // --- hasAccount ---

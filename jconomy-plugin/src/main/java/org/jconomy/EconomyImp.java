@@ -142,7 +142,9 @@ public class EconomyImp implements Economy {
     @Override
     public boolean createAccount(UUID accountId, String name, String worldName, boolean isPlayerAccount) {
         try {
-            return accountAccess.createAccount(accountId, name);
+            if (accountAccess.getAccount(accountId).isPresent()) return false;
+            accountAccess.save(new Account(accountId, name));
+            return true;
         } catch (Exception ex) {
             var message = String.format("Unable to create account(accountId='%s',name='%s'): %s",
                     accountId, name, ex.getMessage());

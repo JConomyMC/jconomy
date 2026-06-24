@@ -82,25 +82,6 @@ class DefaultAccountAccessTests {
         assertEquals("Bob", cache.get(id).get().getName());
     }
 
-    // --- createAccount ---
-
-    @Test
-    void createAccount_delegates_to_repository_and_returns_result() {
-        var id = UUID.randomUUID();
-        repository.createAccountResult = true;
-
-        assertTrue(access.createAccount(id, "Player"));
-        assertEquals(id, repository.lastCreatedId);
-        assertEquals("Player", repository.lastCreatedName);
-    }
-
-    @Test
-    void createAccount_returns_false_when_repository_returns_false() {
-        repository.createAccountResult = false;
-
-        assertFalse(access.createAccount(UUID.randomUUID(), "Player"));
-    }
-
     // --- deleteAccount ---
 
     @Test
@@ -139,9 +120,6 @@ class DefaultAccountAccessTests {
         private final Map<UUID, Account> store = new HashMap<>();
         boolean getAccountCalled = false;
         boolean upsertCalled = false;
-        boolean createAccountResult = false;
-        UUID lastCreatedId = null;
-        String lastCreatedName = null;
         boolean deleteAccountCalled = false;
 
         void store(Account account) {
@@ -163,13 +141,6 @@ class DefaultAccountAccessTests {
         public void upsert(Account account) {
             upsertCalled = true;
             store.put(account.getAccountId(), account);
-        }
-
-        @Override
-        public boolean createAccount(UUID accountId, String name) {
-            lastCreatedId = accountId;
-            lastCreatedName = name;
-            return createAccountResult;
         }
 
         @Override

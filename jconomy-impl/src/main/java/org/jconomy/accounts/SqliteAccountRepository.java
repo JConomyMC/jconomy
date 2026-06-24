@@ -64,24 +64,6 @@ public class SqliteAccountRepository implements AccountRepository {
     }
 
     @Override
-    public boolean createAccount(UUID accountId, String name) {
-        var sql = """
-                insert into accounts (account_id, account_name)
-                values (?, ?)
-                on conflict (account_id) do nothing
-                """;
-        try (
-                var connection = connectionFactory.createConnection();
-                var stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, accountId.toString());
-            stmt.setString(2, name);
-            return stmt.executeUpdate() > 0;
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    @Override
     public void deleteAccount(UUID accountId) {
         var deleteBalances = "delete from account_balances where account_id = ?";
         var deleteAccount = "delete from accounts where account_id = ?";

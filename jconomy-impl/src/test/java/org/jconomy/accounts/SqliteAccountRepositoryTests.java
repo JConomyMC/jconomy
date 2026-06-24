@@ -97,39 +97,6 @@ class SqliteAccountRepositoryTests {
         assertEquals("Bob", repository.getAccount(id).get().getName());
     }
 
-    // --- createAccount ---
-
-    @Test
-    void createAccount_inserts_account_row() {
-        var id = UUID.randomUUID();
-
-        repository.createAccount(id, "Player");
-
-        assertTrue(accountEntityExists(id));
-    }
-
-    @Test
-    void createAccount_returns_true_for_new_account() {
-        assertTrue(repository.createAccount(UUID.randomUUID(), "Player"));
-    }
-
-    @Test
-    void createAccount_returns_false_for_existing_account() throws Exception {
-        var id = UUID.randomUUID();
-        insertAccount(id, "Player");
-
-        assertFalse(repository.createAccount(id, "Player"));
-    }
-
-    @Test
-    void createAccount_is_idempotent() throws Exception {
-        var id = UUID.randomUUID();
-        insertAccount(id, "Player");
-
-        assertDoesNotThrow(() -> repository.createAccount(id, "Player"));
-        assertTrue(accountEntityExists(id));
-    }
-
     // --- deleteAccount ---
 
     @Test

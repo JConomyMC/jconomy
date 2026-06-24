@@ -35,11 +35,6 @@ public class DefaultAccountAccess implements AccountAccess {
     }
 
     @Override
-    public boolean createAccount(UUID accountId, String name) {
-        return repository.createAccount(accountId, name);
-    }
-
-    @Override
     public void deleteAccount(UUID accountId) {
         repository.deleteAccount(accountId);
         cache.remove(accountId);
