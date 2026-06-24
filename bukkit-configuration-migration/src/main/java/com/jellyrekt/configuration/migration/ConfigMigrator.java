@@ -17,6 +17,14 @@ public class ConfigMigrator {
     }
 
     public void migrate(Configuration config) {
+        int currentVersion = config.getInt(versionPath, 0);
+        for (RegisteredConfigMigration registered : migrations) {
+            if (currentVersion < registered.targetVersion()) {
+                registered.migration().apply(config);
+                config.set(versionPath, registered.targetVersion());
+                currentVersion = registered.targetVersion();
+            }
+        }
     }
 
     public static Builder builder(String versionPath) {
