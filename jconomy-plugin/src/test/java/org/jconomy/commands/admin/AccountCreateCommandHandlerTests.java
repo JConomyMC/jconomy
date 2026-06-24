@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.bukkit.OfflinePlayer;
@@ -12,6 +13,7 @@ import org.incendo.cloud.context.CommandContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.jconomy.accounts.Account;
 import org.jconomy.accounts.AccountAccess;
 import org.jconomy.adapters.PlayerResolver;
 
@@ -42,11 +44,11 @@ class AccountCreateCommandHandlerTests {
         when(player.getName()).thenReturn("Steve");
         when(playerResolver.resolve("Steve")).thenReturn(player);
         when(context.get("player")).thenReturn("Steve");
-        when(accountAccess.createAccount(playerId, "Steve")).thenReturn(true);
+        when(accountAccess.getAccount(playerId)).thenReturn(Optional.empty());
 
         handler.execute(context);
 
-        verify(accountAccess).createAccount(playerId, "Steve");
+        verify(accountAccess).save(new Account(playerId, "Steve"));
         verify(sender).sendMessage(contains("Steve"));
     }
 
@@ -58,10 +60,11 @@ class AccountCreateCommandHandlerTests {
         when(player.getName()).thenReturn("Steve");
         when(playerResolver.resolve("Steve")).thenReturn(player);
         when(context.get("player")).thenReturn("Steve");
-        when(accountAccess.createAccount(playerId, "Steve")).thenReturn(false);
+        when(accountAccess.getAccount(playerId)).thenReturn(Optional.of(new Account(playerId, "Steve")));
 
         handler.execute(context);
 
+        verify(accountAccess, never()).save(any());
         verify(sender).sendMessage(anyString());
     }
 
@@ -73,6 +76,6 @@ class AccountCreateCommandHandlerTests {
         handler.execute(context);
 
         verify(sender).sendMessage(anyString());
-        verify(accountAccess, never()).createAccount(any(), any());
+        verify(accountAccess, never()).save(any());
     }
 }
