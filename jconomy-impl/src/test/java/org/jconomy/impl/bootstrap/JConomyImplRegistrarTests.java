@@ -15,14 +15,6 @@ import org.jconomy.dependencyinjection.JConomyServiceBuilder;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.DefaultFlushRegistry;
-import org.jconomy.accounts.AccountAccess;
-import org.jconomy.accounts.DefaultAccountAccess;
-import org.jconomy.balances.BalanceAccess;
-import org.jconomy.balances.DefaultBalanceAccess;
-import org.jconomy.accounts.AccountCache;
-import org.jconomy.accounts.LruAccountCache;
-import org.jconomy.balances.BalanceCache;
-import org.jconomy.balances.LruBalanceCache;
 import org.jconomy.accounts.AccountRepository;
 import org.jconomy.accounts.SqliteAccountRepository;
 import org.jconomy.balances.BalanceRepository;
@@ -30,7 +22,6 @@ import org.jconomy.balances.SqliteBalanceRepository;
 import org.jconomy.storage.SqlConnectionFactory;
 import org.jconomy.storage.DatabaseMigrator;
 import org.jconomy.FeatureManager;
-import org.jconomy.config.CacheConfig;
 import org.jconomy.config.DefaultVaultLegacyAdapterConfig;
 import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.config.economy.EconomyConfig;
@@ -65,12 +56,8 @@ class JConomyImplRegistrarTests {
 
         JConomyImplRegistrar.registerServices(builder);
 
-        assertTrue(builder.singletonImplementations.containsKey(AccountCache.class));
-        assertEquals(LruAccountCache.class, builder.singletonImplementations.get(AccountCache.class));
         assertTrue(builder.singletonImplementations.containsKey(AccountRepository.class));
         assertEquals(SqliteAccountRepository.class, builder.singletonImplementations.get(AccountRepository.class));
-        assertTrue(builder.singletonImplementations.containsKey(AccountAccess.class));
-        assertEquals(DefaultAccountAccess.class, builder.singletonImplementations.get(AccountAccess.class));
     }
 
     @Test
@@ -79,12 +66,8 @@ class JConomyImplRegistrarTests {
 
         JConomyImplRegistrar.registerServices(builder);
 
-        assertTrue(builder.singletonImplementations.containsKey(BalanceCache.class));
-        assertEquals(LruBalanceCache.class, builder.singletonImplementations.get(BalanceCache.class));
         assertTrue(builder.singletonImplementations.containsKey(BalanceRepository.class));
         assertEquals(SqliteBalanceRepository.class, builder.singletonImplementations.get(BalanceRepository.class));
-        assertTrue(builder.singletonImplementations.containsKey(BalanceAccess.class));
-        assertEquals(DefaultBalanceAccess.class, builder.singletonImplementations.get(BalanceAccess.class));
     }
 
     @Test
@@ -103,7 +86,6 @@ class JConomyImplRegistrarTests {
 
         JConomyImplRegistrar.registerServices(builder);
 
-        assertTrue(builder.singletonImplementations.containsKey(CacheConfig.class));
         assertTrue(builder.singletonImplementations.containsKey(FeatureManager.class));
         assertTrue(builder.singletonImplementations.containsKey(VaultLegacyAdapterConfig.class));
         assertEquals(DefaultVaultLegacyAdapterConfig.class,
