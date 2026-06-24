@@ -49,7 +49,6 @@ public class JConomyServiceRegistrar {
         builder.addSingleton(JavaPlugin.class, plugin);
         builder.addSingleton(PluginContext.class, pluginContext);
         builder.addSingleton(Logger.class, plugin.getLogger());
-        builder.addSingleton(ConfigMigrator.class, DefaultConfigMigrator.class);
         builder.addSingletonFactory(CacheConfig.PeriodicFlushConfig.class, sp ->
                 sp.getRequiredService(CacheConfig.class).getPeriodicFlushConfig());
         builder.addSingleton(PeriodicFlushScheduler.class);
