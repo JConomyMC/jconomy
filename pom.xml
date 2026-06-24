@@ -9,6 +9,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
+        <module>bukkit-configuration-migration</module>
         <module>jconomy-api</module>
         <module>jconomy-impl</module>
         <module>jconomy-plugin</module>
