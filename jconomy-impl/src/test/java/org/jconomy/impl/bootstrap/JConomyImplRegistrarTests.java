@@ -20,7 +20,6 @@ import org.jconomy.accounts.SqliteAccountRepository;
 import org.jconomy.balances.BalanceRepository;
 import org.jconomy.balances.SqliteBalanceRepository;
 import org.jconomy.storage.SqlConnectionFactory;
-import org.jconomy.storage.DatabaseMigrator;
 import org.jconomy.FeatureManager;
 import org.jconomy.config.DefaultVaultLegacyAdapterConfig;
 import org.jconomy.config.VaultLegacyAdapterConfig;
@@ -77,7 +76,6 @@ class JConomyImplRegistrarTests {
         JConomyImplRegistrar.registerServices(builder);
 
         assertTrue(builder.singletonImplementations.containsKey(SqlConnectionFactory.class));
-        assertTrue(builder.singletonImplementations.containsKey(DatabaseMigrator.class));
     }
 
     @Test

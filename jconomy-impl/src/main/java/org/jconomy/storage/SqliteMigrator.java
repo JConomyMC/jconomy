@@ -3,15 +3,14 @@ package org.jconomy.storage;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class SqliteMigrator implements DatabaseMigrator {
+public class SqliteMigrator {
     private final SqlConnectionFactory connectionFactory;
 
     public SqliteMigrator(SqlConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
     }
 
-    @Override
-    public void migrate() {
+                                public void migrate() {
         try (var connection = connectionFactory.createConnection()) {
             connection.setAutoCommit(false);
             try (var statement = connection.createStatement()) {
