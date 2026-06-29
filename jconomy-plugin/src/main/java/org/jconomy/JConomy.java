@@ -22,10 +22,10 @@ import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.config.migrations.*;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.config.CacheConfig;
-import org.jconomy.storage.DatabaseMigrator;
 import org.jconomy.storage.Flushable;
 import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.PeriodicFlushScheduler;
+import org.jconomy.storage.SqliteMigrator;
 import org.jconomy.transfer.TransferExporter;
 import org.jconomy.transfer.TransferImporter;
 
@@ -62,7 +62,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
         saveDefaultConfig();
         buildConfigMigrator().migrate(getConfig());
         saveConfig();
-        services.getRequiredService(DatabaseMigrator.class).migrate();
+        services.getRequiredService(SqliteMigrator.class).migrate();
         registerFlushables();
         startPeriodicFlushIfEnabled();
         extensionManager.notifyServicesReady(services);
