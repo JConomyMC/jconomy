@@ -38,6 +38,8 @@ import org.jconomy.impl.bootstrap.JConomyImplRegistrar;
 import org.incendo.cloud.paper.LegacyPaperCommandManager;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.storage.PeriodicFlushScheduler;
+import org.jconomy.storage.SqliteMigrator;
+
 import com.jellyrekt.storage.configuration.file.FileConfigurationProvider;
 import com.jellyrekt.storage.configuration.file.javaplugin.JavaPluginConfigurationProvider;
 
@@ -103,6 +105,7 @@ public class JConomyServiceRegistrar {
                 throw new RuntimeException("Failed to create config provider", e);
             }
         });
+        builder.addSingleton(SqliteMigrator.class);
         extensionManager.configureServices(builder);
     }
 }

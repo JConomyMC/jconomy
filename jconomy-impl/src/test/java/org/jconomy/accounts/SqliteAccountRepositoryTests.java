@@ -7,12 +7,12 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.UUID;
 
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.jconomy.storage.SqlConnectionFactory;
+import org.jconomy.storage.TableBootstrapper;
 
 class SqliteAccountRepositoryTests {
 
@@ -25,46 +25,8 @@ class SqliteAccountRepositoryTests {
         connectionFactory = () -> DriverManager.getConnection(
                 "jdbc:sqlite:file:accountrepotest?mode=memory&cache=shared");
         anchor = connectionFactory.createConnection();
-        var statement = anchor.createStatement();
-        statement.executeUpdate("""
-                create table if not exists accounts (
-                    account_id text not null,
-                    account_name text not null,
-                    primary key(account_id)
-                )
-                """);
-        statement.executeUpdate("""
-                create table if not exists account_balances (
-                    account_id text not null,
-                    world text not null,
-                    currency text not null,
-                    amount numeric,
-                    primary key(account_id, world, currency)
-                )
-                """);
+        TableBootstrapper.bootstrapTables(anchor);
         repository = new SqliteAccountRepository(connectionFactory);
-    }
-
-    void bootstrapTables(Connection anchor) throws Exception {
-        try (var stmt = anchor.createStatement()) {
-            stmt.executeUpdate("""
-                    create table if not exists accounts (
-                        account_id text not null,
-                        account_name text not null,
-                        primary key(account_id)
-                    )
-                    """);
-            stmt.executeUpdate("""
-                    create table if not exists account_balances (
-                        account_id text not null,
-                        world text not null,
-                        currency text not null,
-                        amount numeric,
-                        primary key(account_id, world, currency)
-                    )
-                    """);
-        }
-
     }
 
     @AfterEach
