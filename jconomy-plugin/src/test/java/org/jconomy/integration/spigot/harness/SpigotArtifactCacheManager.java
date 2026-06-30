@@ -10,17 +10,20 @@ class SpigotArtifactCacheManager {
 
     private final Path cacheRoot;
     private final String spigotVersion;
+    private final String buildToolsSha256;
     private final BuildToolsDownloader buildToolsDownloader;
     private final SpigotJarBuilder spigotJarBuilder;
 
     SpigotArtifactCacheManager(
             Path cacheRoot,
             String spigotVersion,
+            String buildToolsSha256,
             BuildToolsDownloader buildToolsDownloader,
             SpigotJarBuilder spigotJarBuilder
     ) {
         this.cacheRoot = Objects.requireNonNull(cacheRoot, "cacheRoot");
         this.spigotVersion = Objects.requireNonNull(spigotVersion, "spigotVersion");
+        this.buildToolsSha256 = Objects.requireNonNull(buildToolsSha256, "buildToolsSha256");
         this.buildToolsDownloader = Objects.requireNonNull(buildToolsDownloader, "buildToolsDownloader");
         this.spigotJarBuilder = Objects.requireNonNull(spigotJarBuilder, "spigotJarBuilder");
     }
@@ -29,10 +32,11 @@ class SpigotArtifactCacheManager {
         Path buildToolsJar = cacheRoot.resolve("buildtools/BuildTools.jar");
         Path cachedSpigotJar = cacheRoot.resolve("servers/spigot").resolve(spigotVersion).resolve("spigot.jar");
 
-        if (!Files.exists(buildToolsJar)) {
+        if (isBuildToolsDownloadRequired(buildToolsJar)) {
             createDirectories(buildToolsJar.getParent());
             buildToolsDownloader.download(buildToolsJar);
             assertExists(buildToolsJar, "BuildTools jar was not downloaded.");
+            Sha256Verifier.verify(buildToolsJar, buildToolsSha256);
         }
 
         if (Files.exists(cachedSpigotJar)) {
@@ -51,6 +55,20 @@ class SpigotArtifactCacheManager {
             throw new IllegalStateException("Failed to cache Spigot jar.", exception);
         } finally {
             deleteRecursively(workspace);
+        }
+    }
+
+    private boolean isBuildToolsDownloadRequired(Path buildToolsJar) {
+        if (!Files.exists(buildToolsJar)) {
+            return true;
+        }
+
+        try {
+            Sha256Verifier.verify(buildToolsJar, buildToolsSha256);
+            return false;
+        } catch (IllegalStateException checksumMismatch) {
+            deleteFile(buildToolsJar);
+            return true;
         }
     }
 
@@ -75,6 +93,14 @@ class SpigotArtifactCacheManager {
     private void assertExists(Path file, String message) {
         if (!Files.exists(file)) {
             throw new IllegalStateException(message + " Missing file: " + file);
+        }
+    }
+
+    private void deleteFile(Path file) {
+        try {
+            Files.deleteIfExists(file);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to delete file: " + file, exception);
         }
     }
 
