@@ -14,7 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.jconomy.storage.SqlConnectionFactory;
-import org.jconomy.storage.SqliteMigrator;
+import org.jconomy.storage.TableBootstrapper;
 
 class SqliteBalanceRepositoryTests {
 
@@ -27,7 +27,7 @@ class SqliteBalanceRepositoryTests {
         connectionFactory = () -> DriverManager.getConnection(
                 "jdbc:sqlite:file:balancerepotest?mode=memory&cache=shared");
         anchor = connectionFactory.createConnection();
-        new SqliteMigrator(connectionFactory).migrate();
+        TableBootstrapper.bootstrapTables(anchor);
         repository = new SqliteBalanceRepository(connectionFactory);
     }
 

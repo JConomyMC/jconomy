@@ -10,7 +10,7 @@ public class SqliteMigrator {
         this.connectionFactory = connectionFactory;
     }
 
-                                public void migrate() {
+    public void migrate() {
         try (var connection = connectionFactory.createConnection()) {
             connection.setAutoCommit(false);
             try (var statement = connection.createStatement()) {
