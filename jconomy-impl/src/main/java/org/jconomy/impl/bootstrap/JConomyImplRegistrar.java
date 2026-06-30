@@ -1,8 +1,6 @@
 package org.jconomy.impl.bootstrap;
 
 import org.jconomy.dependencyinjection.JConomyServiceBuilder;
-import org.jconomy.storage.DefaultFlushRegistry;
-import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.SqlConnectionFactory;
 import org.jconomy.storage.SqliteConnectionFactory;
 import org.jconomy.accounts.AccountRepository;
@@ -32,7 +30,6 @@ public final class JConomyImplRegistrar {
 
         builder.addSingleton(AccountRepository.class, SqliteAccountRepository.class);
         builder.addSingleton(BalanceRepository.class, SqliteBalanceRepository.class);
-        builder.addSingleton(FlushRegistry.class, DefaultFlushRegistry.class);
         builder.addSingleton(SqlConnectionFactory.class, SqliteConnectionFactory.class);
         builder.addSingleton(FeatureManager.class, DefaultFeatureManager.class);
         builder.addSingleton(VaultLegacyAdapterConfig.class, DefaultVaultLegacyAdapterConfig.class);
