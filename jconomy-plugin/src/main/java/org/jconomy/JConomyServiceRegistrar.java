@@ -117,7 +117,7 @@ public class JConomyServiceRegistrar {
      * <p>
      * Protected services:
      * <ul>
-     *   <li>{@link FlushRegistry} - Already registered early by JConomyImplRegistrar before extensions</li>
+    *   <li>{@link FlushRegistry} - Registered here after extensions to prevent override</li>
      *   <li>{@link CacheConfig.PeriodicFlushConfig} - Configuration for periodic flushing (re-registered to ensure it's set)</li>
      * </ul>
      * </p>

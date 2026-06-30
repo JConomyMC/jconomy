@@ -16,6 +16,7 @@
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+        <jconomy.integration.skip>true</jconomy.integration.skip>
     </properties>
     <repositories>
         <repository>
@@ -125,11 +126,34 @@
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/*IT.java</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
 
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>3.5.4</version>
+                <configuration>
+                    <skipITs>${jconomy.integration.skip}</skipITs>
+                    <includes>
+                        <include>**/*IT.java</include>
+                    </includes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -161,4 +185,19 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>jconomy-spigot-integration</id>
+            <activation>
+                <property>
+                    <name>jconomy.integration.spigot</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <jconomy.integration.skip>false</jconomy.integration.skip>
+            </properties>
+        </profile>
+    </profiles>
 </project>
