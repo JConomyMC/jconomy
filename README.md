@@ -166,3 +166,64 @@ Examples include:
 - Supplemental services
 
 See the API documentation for more information.
+
+## Spigot Integration Harness
+
+JConomy includes an opt-in Spigot integration harness for end-to-end validation against a real server runtime.
+
+Normal unit tests remain unchanged:
+
+```bash
+mvn test
+```
+
+Spigot integration tests are opt-in and run during `verify`:
+
+```bash
+mvn verify -Djconomy.integration.spigot=true
+```
+
+### Prerequisites
+
+- Docker installed and running (integration run fails fast if unavailable).
+- Java 21+.
+- Network access on first run for BuildTools and any uncached artifacts.
+- A valid artifact lock file at `jconomy-plugin/src/test/resources/integration/spigot/artifacts-lock.json`.
+
+### Artifact Pinning
+
+External artifacts are pinned through `artifacts-lock.json`.
+
+- URLs and versions are read from the lock manifest.
+- SHA-256 checks are required and enforced.
+- Placeholder SHA values must be replaced before integration runs.
+
+### Cache and Run Directories
+
+Reusable artifacts are cached outside per-run server workspaces.
+
+Cache root resolution order:
+
+1. `-Djellyrekt.test.cache=<path>`
+2. `JELLYREKT_TEST_CACHE=<path>`
+3. `~/.jellyrekt/test-cache`
+
+Per-test run workspaces are created under `target/integration-runs` and include disposable runtime state (logs, world data, copied jars, generated server files).
+
+### Cleanup Policy
+
+- Default: delete per-run workspace after successful test.
+- Preserve per-run workspace after failed test.
+- Preserve all run workspaces with:
+
+```bash
+-Djconomy.integration.keepRuns=true
+```
+
+Persistent cache artifacts are not deleted by run cleanup.
+
+### Typical Failure Modes
+
+- Docker unavailable: integration run fails immediately with a preflight error.
+- Lock file placeholders still present: integration run fails before download/build steps.
+- Missing plugin artifact: verify package output exists for the plugin module.
