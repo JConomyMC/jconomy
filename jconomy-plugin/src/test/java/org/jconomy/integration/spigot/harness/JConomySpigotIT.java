@@ -5,6 +5,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 
@@ -18,6 +19,7 @@ class JConomySpigotIT {
     void runsBasicJConomyFlowAgainstSpigotServer() {
         SpigotIntegrationSettings settings = SpigotIntegrationSettings.fromSystem();
         assertTrue(Boolean.getBoolean("jconomy.integration.spigot"));
+        boolean success = false;
 
         ArtifactLockManifest manifest = ArtifactLockManifestLoader.loadFromResource("integration/spigot/artifacts-lock.json");
         if (manifest.buildTools().sha256().contains("REPLACE_WITH_REAL_SHA256")) {
@@ -68,5 +70,15 @@ class JConomySpigotIT {
         } finally {
             lifecycle.stop(server);
         }
+
+        Path database = workspace.runDirectory().resolve("plugins/JConomy/jconomy.db");
+        assertTrue(Files.exists(database));
+        JConomyDatabaseAssertions.assertAccountExists(database, "Alice");
+        JConomyDatabaseAssertions.assertAccountExists(database, "Bob");
+        JConomyDatabaseAssertions.assertAccountMissing(database, "Mallory");
+        JConomyDatabaseAssertions.assertBalance(database, "Alice", "world", "default", new BigDecimal("100"));
+        success = true;
+
+        RunWorkspaceCleanup.cleanup(workspace.runDirectory(), settings.keepRuns(), success);
     }
 }
