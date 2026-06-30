@@ -6,6 +6,8 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,6 +26,7 @@ class SpigotArtifactCacheManagerTests {
         SpigotArtifactCacheManager manager = new SpigotArtifactCacheManager(
                 tempDir,
                 "1.21.8",
+            sha256("buildtools"),
                 downloader,
                 builder
         );
@@ -39,13 +42,14 @@ class SpigotArtifactCacheManagerTests {
     void ensureSpigotJarSkipsBuildToolsDownloadWhenCached() throws IOException {
         Path buildToolsJar = tempDir.resolve("buildtools/BuildTools.jar");
         Files.createDirectories(buildToolsJar.getParent());
-        Files.writeString(buildToolsJar, "existing-buildtools");
+        Files.writeString(buildToolsJar, "buildtools");
 
         RecordingBuildToolsDownloader downloader = new RecordingBuildToolsDownloader();
         RecordingSpigotJarBuilder builder = new RecordingSpigotJarBuilder();
         SpigotArtifactCacheManager manager = new SpigotArtifactCacheManager(
                 tempDir,
                 "1.21.8",
+            sha256("buildtools"),
                 downloader,
                 builder
         );
@@ -62,6 +66,7 @@ class SpigotArtifactCacheManagerTests {
         SpigotArtifactCacheManager manager = new SpigotArtifactCacheManager(
                 tempDir,
                 "1.21.8",
+            sha256("buildtools"),
                 downloader,
                 builder
         );
@@ -86,6 +91,7 @@ class SpigotArtifactCacheManagerTests {
         SpigotArtifactCacheManager manager = new SpigotArtifactCacheManager(
                 tempDir,
                 "1.21.8",
+            sha256("buildtools"),
                 downloader,
                 builder
         );
@@ -94,6 +100,28 @@ class SpigotArtifactCacheManagerTests {
 
         assertEquals(0, builder.buildCalls);
         assertEquals(cachedSpigotJar, resolvedSpigotJar);
+    }
+
+    @Test
+    void ensureSpigotJarRedownloadsBuildToolsWhenCachedChecksumIsInvalid() throws IOException {
+        Path buildToolsJar = tempDir.resolve("buildtools/BuildTools.jar");
+        Files.createDirectories(buildToolsJar.getParent());
+        Files.writeString(buildToolsJar, "corrupt-buildtools");
+
+        RecordingBuildToolsDownloader downloader = new RecordingBuildToolsDownloader();
+        RecordingSpigotJarBuilder builder = new RecordingSpigotJarBuilder();
+        SpigotArtifactCacheManager manager = new SpigotArtifactCacheManager(
+                tempDir,
+                "1.21.8",
+                sha256("buildtools"),
+                downloader,
+                builder
+        );
+
+        manager.ensureSpigotJar();
+
+        assertEquals(1, downloader.downloadCalls);
+        assertEquals("buildtools", Files.readString(buildToolsJar));
     }
 
     private static final class RecordingBuildToolsDownloader implements BuildToolsDownloader {
@@ -133,6 +161,21 @@ class SpigotArtifactCacheManagerTests {
             }
 
             return builtJar;
+        }
+    }
+
+    private static String sha256(String content) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] bytes = digest.digest(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(bytes.length * 2);
+            for (byte value : bytes) {
+                hex.append(String.format("%02x", value));
+            }
+
+            return hex.toString();
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException(exception);
         }
     }
 }
