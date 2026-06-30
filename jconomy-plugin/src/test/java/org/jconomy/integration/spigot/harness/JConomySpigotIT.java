@@ -18,8 +18,11 @@ class JConomySpigotIT {
     @Test
     void runsBasicJConomyFlowAgainstSpigotServer() {
         SpigotIntegrationSettings settings = SpigotIntegrationSettings.fromSystem();
+        DefaultProcessRunner processRunner = new DefaultProcessRunner();
         assertTrue(Boolean.getBoolean("jconomy.integration.spigot"));
         boolean success = false;
+
+        DockerPreflight.verifyDockerAvailable(processRunner);
 
         ArtifactLockManifest manifest = ArtifactLockManifestLoader.loadFromResource("integration/spigot/artifacts-lock.json");
         if (manifest.buildTools().sha256().contains("REPLACE_WITH_REAL_SHA256")) {
@@ -33,7 +36,7 @@ class JConomySpigotIT {
                 settings.cacheRoot(),
                 manifest,
                 new HttpArtifactFetcher(),
-                new DockerBuildToolsSpigotJarBuilder(new DefaultProcessRunner(), settings.dockerImageName())
+                new DockerBuildToolsSpigotJarBuilder(processRunner, settings.dockerImageName())
         );
         Path spigotJar = cacheManager.ensureSpigotJar();
 
@@ -52,7 +55,7 @@ class JConomySpigotIT {
 
         RconCommandExecutor rcon = new RconCommandExecutor("127.0.0.1", workspace.rconPort(), "test-password", Duration.ofSeconds(5));
         SpigotServerLifecycleManager lifecycle = new SpigotServerLifecycleManager(
-                new DockerContainerRuntime(new DefaultProcessRunner()),
+            new DockerContainerRuntime(processRunner),
                 rcon,
                 settings.dockerImageName(),
                 Duration.ofMinutes(2),
