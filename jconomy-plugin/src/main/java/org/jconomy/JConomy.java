@@ -36,6 +36,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
     private final ExtensionManager extensionManager = createExtensionManager();
 
     private JConomyServiceProvider services;
+    private PeriodicFlushScheduler periodicFlushScheduler;
 
     private ExtensionManager createExtensionManager() {
         var loader = new DefaultExtensionLoader(this, getClassLoader());
@@ -52,6 +53,8 @@ public class JConomy extends JavaPlugin implements PluginContext {
 
         try {
             services = JConomyServiceRegistrar.buildServiceProvider(this, this, extensionManager);
+            // Create scheduler outside DI container to prevent extension access/override
+            periodicFlushScheduler = JConomyServiceRegistrar.createPeriodicFlushScheduler(services);
         } catch (Exception ex) {
             getLogger().severe("Some services could not be instantiated: " + ExceptionUtils.getStackTrace(ex));
             getLogger().severe("Disabling plugin.");
@@ -94,13 +97,13 @@ public class JConomy extends JavaPlugin implements PluginContext {
 
     private void startPeriodicFlushIfEnabled() {
         if (services.getRequiredService(CacheConfig.PeriodicFlushConfig.class).isEnabled()) {
-            services.getRequiredService(PeriodicFlushScheduler.class).start();
+            periodicFlushScheduler.start();
         }
     }
 
     @Override
     public void onDisable() {
-        services.getRequiredService(PeriodicFlushScheduler.class).stop();
+        periodicFlushScheduler.stop();
         services.getRequiredService(FlushRegistry.class).flushAll();
 
         extensionManager.close();
