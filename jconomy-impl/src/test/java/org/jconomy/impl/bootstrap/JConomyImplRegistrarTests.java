@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.jconomy.dependencyinjection.JConomyServiceBuilder;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.storage.FlushRegistry;
-import org.jconomy.storage.DefaultFlushRegistry;
 import org.jconomy.accounts.AccountRepository;
 import org.jconomy.accounts.SqliteAccountRepository;
 import org.jconomy.balances.BalanceRepository;
@@ -40,13 +39,12 @@ class JConomyImplRegistrarTests {
     }
 
     @Test
-    void registerServices_registers_default_flush_registry() {
+    void registerServices_does_not_register_flush_registry() {
         var builder = new NoopBuilder();
 
         JConomyImplRegistrar.registerServices(builder);
 
-        assertTrue(builder.singletonImplementations.containsKey(FlushRegistry.class));
-        assertEquals(DefaultFlushRegistry.class, builder.singletonImplementations.get(FlushRegistry.class));
+        assertTrue(!builder.singletonImplementations.containsKey(FlushRegistry.class));
     }
 
     @Test

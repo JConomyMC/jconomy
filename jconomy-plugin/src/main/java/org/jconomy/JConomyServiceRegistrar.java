@@ -37,6 +37,7 @@ import org.jconomy.extensions.ExtensionManager;
 import org.jconomy.impl.bootstrap.JConomyImplRegistrar;
 import org.incendo.cloud.paper.LegacyPaperCommandManager;
 import org.jconomy.listeners.PlayerJoinListener;
+import org.jconomy.storage.DefaultFlushRegistry;
 import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.PeriodicFlushScheduler;
 import org.jconomy.storage.SqliteMigrator;
@@ -122,6 +123,7 @@ public class JConomyServiceRegistrar {
      * </p>
      */
     private static void registerProtectedInfrastructure(DefaultServiceBuilder builder) {
+        builder.addSingleton(FlushRegistry.class, DefaultFlushRegistry.class);
         // Re-register PeriodicFlushConfig factory to ensure it's available with correct dependencies
         builder.addSingletonFactory(CacheConfig.PeriodicFlushConfig.class, sp ->
                 sp.getRequiredService(CacheConfig.class).getPeriodicFlushConfig());
