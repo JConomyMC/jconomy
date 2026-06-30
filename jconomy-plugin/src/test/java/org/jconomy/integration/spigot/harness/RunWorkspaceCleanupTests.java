@@ -46,4 +46,21 @@ class RunWorkspaceCleanupTests {
 
         assertTrue(Files.exists(runDir));
     }
+
+    @Test
+    void cleanupDoesNotDeleteCacheArtifactsOutsideRunDirectory() throws Exception {
+        Path runRoot = tempDir.resolve("target/integration-runs");
+        Path runDir = runRoot.resolve("jconomy-spigot-basic");
+        Path cacheSpigot = tempDir.resolve("cache/servers/spigot/1.21.8/spigot.jar");
+
+        Files.createDirectories(runDir);
+        Files.createDirectories(cacheSpigot.getParent());
+        Files.writeString(runDir.resolve("server.jar"), "run-server");
+        Files.writeString(cacheSpigot, "cached-server");
+
+        RunWorkspaceCleanup.cleanup(runDir, false, true);
+
+        assertFalse(Files.exists(runDir));
+        assertTrue(Files.exists(cacheSpigot));
+    }
 }
