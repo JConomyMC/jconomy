@@ -37,6 +37,7 @@ import org.jconomy.extensions.ExtensionManager;
 import org.jconomy.impl.bootstrap.JConomyImplRegistrar;
 import org.incendo.cloud.paper.LegacyPaperCommandManager;
 import org.jconomy.listeners.PlayerJoinListener;
+import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.PeriodicFlushScheduler;
 import org.jconomy.storage.SqliteMigrator;
 
@@ -51,6 +52,9 @@ public class JConomyServiceRegistrar {
             JavaPlugin plugin, PluginContext pluginContext, ExtensionManager extensionManager) {
         var builder = new DefaultServiceBuilder();
         registerServices(builder, plugin, pluginContext, extensionManager);
+        // Re-register protected infrastructure after extensions have configured their services.
+        // This prevents extensions from overriding critical services like FlushRegistry.
+        registerProtectedInfrastructure(builder);
         return builder.build();
     }
 
@@ -60,9 +64,6 @@ public class JConomyServiceRegistrar {
         builder.addSingleton(JavaPlugin.class, plugin);
         builder.addSingleton(PluginContext.class, pluginContext);
         builder.addSingleton(Logger.class, plugin.getLogger());
-        builder.addSingletonFactory(CacheConfig.PeriodicFlushConfig.class, sp ->
-                sp.getRequiredService(CacheConfig.class).getPeriodicFlushConfig());
-        builder.addSingleton(PeriodicFlushScheduler.class);
         JConomyImplRegistrar.registerServices(builder);
         builder.addSingleton(CacheConfig.class, DefaultCacheConfig.class);
         builder.addSingleton(AccountCache.class, LruAccountCache.class);
@@ -107,5 +108,38 @@ public class JConomyServiceRegistrar {
         });
         builder.addSingleton(SqliteMigrator.class);
         extensionManager.configureServices(builder);
+    }
+
+    /**
+     * Registers critical infrastructure services that should not be overridable by extensions.
+     * This method is called after extensions have configured their services.
+     * <p>
+     * Protected services:
+     * <ul>
+     *   <li>{@link FlushRegistry} - Already registered early by JConomyImplRegistrar before extensions</li>
+     *   <li>{@link CacheConfig.PeriodicFlushConfig} - Configuration for periodic flushing (re-registered to ensure it's set)</li>
+     * </ul>
+     * </p>
+     */
+    private static void registerProtectedInfrastructure(DefaultServiceBuilder builder) {
+        // Re-register PeriodicFlushConfig factory to ensure it's available with correct dependencies
+        builder.addSingletonFactory(CacheConfig.PeriodicFlushConfig.class, sp ->
+                sp.getRequiredService(CacheConfig.class).getPeriodicFlushConfig());
+    }
+
+    /**
+     * Creates a {@link PeriodicFlushScheduler} instance outside the DI container.
+     * This scheduler is not registered in the service provider, preventing extensions
+     * from accessing or replacing it.
+     *
+     * @param provider the built service provider
+     * @return a new {@link PeriodicFlushScheduler} instance
+     */
+    public static PeriodicFlushScheduler createPeriodicFlushScheduler(JConomyServiceProvider provider) {
+        return new PeriodicFlushScheduler(
+                provider.getRequiredService(JavaPlugin.class),
+                provider.getRequiredService(BukkitScheduler.class),
+                provider.getRequiredService(FlushRegistry.class),
+                provider.getRequiredService(CacheConfig.PeriodicFlushConfig.class));
     }
 }
