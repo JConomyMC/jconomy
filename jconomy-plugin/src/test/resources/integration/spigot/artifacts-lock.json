@@ -1,0 +1,19 @@
+{
+  "buildTools": {
+    "version": "latest",
+    "url": "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar",
+    "sha256": "REPLACE_WITH_REAL_SHA256"
+  },
+  "spigot": {
+    "version": "1.21.8",
+    "buildToolsRevision": "1.21.8"
+  },
+  "plugins": [
+    {
+      "name": "EssentialsX",
+      "version": "2.21.0",
+      "url": "https://example.invalid/EssentialsX-2.21.0.jar",
+      "sha256": "REPLACE_WITH_REAL_SHA256"
+    }
+  ]
+}
