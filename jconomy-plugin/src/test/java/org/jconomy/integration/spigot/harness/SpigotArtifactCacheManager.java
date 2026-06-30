@@ -28,6 +28,31 @@ class SpigotArtifactCacheManager {
         this.spigotJarBuilder = Objects.requireNonNull(spigotJarBuilder, "spigotJarBuilder");
     }
 
+        static SpigotArtifactCacheManager fromManifest(
+            Path cacheRoot,
+            ArtifactLockManifest manifest,
+            ArtifactFetcher artifactFetcher,
+            SpigotJarBuilder spigotJarBuilder
+        ) {
+        Objects.requireNonNull(manifest, "manifest");
+        ArtifactLockManifest.BuildToolsArtifact buildTools = Objects.requireNonNull(
+            manifest.buildTools(),
+            "manifest.buildTools"
+        );
+        ArtifactLockManifest.SpigotArtifact spigot = Objects.requireNonNull(
+            manifest.spigot(),
+            "manifest.spigot"
+        );
+
+        return new SpigotArtifactCacheManager(
+            cacheRoot,
+            spigot.version(),
+            buildTools.sha256(),
+            new ManifestBuildToolsDownloader(manifest, artifactFetcher),
+            spigotJarBuilder
+        );
+        }
+
     Path ensureSpigotJar() {
         Path buildToolsJar = cacheRoot.resolve("buildtools/BuildTools.jar");
         Path cachedSpigotJar = cacheRoot.resolve("servers/spigot").resolve(spigotVersion).resolve("spigot.jar");
