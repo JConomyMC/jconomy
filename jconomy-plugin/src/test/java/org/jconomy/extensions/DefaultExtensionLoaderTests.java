@@ -216,7 +216,7 @@ class DefaultExtensionLoaderTests {
 
         loader.load();
 
-        verify(logger).info("Load diagnostics: empty jars=0, duplicate names=1");
+        verify(logger).info("Load diagnostics: empty jars=0, duplicate names=1, invalid names=0");
     }
 
     @Test
