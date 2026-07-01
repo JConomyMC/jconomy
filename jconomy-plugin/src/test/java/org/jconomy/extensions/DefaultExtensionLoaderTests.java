@@ -264,6 +264,31 @@ class DefaultExtensionLoaderTests {
     }
 
     @Test
+    void load_logs_name_diagnostics_with_invalid_name_count() throws Exception {
+        var plugin = mock(JavaPlugin.class);
+        when(plugin.getDataFolder()).thenReturn(tempDir);
+        var logger = mock(java.util.logging.Logger.class);
+        when(plugin.getLogger()).thenReturn(logger);
+
+        var extensionsDir = new File(tempDir, "extensions");
+        assertTrue(extensionsDir.mkdirs() || extensionsDir.exists());
+
+        createJarWithClasses(new File(extensionsDir, "invalid-names.jar"),
+            List.of(
+                "org/jconomy/extensions/DefaultExtensionLoaderTests$BlankNameExtension.class",
+                "org/jconomy/extensions/DefaultExtensionLoaderTests$NullNameExtension.class"),
+            List.of(
+                BlankNameExtension.class.getName(),
+                NullNameExtension.class.getName()));
+
+        var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
+
+        loader.load();
+
+        verify(logger).info("Name diagnostics: invalid names=2");
+    }
+
+    @Test
     void load_warns_when_jar_contains_no_discoverable_extensions() throws Exception {
         var plugin = mock(JavaPlugin.class);
         when(plugin.getDataFolder()).thenReturn(tempDir);

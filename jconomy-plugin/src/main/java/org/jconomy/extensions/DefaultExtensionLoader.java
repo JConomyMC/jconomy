@@ -42,13 +42,28 @@ public class DefaultExtensionLoader implements ExtensionLoader {
         }
 
         var duplicateNameCount = warnOnDuplicateExtensionNames(loadedExtensions);
+        var invalidNameCount = countInvalidExtensionNames(loadedExtensions);
 
         plugin.getLogger().info(String.format("Loaded %d extension(s) from %d jar(s) (empty jars: %d)",
             loadedExtensions.size(), jars.size(), emptyJarCount));
         plugin.getLogger().info(String.format("Load diagnostics: empty jars=%d, duplicate names=%d",
                 emptyJarCount, duplicateNameCount));
+        plugin.getLogger().info(String.format("Name diagnostics: invalid names=%d", invalidNameCount));
 
         return loadedExtensions;
+    }
+
+    private int countInvalidExtensionNames(Set<LoadedExtension> loadedExtensions) {
+        var invalidNameCount = 0;
+
+        for (var loaded : loadedExtensions) {
+            var extensionName = loaded.extension().getName();
+            if (extensionName == null || extensionName.isBlank()) {
+                invalidNameCount++;
+            }
+        }
+
+        return invalidNameCount;
     }
 
     private int warnOnDuplicateExtensionNames(Set<LoadedExtension> loadedExtensions) {
