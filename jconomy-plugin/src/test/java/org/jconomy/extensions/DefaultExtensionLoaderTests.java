@@ -45,8 +45,12 @@ class DefaultExtensionLoaderTests {
 
         var jarFile = new File(extensionsDir, "sample-extensions.jar");
         createJarWithClasses(jarFile,
+            List.of(
                 "org/jconomy/extensions/DefaultExtensionLoaderTests$FirstTestExtension.class",
-                "org/jconomy/extensions/DefaultExtensionLoaderTests$SecondTestExtension.class");
+                "org/jconomy/extensions/DefaultExtensionLoaderTests$SecondTestExtension.class"),
+            List.of(
+                FirstTestExtension.class.getName(),
+                SecondTestExtension.class.getName()));
 
         var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
 
@@ -68,7 +72,8 @@ class DefaultExtensionLoaderTests {
 
         var jarFile = new File(extensionsDir, "malformed-class.jar");
         createJarWithClasses(jarFile,
-                "org/jconomy/extensions/DefaultExtensionLoaderTests$FirstTestExtension.class");
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$FirstTestExtension.class"),
+            List.of(FirstTestExtension.class.getName()));
         appendJarEntry(jarFile, "broken/Bogus.class", new byte[] { 0x00, 0x01, 0x02 });
 
         var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
@@ -91,9 +96,11 @@ class DefaultExtensionLoaderTests {
         assertTrue(extensionsDir.mkdirs() || extensionsDir.exists());
 
         createJarWithClasses(new File(extensionsDir, "zeta.jar"),
-                "org/jconomy/extensions/DefaultExtensionLoaderTests$SecondTestExtension.class");
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$SecondTestExtension.class"),
+            List.of(SecondTestExtension.class.getName()));
         createJarWithClasses(new File(extensionsDir, "alpha.jar"),
-                "org/jconomy/extensions/DefaultExtensionLoaderTests$FirstTestExtension.class");
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$FirstTestExtension.class"),
+            List.of(FirstTestExtension.class.getName()));
 
         var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
         loader.load();
@@ -114,7 +121,32 @@ class DefaultExtensionLoaderTests {
                 "expected zeta.jar to load second for deterministic ordering");
     }
 
-    private static void createJarWithClasses(File jarFile, String... classResourceNames) throws Exception {
+        @Test
+        void load_requires_service_descriptor_for_extension_discovery() throws Exception {
+        var plugin = mock(JavaPlugin.class);
+        when(plugin.getDataFolder()).thenReturn(tempDir);
+        when(plugin.getLogger()).thenReturn(java.util.logging.Logger.getLogger("test"));
+
+        var extensionsDir = new File(tempDir, "extensions");
+        assertTrue(extensionsDir.mkdirs() || extensionsDir.exists());
+
+        createJarWithClasses(new File(extensionsDir, "with-descriptor.jar"),
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$FirstTestExtension.class"),
+            List.of(FirstTestExtension.class.getName()));
+        createJarWithClasses(new File(extensionsDir, "without-descriptor.jar"),
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$SecondTestExtension.class"),
+            List.of());
+
+        var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
+
+        var loaded = loader.load();
+        var names = loaded.stream().map(le -> le.extension().getName()).toList();
+
+        assertTrue(names.equals(List.of("first-test-extension")),
+            "expected only descriptor-declared extension to be loaded");
+        }
+
+    private static void createJarWithClasses(File jarFile, List<String> classResourceNames, List<String> providers) throws Exception {
         try (OutputStream output = Files.newOutputStream(jarFile.toPath());
                 JarOutputStream jarOutput = new JarOutputStream(output)) {
             for (String resourceName : classResourceNames) {
@@ -125,6 +157,13 @@ class DefaultExtensionLoaderTests {
                     }
                     input.transferTo(jarOutput);
                 }
+                jarOutput.closeEntry();
+            }
+
+            if (!providers.isEmpty()) {
+                jarOutput.putNextEntry(new JarEntry("META-INF/services/org.jconomy.JConomyExtension"));
+                var providerContent = String.join("\n", providers) + "\n";
+                jarOutput.write(providerContent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 jarOutput.closeEntry();
             }
         }
