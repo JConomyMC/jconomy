@@ -1,12 +1,9 @@
 package org.jconomy.extensions;
 
 import java.io.File;
-import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -50,65 +47,50 @@ public class DefaultExtensionLoader implements ExtensionLoader {
     }
 
     private Set<LoadedExtension> loadExtension(File jar) throws Exception {
-        try (var jarFile = new JarFile(jar)) {
-            plugin.getLogger().info("Loading extension: " + jar.getName());
+        plugin.getLogger().info("Loading extension: " + jar.getName());
 
-            var entries = jarFile.entries();
+        var extensions = new LinkedHashSet<LoadedExtension>();
+        var urlClassLoader = new URLClassLoader(new URL[] { jar.toURI().toURL() }, classLoader);
+        var hasLoadedExtensions = false;
 
-            var extensions = new LinkedHashSet<LoadedExtension>();
-            var urlClassLoader = new URLClassLoader(new URL[] { jar.toURI().toURL() }, classLoader);
-            var hasLoadedExtensions = false;
+        try {
+            var services = ServiceLoader.load(JConomyExtension.class, urlClassLoader);
+            var iterator = services.iterator();
 
-            try {
-                while (entries.hasMoreElements()) {
-                    var entry = entries.nextElement();
-                    if (!entry.getName().endsWith(".class")) {
-                        continue;
-                    }
-
-                    var className = getClassName(entry);
-
-                    try {
-                        var clazz = urlClassLoader.loadClass(className);
-
-                        if (isInstantiatableExtension(clazz)) {
-                            try {
-                                var extension = createExtension(clazz);
-                                plugin.getLogger().info("Loaded extension: " + extension.getName());
-                                extensions.add(new LoadedExtension(extension, urlClassLoader));
-                                hasLoadedExtensions = true;
-                            } catch (Exception ex) {
-                                plugin.getLogger().warning(String.format("Failed to load extension from '%s': %s", clazz.getName(), ex.getMessage()));
-                            }
-                        }
-                    } catch (Throwable ex) {
-                        plugin.getLogger().warning(String.format("Failed to load class '%s' from '%s': %s", className, jar.getName(), ex.getMessage()));
-                    }
+            while (hasNextProvider(iterator, jar)) {
+                var extension = loadNextProvider(iterator, jar);
+                if (extension.isEmpty()) {
+                    continue;
                 }
 
-                return extensions;
-            } finally {
-                if (!hasLoadedExtensions) {
-                    urlClassLoader.close();
-                }
+                plugin.getLogger().info("Loaded extension: " + extension.get().getName());
+                extensions.add(new LoadedExtension(extension.get(), urlClassLoader));
+                hasLoadedExtensions = true;
+            }
+
+            return extensions;
+        } finally {
+            if (!hasLoadedExtensions) {
+                urlClassLoader.close();
             }
         }
     }
 
-    private static String getClassName(JarEntry entry) {
-        var className = entry.getName()
-                .replace('/', '.')
-                .substring(0, entry.getName().length() - 6);
-        return className;
+    private boolean hasNextProvider(Iterator<JConomyExtension> iterator, File jar) {
+        try {
+            return iterator.hasNext();
+        } catch (Throwable ex) {
+            plugin.getLogger().warning(String.format("Failed to discover extension providers in '%s': %s", jar.getName(), ex.getMessage()));
+            return false;
+        }
     }
 
-    private static boolean isInstantiatableExtension(Class<?> type) {
-        return JConomyExtension.class.isAssignableFrom(type)
-                && !type.isInterface()
-                && !Modifier.isAbstract(type.getModifiers());
-    }
-
-    private static JConomyExtension createExtension(Class<?> type) throws Exception {
-        return (JConomyExtension) type.getConstructor().newInstance();
+    private Optional<JConomyExtension> loadNextProvider(Iterator<JConomyExtension> iterator, File jar) {
+        try {
+            return Optional.of(iterator.next());
+        } catch (Throwable ex) {
+            plugin.getLogger().warning(String.format("Failed to instantiate extension provider in '%s': %s", jar.getName(), ex.getMessage()));
+            return Optional.empty();
+        }
     }
 }
