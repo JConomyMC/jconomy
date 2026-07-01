@@ -87,21 +87,21 @@ class DefaultExtensionProviderDiscoveryTests {
         }
     }
 
-    public static class FirstProvider implements JConomyExtension {
+    public static class FirstProvider extends JConomyExtension {
         @Override
         public String getName() {
             return "first-provider";
         }
     }
 
-    public static class SecondProvider implements JConomyExtension {
+    public static class SecondProvider extends JConomyExtension {
         @Override
         public String getName() {
             return "second-provider";
         }
     }
 
-    public static class BrokenProvider implements JConomyExtension {
+    public static class BrokenProvider extends JConomyExtension {
         public BrokenProvider() {
             throw new IllegalStateException("broken");
         }

@@ -22,10 +22,10 @@ Add `jconomy-api` as a Maven dependency (scope `provided`):
 </dependency>
 ```
 
-Create a class that implements `JConomyExtension`:
+Create a class that extends `JConomyExtension`:
 
 ```java
-public class MyExtension implements JConomyExtension {
+public class MyExtension extends JConomyExtension {
 
     @Override
     public String getName() {
