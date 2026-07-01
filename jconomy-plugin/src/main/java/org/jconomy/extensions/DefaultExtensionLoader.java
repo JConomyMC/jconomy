@@ -48,37 +48,43 @@ public class DefaultExtensionLoader implements ExtensionLoader {
     }
 
     private Set<LoadedExtension> loadExtension(File jar) throws Exception {
-        try (
-            var jarFile = new JarFile(jar);
-        ) {
+        try (var jarFile = new JarFile(jar)) {
             plugin.getLogger().info("Loading extension: " + jar.getName());
 
             var entries = jarFile.entries();
 
             var extensions = new HashSet<LoadedExtension>();
+            var urlClassLoader = new URLClassLoader(new URL[] { jar.toURI().toURL() }, classLoader);
+            var hasLoadedExtensions = false;
 
-            while (entries.hasMoreElements()) {
-                var entry = entries.nextElement();
-                if (!entry.getName().endsWith(".class")) {
-                    continue;
-                }
+            try {
+                while (entries.hasMoreElements()) {
+                    var entry = entries.nextElement();
+                    if (!entry.getName().endsWith(".class")) {
+                        continue;
+                    }
 
-                var className = getClassName(entry);
-                var urlClassLoader = new URLClassLoader(new URL[] { jar.toURI().toURL() }, classLoader);
-                var clazz = urlClassLoader.loadClass(className);
+                    var className = getClassName(entry);
+                    var clazz = urlClassLoader.loadClass(className);
 
-                if (isInstantiatableExtension(clazz)) {
-                    try {
-                        var extension = createExtension(clazz);
-                        plugin.getLogger().info("Loaded extension: " + extension.getName());
-                        extensions.add(new LoadedExtension(extension, urlClassLoader));
-                    } catch (Exception ex) {
-                        plugin.getLogger().warning(String.format("Failed to load extension from '%s': %s", clazz.getName()));
+                    if (isInstantiatableExtension(clazz)) {
+                        try {
+                            var extension = createExtension(clazz);
+                            plugin.getLogger().info("Loaded extension: " + extension.getName());
+                            extensions.add(new LoadedExtension(extension, urlClassLoader));
+                            hasLoadedExtensions = true;
+                        } catch (Exception ex) {
+                            plugin.getLogger().warning(String.format("Failed to load extension from '%s': %s", clazz.getName(), ex.getMessage()));
+                        }
                     }
                 }
-            }
 
-            return extensions;
+                return extensions;
+            } finally {
+                if (!hasLoadedExtensions) {
+                    urlClassLoader.close();
+                }
+            }
         }
     }
 
