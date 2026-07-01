@@ -27,10 +27,14 @@ public class DefaultExtensionLoader implements ExtensionLoader {
             return Set.of();
 
         var loadedExtensions = new LinkedHashSet<LoadedExtension>();
+        var emptyJarCount = 0;
 
         for (File jar : jars) {
             try {
                 var extensions = loadExtension(jar);
+                if (extensions.isEmpty()) {
+                    emptyJarCount++;
+                }
                 loadedExtensions.addAll(extensions);
             } catch (Exception ex) {
                 plugin.getLogger().warning(String.format("Failed to load extensions from '%s': %s", jar.getName(), ex.getMessage()));
@@ -39,7 +43,8 @@ public class DefaultExtensionLoader implements ExtensionLoader {
 
         warnOnDuplicateExtensionNames(loadedExtensions);
 
-        plugin.getLogger().info(String.format("Loaded %d extension(s) from %d jar(s)", loadedExtensions.size(), jars.size()));
+        plugin.getLogger().info(String.format("Loaded %d extension(s) from %d jar(s) (empty jars: %d)",
+            loadedExtensions.size(), jars.size(), emptyJarCount));
 
         return loadedExtensions;
     }

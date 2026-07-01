@@ -121,8 +121,8 @@ class DefaultExtensionLoaderTests {
                 "expected zeta.jar to load second for deterministic ordering");
     }
 
-        @Test
-        void load_requires_service_descriptor_for_extension_discovery() throws Exception {
+    @Test
+    void load_requires_service_descriptor_for_extension_discovery() throws Exception {
         var plugin = mock(JavaPlugin.class);
         when(plugin.getDataFolder()).thenReturn(tempDir);
         when(plugin.getLogger()).thenReturn(java.util.logging.Logger.getLogger("test"));
@@ -144,10 +144,10 @@ class DefaultExtensionLoaderTests {
 
         assertTrue(names.equals(List.of("first-test-extension")),
             "expected only descriptor-declared extension to be loaded");
-        }
+    }
 
-        @Test
-        void load_logs_startup_summary_with_loaded_count() throws Exception {
+    @Test
+    void load_logs_startup_summary_with_loaded_count() throws Exception {
         var plugin = mock(JavaPlugin.class);
         when(plugin.getDataFolder()).thenReturn(tempDir);
         var logger = mock(java.util.logging.Logger.class);
@@ -161,14 +161,14 @@ class DefaultExtensionLoaderTests {
             List.of(FirstTestExtension.class.getName()));
         createJarWithClasses(new File(extensionsDir, "two.jar"),
             List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$SecondTestExtension.class"),
-            List.of(SecondTestExtension.class.getName()));
+            List.of());
 
         var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
 
         loader.load();
 
-        verify(logger).info("Loaded 2 extension(s) from 2 jar(s)");
-        }
+        verify(logger).info("Loaded 1 extension(s) from 2 jar(s) (empty jars: 1)");
+    }
 
     @Test
     void load_warns_when_duplicate_extension_names_are_discovered() throws Exception {
