@@ -215,14 +215,14 @@ class DefaultExtensionLoaderTests {
         Files.move(tempJar, jarFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
     }
 
-    public static class FirstTestExtension implements JConomyExtension {
+    public static class FirstTestExtension extends JConomyExtension {
         @Override
         public String getName() {
             return "first-test-extension";
         }
     }
 
-    public static class SecondTestExtension implements JConomyExtension {
+    public static class SecondTestExtension extends JConomyExtension {
         @Override
         public String getName() {
             return "second-test-extension";

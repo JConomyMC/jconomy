@@ -3,8 +3,9 @@ package org.jconomy;
 import org.jconomy.dependencyinjection.JConomyServiceBuilder;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 
-public interface JConomyExtension {
-    String getName();
+public abstract class JConomyExtension {
+
+    public abstract String getName();
 
     /**
      * Called once during plugin startup to allow the extension to register services
@@ -14,7 +15,7 @@ public interface JConomyExtension {
      * is built. The {@code builder} must not be used after this method returns.
      * </p>
      */
-    default void configureServices(JConomyServiceBuilder builder) {}
+    public void configureServices(JConomyServiceBuilder builder) {}
 
     /**
      * Called after all extensions have finished configuring services and the
@@ -25,5 +26,5 @@ public interface JConomyExtension {
      * before this method is invoked on any of them.
      * </p>
      */
-    default void onServicesReady(JConomyServiceProvider provider) {}
+    public void onServicesReady(JConomyServiceProvider provider) {}
 }
