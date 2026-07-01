@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -55,6 +56,29 @@ class DefaultExtensionLoaderTests {
         assertTrue(distinctClassLoaders == 1, "expected one classloader shared by all extensions in a jar");
     }
 
+    @Test
+    void load_continues_when_jar_contains_malformed_class() throws Exception {
+        var plugin = mock(JavaPlugin.class);
+        when(plugin.getDataFolder()).thenReturn(tempDir);
+        when(plugin.getLogger()).thenReturn(java.util.logging.Logger.getLogger("test"));
+
+        var extensionsDir = new File(tempDir, "extensions");
+        assertTrue(extensionsDir.mkdirs() || extensionsDir.exists());
+
+        var jarFile = new File(extensionsDir, "malformed-class.jar");
+        createJarWithClasses(jarFile,
+                "org/jconomy/extensions/DefaultExtensionLoaderTests$FirstTestExtension.class");
+        appendJarEntry(jarFile, "broken/Bogus.class", new byte[] { 0x00, 0x01, 0x02 });
+
+        var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
+
+        var loaded = loader.load();
+
+        assertTrue(loaded.size() == 1, "expected valid extension to load even when one class is malformed");
+        var names = loaded.stream().map(le -> le.extension().getName()).toList();
+        assertTrue(names.equals(List.of("first-test-extension")), "expected only the valid extension to be loaded");
+    }
+
     private static void createJarWithClasses(File jarFile, String... classResourceNames) throws Exception {
         try (OutputStream output = Files.newOutputStream(jarFile.toPath());
                 JarOutputStream jarOutput = new JarOutputStream(output)) {
@@ -69,6 +93,28 @@ class DefaultExtensionLoaderTests {
                 jarOutput.closeEntry();
             }
         }
+    }
+
+    private static void appendJarEntry(File jarFile, String entryName, byte[] content) throws Exception {
+        var tempJar = Files.createTempFile("jconomy-extension-test", ".jar");
+
+        try (var originalIn = Files.newInputStream(jarFile.toPath());
+                var originalJar = new java.util.jar.JarInputStream(originalIn);
+                var out = Files.newOutputStream(tempJar);
+                var newJar = new JarOutputStream(out)) {
+            JarEntry existing;
+            while ((existing = originalJar.getNextJarEntry()) != null) {
+                newJar.putNextEntry(new JarEntry(existing.getName()));
+                originalJar.transferTo(newJar);
+                newJar.closeEntry();
+            }
+
+            newJar.putNextEntry(new JarEntry(entryName));
+            newJar.write(content);
+            newJar.closeEntry();
+        }
+
+        Files.move(tempJar, jarFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
     }
 
     public static class FirstTestExtension implements JConomyExtension {
