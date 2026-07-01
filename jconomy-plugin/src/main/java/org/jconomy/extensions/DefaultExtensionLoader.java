@@ -74,6 +74,10 @@ public class DefaultExtensionLoader implements ExtensionLoader {
                 hasLoadedExtensions = true;
             }
 
+            if (!hasLoadedExtensions) {
+                plugin.getLogger().warning("No discoverable extensions found in jar: " + jar.getName());
+            }
+
             return extensions;
         } finally {
             if (!hasLoadedExtensions) {
