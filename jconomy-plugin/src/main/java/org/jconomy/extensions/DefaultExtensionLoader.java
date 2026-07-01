@@ -7,17 +7,17 @@ import java.util.*;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-import org.jconomy.JConomyExtension;
-
 public class DefaultExtensionLoader implements ExtensionLoader {
     private final JavaPlugin plugin;
     private final ClassLoader classLoader;
     private final DefaultExtensionJarDiscovery jarDiscovery;
+    private final DefaultExtensionProviderDiscovery providerDiscovery;
 
     public DefaultExtensionLoader(JavaPlugin plugin, ClassLoader classLoader) {
         this.plugin = plugin;
         this.classLoader = classLoader;
         this.jarDiscovery = new DefaultExtensionJarDiscovery(plugin);
+        this.providerDiscovery = new DefaultExtensionProviderDiscovery(plugin);
     }
 
     @Override
@@ -50,17 +50,11 @@ public class DefaultExtensionLoader implements ExtensionLoader {
         var hasLoadedExtensions = false;
 
         try {
-            var services = ServiceLoader.load(JConomyExtension.class, urlClassLoader);
-            var iterator = services.iterator();
+            var providers = providerDiscovery.discover(urlClassLoader, jar);
 
-            while (hasNextProvider(iterator, jar)) {
-                var extension = loadNextProvider(iterator, jar);
-                if (extension.isEmpty()) {
-                    continue;
-                }
-
-                plugin.getLogger().info("Loaded extension: " + extension.get().getName());
-                extensions.add(new LoadedExtension(extension.get(), urlClassLoader));
+            for (var extension : providers) {
+                plugin.getLogger().info("Loaded extension: " + extension.getName());
+                extensions.add(new LoadedExtension(extension, urlClassLoader));
                 hasLoadedExtensions = true;
             }
 
@@ -69,24 +63,6 @@ public class DefaultExtensionLoader implements ExtensionLoader {
             if (!hasLoadedExtensions) {
                 urlClassLoader.close();
             }
-        }
-    }
-
-    private boolean hasNextProvider(Iterator<JConomyExtension> iterator, File jar) {
-        try {
-            return iterator.hasNext();
-        } catch (Throwable ex) {
-            plugin.getLogger().warning(String.format("Failed to discover extension providers in '%s': %s", jar.getName(), ex.getMessage()));
-            return false;
-        }
-    }
-
-    private Optional<JConomyExtension> loadNextProvider(Iterator<JConomyExtension> iterator, File jar) {
-        try {
-            return Optional.of(iterator.next());
-        } catch (Throwable ex) {
-            plugin.getLogger().warning(String.format("Failed to instantiate extension provider in '%s': %s", jar.getName(), ex.getMessage()));
-            return Optional.empty();
         }
     }
 }
