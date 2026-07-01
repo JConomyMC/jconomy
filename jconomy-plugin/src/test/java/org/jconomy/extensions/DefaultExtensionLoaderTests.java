@@ -195,6 +195,31 @@ class DefaultExtensionLoaderTests {
         verify(logger).warning(contains("Duplicate extension name detected: duplicate-extension"));
     }
 
+    @Test
+    void load_warns_when_jar_contains_no_discoverable_extensions() throws Exception {
+        var plugin = mock(JavaPlugin.class);
+        when(plugin.getDataFolder()).thenReturn(tempDir);
+        var logger = mock(java.util.logging.Logger.class);
+        when(plugin.getLogger()).thenReturn(logger);
+
+        var extensionsDir = new File(tempDir, "extensions");
+        assertTrue(extensionsDir.mkdirs() || extensionsDir.exists());
+
+        createJarWithClasses(new File(extensionsDir, "with-descriptor.jar"),
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$FirstTestExtension.class"),
+            List.of(FirstTestExtension.class.getName()));
+        createJarWithClasses(new File(extensionsDir, "without-descriptor.jar"),
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$SecondTestExtension.class"),
+            List.of());
+
+        var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
+
+        var loaded = loader.load();
+
+        assertTrue(loaded.size() == 1, "expected only one discoverable extension");
+        verify(logger).warning("No discoverable extensions found in jar: without-descriptor.jar");
+    }
+
     private static void createJarWithClasses(File jarFile, List<String> classResourceNames, List<String> providers) throws Exception {
         try (OutputStream output = Files.newOutputStream(jarFile.toPath());
                 JarOutputStream jarOutput = new JarOutputStream(output)) {
