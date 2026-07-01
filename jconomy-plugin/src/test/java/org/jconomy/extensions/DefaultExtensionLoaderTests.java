@@ -289,6 +289,32 @@ class DefaultExtensionLoaderTests {
     }
 
     @Test
+    void load_does_not_report_duplicate_name_for_null_names() throws Exception {
+        var plugin = mock(JavaPlugin.class);
+        when(plugin.getDataFolder()).thenReturn(tempDir);
+        var logger = mock(java.util.logging.Logger.class);
+        when(plugin.getLogger()).thenReturn(logger);
+
+        var extensionsDir = new File(tempDir, "extensions");
+        assertTrue(extensionsDir.mkdirs() || extensionsDir.exists());
+
+        createJarWithClasses(new File(extensionsDir, "null-duplicates.jar"),
+            List.of(
+                "org/jconomy/extensions/DefaultExtensionLoaderTests$NullNameExtension.class",
+                "org/jconomy/extensions/DefaultExtensionLoaderTests$NullNameExtensionTwo.class"),
+            List.of(
+                NullNameExtension.class.getName(),
+                NullNameExtensionTwo.class.getName()));
+
+        var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
+
+        var loaded = loader.load();
+
+        assertTrue(loaded.size() == 2, "expected both null-name extensions to load");
+        verify(logger, never()).warning(contains("Duplicate extension name detected: null"));
+    }
+
+    @Test
     void load_warns_when_jar_contains_no_discoverable_extensions() throws Exception {
         var plugin = mock(JavaPlugin.class);
         when(plugin.getDataFolder()).thenReturn(tempDir);
@@ -394,6 +420,13 @@ class DefaultExtensionLoaderTests {
     }
 
     public static class NullNameExtension extends JConomyExtension {
+        @Override
+        public String getName() {
+            return null;
+        }
+    }
+
+    public static class NullNameExtensionTwo extends JConomyExtension {
         @Override
         public String getName() {
             return null;
