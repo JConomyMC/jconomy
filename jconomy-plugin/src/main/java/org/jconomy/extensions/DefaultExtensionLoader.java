@@ -65,17 +65,22 @@ public class DefaultExtensionLoader implements ExtensionLoader {
                     }
 
                     var className = getClassName(entry);
-                    var clazz = urlClassLoader.loadClass(className);
 
-                    if (isInstantiatableExtension(clazz)) {
-                        try {
-                            var extension = createExtension(clazz);
-                            plugin.getLogger().info("Loaded extension: " + extension.getName());
-                            extensions.add(new LoadedExtension(extension, urlClassLoader));
-                            hasLoadedExtensions = true;
-                        } catch (Exception ex) {
-                            plugin.getLogger().warning(String.format("Failed to load extension from '%s': %s", clazz.getName(), ex.getMessage()));
+                    try {
+                        var clazz = urlClassLoader.loadClass(className);
+
+                        if (isInstantiatableExtension(clazz)) {
+                            try {
+                                var extension = createExtension(clazz);
+                                plugin.getLogger().info("Loaded extension: " + extension.getName());
+                                extensions.add(new LoadedExtension(extension, urlClassLoader));
+                                hasLoadedExtensions = true;
+                            } catch (Exception ex) {
+                                plugin.getLogger().warning(String.format("Failed to load extension from '%s': %s", clazz.getName(), ex.getMessage()));
+                            }
                         }
+                    } catch (Throwable ex) {
+                        plugin.getLogger().warning(String.format("Failed to load class '%s' from '%s': %s", className, jar.getName(), ex.getMessage()));
                     }
                 }
 

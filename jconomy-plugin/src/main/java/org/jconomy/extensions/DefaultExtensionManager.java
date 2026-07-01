@@ -27,11 +27,14 @@ public class DefaultExtensionManager implements ExtensionManager {
 
     @Override
     public void close() {
-        loadedExtensions.forEach(extension -> {
+        var classLoaderNames = new java.util.LinkedHashMap<java.net.URLClassLoader, String>();
+        loadedExtensions.forEach(extension -> classLoaderNames.putIfAbsent(extension.classLoader(), extension.extension().getName()));
+
+        classLoaderNames.forEach((classLoader, extensionName) -> {
             try {
-                extension.classLoader().close();
+                classLoader.close();
             } catch (Exception ex) {
-                logger.warning(String.format("Failed to close classloader for extension '%s': %s", extension.extension().getName(),
+                logger.warning(String.format("Failed to close classloader for extension '%s': %s", extensionName,
                         ex.getMessage()));
             }
         });
