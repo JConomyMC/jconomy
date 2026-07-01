@@ -70,6 +70,9 @@ public class DefaultExtensionLoader implements ExtensionLoader {
         var nameCounts = new LinkedHashMap<String, Integer>();
         for (var loaded : loadedExtensions) {
             var extensionName = loaded.extension().getName();
+            if (extensionName == null || extensionName.isBlank()) {
+                continue;
+            }
             nameCounts.put(extensionName, nameCounts.getOrDefault(extensionName, 0) + 1);
         }
 
