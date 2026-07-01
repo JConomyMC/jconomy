@@ -46,8 +46,8 @@ public class DefaultExtensionLoader implements ExtensionLoader {
 
         plugin.getLogger().info(String.format("Loaded %d extension(s) from %d jar(s) (empty jars: %d)",
             loadedExtensions.size(), jars.size(), emptyJarCount));
-        plugin.getLogger().info(String.format("Load diagnostics: empty jars=%d, duplicate names=%d",
-                emptyJarCount, duplicateNameCount));
+        plugin.getLogger().info(String.format("Load diagnostics: empty jars=%d, duplicate names=%d, invalid names=%d",
+            emptyJarCount, duplicateNameCount, invalidNameCount));
         plugin.getLogger().info(String.format("Name diagnostics: invalid names=%d", invalidNameCount));
 
         return loadedExtensions;
