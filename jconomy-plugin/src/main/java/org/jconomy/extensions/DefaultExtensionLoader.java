@@ -37,9 +37,25 @@ public class DefaultExtensionLoader implements ExtensionLoader {
             }
         }
 
+        warnOnDuplicateExtensionNames(loadedExtensions);
+
         plugin.getLogger().info(String.format("Loaded %d extension(s) from %d jar(s)", loadedExtensions.size(), jars.size()));
 
         return loadedExtensions;
+    }
+
+    private void warnOnDuplicateExtensionNames(Set<LoadedExtension> loadedExtensions) {
+        var nameCounts = new LinkedHashMap<String, Integer>();
+        for (var loaded : loadedExtensions) {
+            var extensionName = loaded.extension().getName();
+            nameCounts.put(extensionName, nameCounts.getOrDefault(extensionName, 0) + 1);
+        }
+
+        nameCounts.forEach((name, count) -> {
+            if (count > 1) {
+                plugin.getLogger().warning(String.format("Duplicate extension name detected: %s (count=%d)", name, count));
+            }
+        });
     }
 
     private Set<LoadedExtension> loadExtension(File jar) throws Exception {

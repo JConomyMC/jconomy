@@ -170,6 +170,31 @@ class DefaultExtensionLoaderTests {
         verify(logger).info("Loaded 2 extension(s) from 2 jar(s)");
         }
 
+    @Test
+    void load_warns_when_duplicate_extension_names_are_discovered() throws Exception {
+        var plugin = mock(JavaPlugin.class);
+        when(plugin.getDataFolder()).thenReturn(tempDir);
+        var logger = mock(java.util.logging.Logger.class);
+        when(plugin.getLogger()).thenReturn(logger);
+
+        var extensionsDir = new File(tempDir, "extensions");
+        assertTrue(extensionsDir.mkdirs() || extensionsDir.exists());
+
+        createJarWithClasses(new File(extensionsDir, "one.jar"),
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$DuplicateNameExtensionOne.class"),
+            List.of(DuplicateNameExtensionOne.class.getName()));
+        createJarWithClasses(new File(extensionsDir, "two.jar"),
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$DuplicateNameExtensionTwo.class"),
+            List.of(DuplicateNameExtensionTwo.class.getName()));
+
+        var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
+
+        var loaded = loader.load();
+
+        assertTrue(loaded.size() == 2, "expected both extensions to be loaded despite duplicate names");
+        verify(logger).warning(contains("Duplicate extension name detected: duplicate-extension"));
+    }
+
     private static void createJarWithClasses(File jarFile, List<String> classResourceNames, List<String> providers) throws Exception {
         try (OutputStream output = Files.newOutputStream(jarFile.toPath());
                 JarOutputStream jarOutput = new JarOutputStream(output)) {
@@ -226,6 +251,20 @@ class DefaultExtensionLoaderTests {
         @Override
         public String getName() {
             return "second-test-extension";
+        }
+    }
+
+    public static class DuplicateNameExtensionOne extends JConomyExtension {
+        @Override
+        public String getName() {
+            return "duplicate-extension";
+        }
+    }
+
+    public static class DuplicateNameExtensionTwo extends JConomyExtension {
+        @Override
+        public String getName() {
+            return "duplicate-extension";
         }
     }
 }
