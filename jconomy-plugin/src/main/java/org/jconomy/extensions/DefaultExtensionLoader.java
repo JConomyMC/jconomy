@@ -43,6 +43,8 @@ public class DefaultExtensionLoader implements ExtensionLoader {
             }
         }
 
+        plugin.getLogger().info(String.format("Loaded %d extension(s) from %d jar(s)", loadedExtensions.size(), jars.length));
+
         return loadedExtensions;
     }
 

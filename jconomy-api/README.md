@@ -43,6 +43,22 @@ public class MyExtension implements JConomyExtension {
 
 Package the class in a jar and drop it in `plugins/JConomy/extensions/`. JConomy will load it automatically on startup.
 
+### Register your extension entry point
+
+JConomy discovers extensions using Java ServiceLoader. Your jar must include this descriptor file:
+
+`META-INF/services/org.jconomy.JConomyExtension`
+
+The file content should list one implementation class per line:
+
+```text
+com.example.MyExtension
+com.example.AnotherExtension
+```
+
+You can register multiple `JConomyExtension` implementations in one jar.
+JConomy also supports loading from any number of jars in `plugins/JConomy/extensions/`.
+
 ## Snapshots
 
 > [!WARNING]

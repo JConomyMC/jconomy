@@ -146,6 +146,30 @@ class DefaultExtensionLoaderTests {
             "expected only descriptor-declared extension to be loaded");
         }
 
+        @Test
+        void load_logs_startup_summary_with_loaded_count() throws Exception {
+        var plugin = mock(JavaPlugin.class);
+        when(plugin.getDataFolder()).thenReturn(tempDir);
+        var logger = mock(java.util.logging.Logger.class);
+        when(plugin.getLogger()).thenReturn(logger);
+
+        var extensionsDir = new File(tempDir, "extensions");
+        assertTrue(extensionsDir.mkdirs() || extensionsDir.exists());
+
+        createJarWithClasses(new File(extensionsDir, "one.jar"),
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$FirstTestExtension.class"),
+            List.of(FirstTestExtension.class.getName()));
+        createJarWithClasses(new File(extensionsDir, "two.jar"),
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$SecondTestExtension.class"),
+            List.of(SecondTestExtension.class.getName()));
+
+        var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
+
+        loader.load();
+
+        verify(logger).info("Loaded 2 extension(s) from 2 jar(s)");
+        }
+
     private static void createJarWithClasses(File jarFile, List<String> classResourceNames, List<String> providers) throws Exception {
         try (OutputStream output = Files.newOutputStream(jarFile.toPath());
                 JarOutputStream jarOutput = new JarOutputStream(output)) {
