@@ -33,7 +33,9 @@ public class DefaultExtensionLoader implements ExtensionLoader {
         if (jars == null)
             return Set.of();
 
-        var loadedExtensions = new HashSet<LoadedExtension>();
+        Arrays.sort(jars, Comparator.comparing(File::getName));
+
+        var loadedExtensions = new LinkedHashSet<LoadedExtension>();
 
         for (File jar : jars) {
             try {
@@ -53,7 +55,7 @@ public class DefaultExtensionLoader implements ExtensionLoader {
 
             var entries = jarFile.entries();
 
-            var extensions = new HashSet<LoadedExtension>();
+            var extensions = new LinkedHashSet<LoadedExtension>();
             var urlClassLoader = new URLClassLoader(new URL[] { jar.toURI().toURL() }, classLoader);
             var hasLoadedExtensions = false;
 
