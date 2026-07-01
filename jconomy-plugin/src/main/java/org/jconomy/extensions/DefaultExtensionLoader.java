@@ -86,13 +86,19 @@ public class DefaultExtensionLoader implements ExtensionLoader {
             var providers = providerDiscovery.discover(urlClassLoader, jar);
 
             for (var extension : providers) {
-                if (extension.getName().isBlank()) {
+                var extensionName = extension.getName();
+                if (extensionName == null) {
+                    plugin.getLogger().warning(String.format(
+                            "Loaded extension reported null name: %s (jar=%s)",
+                            extension.getClass().getName(),
+                            jar.getName()));
+                } else if (extensionName.isBlank()) {
                     plugin.getLogger().warning(String.format(
                             "Loaded extension reported blank name: %s (jar=%s)",
                             extension.getClass().getName(),
                             jar.getName()));
                 }
-                plugin.getLogger().info("Loaded extension: " + extension.getName());
+                plugin.getLogger().info("Loaded extension: " + extensionName);
                 extensions.add(new LoadedExtension(extension, urlClassLoader));
                 hasLoadedExtensions = true;
             }
