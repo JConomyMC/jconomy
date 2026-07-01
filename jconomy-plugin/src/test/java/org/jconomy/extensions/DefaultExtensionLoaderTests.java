@@ -220,6 +220,28 @@ class DefaultExtensionLoaderTests {
     }
 
     @Test
+    void load_warns_when_extension_name_is_blank() throws Exception {
+        var plugin = mock(JavaPlugin.class);
+        when(plugin.getDataFolder()).thenReturn(tempDir);
+        var logger = mock(java.util.logging.Logger.class);
+        when(plugin.getLogger()).thenReturn(logger);
+
+        var extensionsDir = new File(tempDir, "extensions");
+        assertTrue(extensionsDir.mkdirs() || extensionsDir.exists());
+
+        createJarWithClasses(new File(extensionsDir, "blank-name.jar"),
+            List.of("org/jconomy/extensions/DefaultExtensionLoaderTests$BlankNameExtension.class"),
+            List.of(BlankNameExtension.class.getName()));
+
+        var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
+
+        var loaded = loader.load();
+
+        assertTrue(loaded.size() == 1, "expected extension with blank name to still load");
+        verify(logger).warning(contains("Loaded extension reported blank name"));
+    }
+
+    @Test
     void load_warns_when_jar_contains_no_discoverable_extensions() throws Exception {
         var plugin = mock(JavaPlugin.class);
         when(plugin.getDataFolder()).thenReturn(tempDir);
@@ -314,6 +336,13 @@ class DefaultExtensionLoaderTests {
         @Override
         public String getName() {
             return "duplicate-extension";
+        }
+    }
+
+    public static class BlankNameExtension extends JConomyExtension {
+        @Override
+        public String getName() {
+            return "  ";
         }
     }
 }
