@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -77,6 +78,40 @@ class DefaultExtensionLoaderTests {
         assertTrue(loaded.size() == 1, "expected valid extension to load even when one class is malformed");
         var names = loaded.stream().map(le -> le.extension().getName()).toList();
         assertTrue(names.equals(List.of("first-test-extension")), "expected only the valid extension to be loaded");
+    }
+
+    @Test
+    void load_orders_jars_lexicographically_for_deterministic_startup() throws Exception {
+        var plugin = mock(JavaPlugin.class);
+        when(plugin.getDataFolder()).thenReturn(tempDir);
+        var logger = mock(java.util.logging.Logger.class);
+        when(plugin.getLogger()).thenReturn(logger);
+
+        var extensionsDir = new File(tempDir, "extensions");
+        assertTrue(extensionsDir.mkdirs() || extensionsDir.exists());
+
+        createJarWithClasses(new File(extensionsDir, "zeta.jar"),
+                "org/jconomy/extensions/DefaultExtensionLoaderTests$SecondTestExtension.class");
+        createJarWithClasses(new File(extensionsDir, "alpha.jar"),
+                "org/jconomy/extensions/DefaultExtensionLoaderTests$FirstTestExtension.class");
+
+        var loader = new DefaultExtensionLoader(plugin, getClass().getClassLoader());
+        loader.load();
+
+        var loadingMessages = new ArrayList<String>();
+        var captor = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(logger, atLeast(2)).info(captor.capture());
+        for (String message : captor.getAllValues()) {
+            if (message.startsWith("Loading extension: ")) {
+                loadingMessages.add(message);
+            }
+        }
+
+        assertTrue(loadingMessages.size() == 2, "expected two loading log entries");
+        assertTrue(loadingMessages.get(0).equals("Loading extension: alpha.jar"),
+                "expected alpha.jar to load first for deterministic ordering");
+        assertTrue(loadingMessages.get(1).equals("Loading extension: zeta.jar"),
+                "expected zeta.jar to load second for deterministic ordering");
     }
 
     private static void createJarWithClasses(File jarFile, String... classResourceNames) throws Exception {
