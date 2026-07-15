@@ -46,7 +46,6 @@ public class DefaultServiceBuilder implements JConomyServiceBuilder {
         return this;
     }
 
-    @Override
     public JConomyServiceProvider build() {
         if (isBuilt) {
             throw new IllegalStateException("Provider has already been built");
