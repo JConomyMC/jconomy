@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 
 import org.jconomy.JConomyExtension;
-import org.jconomy.dependencyinjection.JConomyServiceBuilder;
+import org.jconomy.dependencyinjection.JConomyServiceRegistrar;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 
 class DefaultExtensionManagerTests {
@@ -41,7 +41,7 @@ class DefaultExtensionManagerTests {
         ExtensionLoader loader = () -> Set.of(new LoadedExtension(extension1, classLoader1));
 
         var manager = new DefaultExtensionManager(loader, Logger.getLogger("test"));
-        var builder = mock(JConomyServiceBuilder.class);
+        var builder = mock(JConomyServiceRegistrar.class);
 
         manager.configureServices(builder);
 

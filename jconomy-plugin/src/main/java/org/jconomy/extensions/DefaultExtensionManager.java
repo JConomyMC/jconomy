@@ -3,7 +3,7 @@ package org.jconomy.extensions;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.jconomy.dependencyinjection.JConomyServiceBuilder;
+import org.jconomy.dependencyinjection.JConomyServiceRegistrar;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 
 public class DefaultExtensionManager implements ExtensionManager {
@@ -16,7 +16,7 @@ public class DefaultExtensionManager implements ExtensionManager {
     }
 
     @Override
-    public void configureServices(JConomyServiceBuilder builder) {
+    public void configureServices(JConomyServiceRegistrar builder) {
         loadedExtensions.forEach(extension -> extension.extension().configureServices(builder));
     }
 

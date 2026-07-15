@@ -3,7 +3,7 @@ package org.jconomy.dependencyinjection;
 import java.util.List;
 
 /**
- * Provides access to services registered via {@link JConomyServiceBuilder}.
+ * Provides access to services registered via {@link JConomyServiceRegistrar}.
  * <p>
  * Allows resolving single or multiple services by type. Supports optional and required lookups.
  * </p>

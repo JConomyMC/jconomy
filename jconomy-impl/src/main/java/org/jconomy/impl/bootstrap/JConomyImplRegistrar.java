@@ -1,6 +1,6 @@
 package org.jconomy.impl.bootstrap;
 
-import org.jconomy.dependencyinjection.JConomyServiceBuilder;
+import org.jconomy.dependencyinjection.JConomyServiceRegistrar;
 import org.jconomy.storage.SqlConnectionFactory;
 import org.jconomy.storage.SqliteConnectionFactory;
 import org.jconomy.accounts.AccountRepository;
@@ -23,7 +23,7 @@ public final class JConomyImplRegistrar {
     private JConomyImplRegistrar() {
     }
 
-    public static void registerServices(JConomyServiceBuilder builder) {
+    public static void registerServices(JConomyServiceRegistrar builder) {
         if (builder == null) {
             throw new IllegalArgumentException("builder cannot be null");
         }
