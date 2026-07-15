@@ -54,12 +54,4 @@ public interface JConomyServiceBuilder {
      * @return this builder for chaining
      */
     <T> JConomyServiceBuilder addSingletonFactory(Class<T> type, Function<JConomyServiceProvider, T> factory);
-
-    /**
-     * Builds the service provider from the registered services.
-     * After calling this method, the builder should not be used to register additional services.
-     *
-     * @return a {@link JConomyServiceProvider} for resolving registered services
-     */
-    JConomyServiceProvider build();
 }

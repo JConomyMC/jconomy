@@ -120,24 +120,5 @@ class JConomyImplRegistrarTests {
             return this;
         }
 
-        @Override
-        public JConomyServiceProvider build() {
-            return new JConomyServiceProvider() {
-                @Override
-                public <T> T getService(Class<T> type) {
-                    return null;
-                }
-
-                @Override
-                public <T> T getRequiredService(Class<T> type) {
-                    throw new UnsupportedOperationException("Not needed for this test");
-                }
-
-                @Override
-                public <T> List<T> getServices(Class<T> type) {
-                    return List.of();
-                }
-            };
-        }
     }
 }
