@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import org.jconomy.dependencyinjection.DefaultServiceBuilder;
-import org.jconomy.dependencyinjection.JConomyServiceRegistrar;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.PeriodicFlushScheduler;
@@ -13,7 +12,7 @@ import org.jconomy.storage.PeriodicFlushScheduler;
 /**
  * Tests that critical infrastructure services are protected from extension overloading.
  */
-class JConomyServiceRegistrarTests {
+class JConomyProviderFactoryTests {
 
     /**
      * Verifies that PeriodicFlushScheduler is NOT registered in the DI container,
