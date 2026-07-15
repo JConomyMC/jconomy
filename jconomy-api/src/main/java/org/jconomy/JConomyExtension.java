@@ -1,6 +1,6 @@
 package org.jconomy;
 
-import org.jconomy.dependencyinjection.JConomyServiceBuilder;
+import org.jconomy.dependencyinjection.JConomyServiceRegistrar;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 
 public abstract class JConomyExtension {
@@ -15,7 +15,7 @@ public abstract class JConomyExtension {
      * is built. The {@code builder} must not be used after this method returns.
      * </p>
      */
-    public void configureServices(JConomyServiceBuilder builder) {}
+    public void configureServices(JConomyServiceRegistrar builder) {}
 
     /**
      * Called after all extensions have finished configuring services and the

@@ -9,7 +9,7 @@ import java.util.function.Function;
  * and produces a {@link JConomyServiceProvider} for resolving the services.
  * </p>
  */
-public interface JConomyServiceBuilder {
+public interface JConomyServiceRegistrar {
 
     /**
      * Registers a singleton service by its type. The implementation will be the type itself.
@@ -19,7 +19,7 @@ public interface JConomyServiceBuilder {
      * @param <T>  the type of the service
      * @return this builder for chaining
      */
-    <T> JConomyServiceBuilder addSingleton(Class<T> type);
+    <T> JConomyServiceRegistrar addSingleton(Class<T> type);
 
     /**
      * Registers a singleton service by an abstraction and a concrete implementation type.
@@ -31,7 +31,7 @@ public interface JConomyServiceBuilder {
      * @param <T>                the concrete implementation type
      * @return this builder for chaining
      */
-    <S, T extends S> JConomyServiceBuilder addSingleton(Class<S> type, Class<T> implementationType);
+    <S, T extends S> JConomyServiceRegistrar addSingleton(Class<S> type, Class<T> implementationType);
 
     /**
      * Registers a singleton service with a pre-created instance.
@@ -42,7 +42,7 @@ public interface JConomyServiceBuilder {
      * @param <T>      the type of the service
      * @return this builder for chaining
      */
-    <T> JConomyServiceBuilder addSingleton(Class<T> type, T instance);
+    <T> JConomyServiceRegistrar addSingleton(Class<T> type, T instance);
 
     /**
      * Registers a singleton service using a factory function.
@@ -53,5 +53,5 @@ public interface JConomyServiceBuilder {
      * @param <T>     the type of the service
      * @return this builder for chaining
      */
-    <T> JConomyServiceBuilder addSingletonFactory(Class<T> type, Function<JConomyServiceProvider, T> factory);
+    <T> JConomyServiceRegistrar addSingletonFactory(Class<T> type, Function<JConomyServiceProvider, T> factory);
 }

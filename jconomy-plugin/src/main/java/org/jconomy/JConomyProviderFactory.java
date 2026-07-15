@@ -47,7 +47,7 @@ import com.jellyrekt.storage.configuration.file.javaplugin.JavaPluginConfigurati
 
 import net.milkbowl.vault2.economy.Economy;
 
-public class JConomyServiceRegistrar {
+public class JConomyProviderFactory {
 
     public static JConomyServiceProvider buildServiceProvider(
             JavaPlugin plugin, PluginContext pluginContext, ExtensionManager extensionManager) {

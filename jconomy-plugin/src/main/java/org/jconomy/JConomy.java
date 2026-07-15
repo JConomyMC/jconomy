@@ -52,9 +52,9 @@ public class JConomy extends JavaPlugin implements PluginContext {
         }
 
         try {
-            services = JConomyServiceRegistrar.buildServiceProvider(this, this, extensionManager);
+            services = JConomyProviderFactory.buildServiceProvider(this, this, extensionManager);
             // Create scheduler outside DI container to prevent extension access/override
-            periodicFlushScheduler = JConomyServiceRegistrar.createPeriodicFlushScheduler(services);
+            periodicFlushScheduler = JConomyProviderFactory.createPeriodicFlushScheduler(services);
         } catch (Exception ex) {
             getLogger().severe("Some services could not be instantiated: " + ExceptionUtils.getStackTrace(ex));
             getLogger().severe("Disabling plugin.");

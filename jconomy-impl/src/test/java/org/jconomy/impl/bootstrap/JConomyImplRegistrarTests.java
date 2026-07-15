@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 
-import org.jconomy.dependencyinjection.JConomyServiceBuilder;
+import org.jconomy.dependencyinjection.JConomyServiceRegistrar;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.storage.FlushRegistry;
 import org.jconomy.accounts.AccountRepository;
@@ -94,27 +94,27 @@ class JConomyImplRegistrarTests {
         assertEquals(DefaultCurrencyFormatter.class, builder.singletonImplementations.get(CurrencyFormatter.class));
     }
 
-    private static final class NoopBuilder implements JConomyServiceBuilder {
+    private static final class NoopBuilder implements JConomyServiceRegistrar {
         private final Map<Class<?>, Class<?>> singletonImplementations = new HashMap<>();
 
         @Override
-        public <T> JConomyServiceBuilder addSingleton(Class<T> type) {
+        public <T> JConomyServiceRegistrar addSingleton(Class<T> type) {
             return this;
         }
 
         @Override
-        public <S, T extends S> JConomyServiceBuilder addSingleton(Class<S> type, Class<T> implementationType) {
+        public <S, T extends S> JConomyServiceRegistrar addSingleton(Class<S> type, Class<T> implementationType) {
             singletonImplementations.put(type, implementationType);
             return this;
         }
 
         @Override
-        public <T> JConomyServiceBuilder addSingleton(Class<T> type, T instance) {
+        public <T> JConomyServiceRegistrar addSingleton(Class<T> type, T instance) {
             return this;
         }
 
         @Override
-        public <T> JConomyServiceBuilder addSingletonFactory(
+        public <T> JConomyServiceRegistrar addSingletonFactory(
                 Class<T> type,
                 Function<JConomyServiceProvider, T> factory) {
             return this;

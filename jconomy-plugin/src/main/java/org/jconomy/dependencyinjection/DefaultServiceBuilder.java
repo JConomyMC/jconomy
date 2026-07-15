@@ -4,7 +4,7 @@ import java.util.function.Function;
 
 import com.merenze.dependencyinjection.ServiceBuilder;
 
-public class DefaultServiceBuilder implements JConomyServiceBuilder {
+public class DefaultServiceBuilder implements JConomyServiceRegistrar {
     private final ServiceBuilder internalBuilder = new ServiceBuilder();
     private JConomyServiceProvider provider;
     private boolean isBuilt = false;
@@ -16,28 +16,28 @@ public class DefaultServiceBuilder implements JConomyServiceBuilder {
     }
 
     @Override
-    public <T> JConomyServiceBuilder addSingleton(Class<T> type) {
+    public <T> JConomyServiceRegistrar addSingleton(Class<T> type) {
         validateState();
         internalBuilder.addSingleton(type);
         return this;
     }
 
     @Override
-    public <S, T extends S> JConomyServiceBuilder addSingleton(Class<S> type, Class<T> implementationType) {
+    public <S, T extends S> JConomyServiceRegistrar addSingleton(Class<S> type, Class<T> implementationType) {
         validateState();
         internalBuilder.addSingleton(type, implementationType);
         return this;
     }
 
     @Override
-    public <T> JConomyServiceBuilder addSingleton(Class<T> type, T instance) {
+    public <T> JConomyServiceRegistrar addSingleton(Class<T> type, T instance) {
         validateState();
         internalBuilder.addSingleton(type, instance);
         return this;
     }
 
     @Override
-    public <T> JConomyServiceBuilder addSingletonFactory(Class<T> type, Function<JConomyServiceProvider, T> factory) {
+    public <T> JConomyServiceRegistrar addSingletonFactory(Class<T> type, Function<JConomyServiceProvider, T> factory) {
         validateState();
         internalBuilder.addSingletonFactory(type, internalProvider -> {
             var provider = internalProvider.getRequiredService(JConomyServiceProvider.class);
