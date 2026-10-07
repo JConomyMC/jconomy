@@ -51,10 +51,14 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     @Override
     public BigDecimal adjust(UUID accountId, String worldName, String currency, BigDecimal delta) {
         var key = new BalanceKey(accountId, worldName, currency);
-        var current = get(accountId, worldName, currency).map(Balance::getAmount).orElse(BigDecimal.ZERO);
-        var adjusted = current.add(delta);
-        pendingBalances.put(key, new PendingBalance(adjusted, delta));
-        return adjusted;
+        var pending = pendingBalances.get(key);
+        if (pending == null) {
+            var current = get(accountId, worldName, currency).map(Balance::getAmount).orElse(BigDecimal.ZERO);
+            pending = new PendingBalance(current, BigDecimal.ZERO);
+        }
+        var adjusted = new PendingBalance(pending.amount().add(delta), pending.delta().add(delta));
+        pendingBalances.put(key, adjusted);
+        return adjusted.amount();
     }
 
     @Override
