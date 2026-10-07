@@ -2,6 +2,7 @@ package org.jconomy.balances;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -354,6 +355,10 @@ class DefaultBalanceAccessTests {
         public void upsertAll(Set<Balance> balances) {
             if (failOnUpsertAll) throw new RuntimeException("simulated failure");
             lastUpsertAll = balances;
+        }
+
+        @Override
+        public void adjustAll(Collection<BalanceAdjustment> adjustments) {
         }
 
         @Override

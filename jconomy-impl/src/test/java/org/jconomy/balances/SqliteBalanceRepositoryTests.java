@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -128,6 +129,18 @@ class SqliteBalanceRepositoryTests {
     @Test
     void upsertAll_with_empty_set_is_a_no_op() {
         assertDoesNotThrow(() -> repository.upsertAll(Set.of()));
+    }
+
+    // --- adjustAll ---
+
+    @Test
+    void adjustAll_adds_delta_to_existing_amount() throws Exception {
+        var id = UUID.randomUUID();
+        insert(id, "world", "gold", BigDecimal.valueOf(100));
+
+        repository.adjustAll(List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(10))));
+
+        assertEquals(0, BigDecimal.valueOf(110).compareTo(repository.get(id, "world", "gold").get().getAmount()));
     }
 
     // --- delete ---
