@@ -131,6 +131,29 @@ class SqliteBalanceRepositoryTests {
         assertDoesNotThrow(() -> repository.upsertAll(Set.of()));
     }
 
+    // --- assignAll ---
+
+    @Test
+    void assignAll_overwrites_existing_amount() throws Exception {
+        var id = UUID.randomUUID();
+        insert(id, "world", "gold", BigDecimal.valueOf(100));
+
+        repository.assignAll(List.of(new BalanceAssignment(id, "world", "gold", BigDecimal.valueOf(40))));
+
+        assertEquals(0, BigDecimal.valueOf(40).compareTo(repository.get(id, "world", "gold").get().getAmount()));
+    }
+
+    @Test
+    void assignAll_inserts_amount_when_no_row_exists() {
+        var id = UUID.randomUUID();
+
+        repository.assignAll(List.of(new BalanceAssignment(id, "world", "gold", BigDecimal.valueOf(40))));
+
+        var result = repository.get(id, "world", "gold");
+        assertTrue(result.isPresent());
+        assertEquals(0, BigDecimal.valueOf(40).compareTo(result.get().getAmount()));
+    }
+
     // --- adjustAll ---
 
     @Test

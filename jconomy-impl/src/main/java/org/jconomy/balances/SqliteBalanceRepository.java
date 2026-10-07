@@ -69,6 +69,30 @@ public class SqliteBalanceRepository implements BalanceRepository {
     }
 
     @Override
+    public void assignAll(Collection<BalanceAssignment> assignments) {
+        var sql = """
+                insert into account_balances (account_id, world, currency, amount)
+                values (?, ?, ?, ?)
+                on conflict (account_id, world, currency)
+                do update set amount = excluded.amount
+                """;
+        try (
+                var connection = connectionFactory.createConnection();
+                var stmt = connection.prepareStatement(sql)) {
+            for (var assignment : assignments) {
+                stmt.setString(1, assignment.accountId().toString());
+                stmt.setString(2, assignment.worldName());
+                stmt.setString(3, assignment.currency());
+                stmt.setBigDecimal(4, assignment.amount());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
     public void adjustAll(Collection<BalanceAdjustment> adjustments) {
         var sql = """
                 insert into account_balances (account_id, world, currency, amount)

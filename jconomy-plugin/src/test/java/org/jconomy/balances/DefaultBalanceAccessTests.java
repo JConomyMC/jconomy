@@ -358,6 +358,10 @@ class DefaultBalanceAccessTests {
         }
 
         @Override
+        public void assignAll(Collection<BalanceAssignment> assignments) {
+        }
+
+        @Override
         public void adjustAll(Collection<BalanceAdjustment> adjustments) {
         }
 
