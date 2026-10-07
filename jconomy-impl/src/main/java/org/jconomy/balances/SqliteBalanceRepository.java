@@ -3,6 +3,7 @@ package org.jconomy.balances;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -59,6 +60,29 @@ public class SqliteBalanceRepository implements BalanceRepository {
                 stmt.setString(2, balance.getWorldName());
                 stmt.setString(3, balance.getCurrency());
                 stmt.setBigDecimal(4, balance.getAmount());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public void adjustAll(Collection<BalanceAdjustment> adjustments) {
+        var sql = """
+                update account_balances
+                set amount = amount + ?
+                where account_id = ? and world = ? and currency = ?
+                """;
+        try (
+                var connection = connectionFactory.createConnection();
+                var stmt = connection.prepareStatement(sql)) {
+            for (var adjustment : adjustments) {
+                stmt.setBigDecimal(1, adjustment.delta());
+                stmt.setString(2, adjustment.accountId().toString());
+                stmt.setString(3, adjustment.worldName());
+                stmt.setString(4, adjustment.currency());
                 stmt.addBatch();
             }
             stmt.executeBatch();
