@@ -1,5 +1,6 @@
 package org.jconomy.balances;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
@@ -15,9 +16,12 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
 
     private record BalanceKey(UUID accountId, String worldName, String currency) {}
 
+    private record PendingBalance(BigDecimal amount, BigDecimal delta) {}
+
     private final BalanceCache cache;
     private final BalanceRepository repository;
     private final ConcurrentHashMap<BalanceKey, Balance> dirtyRecords = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<BalanceKey, PendingBalance> pendingBalances = new ConcurrentHashMap<>();
 
     public DefaultBalanceAccess(BalanceCache cache, BalanceRepository repository) {
         this.cache = cache;
@@ -45,15 +49,39 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     }
 
     @Override
+    public BigDecimal adjust(UUID accountId, String worldName, String currency, BigDecimal delta) {
+        var key = new BalanceKey(accountId, worldName, currency);
+        var current = get(accountId, worldName, currency).map(Balance::getAmount).orElse(BigDecimal.ZERO);
+        var adjusted = current.add(delta);
+        pendingBalances.put(key, new PendingBalance(adjusted, delta));
+        return adjusted;
+    }
+
+    @Override
     public void flush() {
-        if (dirtyRecords.isEmpty()) return;
-        var snapshot = new HashMap<>(dirtyRecords);
         try {
-            repository.upsertAll(new HashSet<>(snapshot.values()));
-            snapshot.forEach((k, v) -> dirtyRecords.remove(k, v));
+            flushDirtyRecords();
+            flushPendingBalances();
         } catch (Exception e) {
             logger.warning("Failed to flush dirty balances: " + ExceptionUtils.getStackTrace(e));
         }
+    }
+
+    private void flushDirtyRecords() {
+        if (dirtyRecords.isEmpty()) return;
+        var snapshot = new HashMap<>(dirtyRecords);
+        repository.upsertAll(new HashSet<>(snapshot.values()));
+        snapshot.forEach((k, v) -> dirtyRecords.remove(k, v));
+    }
+
+    private void flushPendingBalances() {
+        if (pendingBalances.isEmpty()) return;
+        var snapshot = new HashMap<>(pendingBalances);
+        repository.adjustAll(snapshot.entrySet().stream()
+                .map(e -> new BalanceAdjustment(
+                        e.getKey().accountId(), e.getKey().worldName(), e.getKey().currency(), e.getValue().delta()))
+                .toList());
+        snapshot.forEach((k, v) -> pendingBalances.remove(k, v));
     }
 
     @Override

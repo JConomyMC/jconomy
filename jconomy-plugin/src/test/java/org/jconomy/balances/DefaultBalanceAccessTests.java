@@ -3,7 +3,9 @@ package org.jconomy.balances;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collection;
+import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -145,6 +147,35 @@ class DefaultBalanceAccessTests {
         } finally {
             logger.removeHandler(handler);
         }
+    }
+
+    // --- adjust ---
+
+    @Test
+    void adjust_returns_cached_amount_plus_delta() {
+        var id = UUID.randomUUID();
+        var balance = new Balance(id, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        cache.put(balance);
+
+        var result = access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+
+        assertEquals(BigDecimal.valueOf(110), result);
+    }
+
+    @Test
+    void flush_sends_adjusted_balance_as_single_adjustment() {
+        var id = UUID.randomUUID();
+        var balance = new Balance(id, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        cache.put(balance);
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+
+        access.flush();
+
+        assertEquals(
+                List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(10))),
+                List.copyOf(repository.lastAdjustAll));
     }
 
     @Test
@@ -329,6 +360,7 @@ class DefaultBalanceAccessTests {
         boolean getCalled = false;
         Set<Balance> lastUpsertAll = null;
         boolean failOnUpsertAll = false;
+        Collection<BalanceAdjustment> lastAdjustAll = null;
         boolean deleteCalled = false;
         UUID lastDeletedId = null;
         String lastDeletedWorld = null;
@@ -363,6 +395,7 @@ class DefaultBalanceAccessTests {
 
         @Override
         public void adjustAll(Collection<BalanceAdjustment> adjustments) {
+            lastAdjustAll = adjustments;
         }
 
         @Override
