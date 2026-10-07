@@ -71,18 +71,19 @@ public class SqliteBalanceRepository implements BalanceRepository {
     @Override
     public void adjustAll(Collection<BalanceAdjustment> adjustments) {
         var sql = """
-                update account_balances
-                set amount = amount + ?
-                where account_id = ? and world = ? and currency = ?
+                insert into account_balances (account_id, world, currency, amount)
+                values (?, ?, ?, ?)
+                on conflict (account_id, world, currency)
+                do update set amount = amount + excluded.amount
                 """;
         try (
                 var connection = connectionFactory.createConnection();
                 var stmt = connection.prepareStatement(sql)) {
             for (var adjustment : adjustments) {
-                stmt.setBigDecimal(1, adjustment.delta());
-                stmt.setString(2, adjustment.accountId().toString());
-                stmt.setString(3, adjustment.worldName());
-                stmt.setString(4, adjustment.currency());
+                stmt.setString(1, adjustment.accountId().toString());
+                stmt.setString(2, adjustment.worldName());
+                stmt.setString(3, adjustment.currency());
+                stmt.setBigDecimal(4, adjustment.delta());
                 stmt.addBatch();
             }
             stmt.executeBatch();

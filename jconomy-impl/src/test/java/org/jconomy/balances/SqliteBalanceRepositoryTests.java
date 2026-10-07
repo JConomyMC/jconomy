@@ -143,6 +143,28 @@ class SqliteBalanceRepositoryTests {
         assertEquals(0, BigDecimal.valueOf(110).compareTo(repository.get(id, "world", "gold").get().getAmount()));
     }
 
+    @Test
+    void adjustAll_inserts_delta_when_no_row_exists() {
+        var id = UUID.randomUUID();
+
+        repository.adjustAll(List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(25))));
+
+        var result = repository.get(id, "world", "gold");
+        assertTrue(result.isPresent());
+        assertEquals(0, BigDecimal.valueOf(25).compareTo(result.get().getAmount()));
+    }
+
+    @Test
+    void adjustAll_applies_successive_adjustments_cumulatively() throws Exception {
+        var id = UUID.randomUUID();
+        insert(id, "world", "gold", BigDecimal.valueOf(100));
+
+        repository.adjustAll(List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(10))));
+        repository.adjustAll(List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(20))));
+
+        assertEquals(0, BigDecimal.valueOf(130).compareTo(repository.get(id, "world", "gold").get().getAmount()));
+    }
+
     // --- delete ---
 
     @Test
