@@ -10,6 +10,8 @@ public interface BalanceAccess {
 
     void save(Balance balance);
 
+    BigDecimal set(UUID accountId, String worldName, String currency, BigDecimal amount);
+
     BigDecimal adjust(UUID accountId, String worldName, String currency, BigDecimal delta);
 
     void delete(UUID accountId, String worldName, String currency);
