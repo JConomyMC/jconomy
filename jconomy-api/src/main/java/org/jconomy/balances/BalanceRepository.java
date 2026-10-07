@@ -13,6 +13,8 @@ public interface BalanceRepository {
 
     void upsertAll(Set<Balance> balances);
 
+    void assignAll(Collection<BalanceAssignment> assignments);
+
     void adjustAll(Collection<BalanceAdjustment> adjustments);
 
     void delete(UUID accountId, String worldName, String currency);
