@@ -3,6 +3,8 @@ package org.jconomy.balances;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,7 +18,20 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
 
     private record BalanceKey(UUID accountId, String worldName, String currency) {}
 
-    private record PendingBalance(BigDecimal amount, BigDecimal delta) {}
+    private record PendingBalance(BigDecimal amount, BigDecimal delta, boolean assigned) {
+
+        static PendingBalance assignment(BigDecimal amount) {
+            return new PendingBalance(amount, BigDecimal.ZERO, true);
+        }
+
+        static PendingBalance unchanged(BigDecimal amount) {
+            return new PendingBalance(amount, BigDecimal.ZERO, false);
+        }
+
+        PendingBalance adjustedBy(BigDecimal delta) {
+            return new PendingBalance(amount.add(delta), this.delta.add(delta), assigned);
+        }
+    }
 
     private final BalanceCache cache;
     private final BalanceRepository repository;
@@ -49,14 +64,20 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     }
 
     @Override
+    public BigDecimal set(UUID accountId, String worldName, String currency, BigDecimal amount) {
+        pendingBalances.put(new BalanceKey(accountId, worldName, currency), PendingBalance.assignment(amount));
+        return amount;
+    }
+
+    @Override
     public BigDecimal adjust(UUID accountId, String worldName, String currency, BigDecimal delta) {
         var key = new BalanceKey(accountId, worldName, currency);
         var pending = pendingBalances.get(key);
         if (pending == null) {
             var current = get(accountId, worldName, currency).map(Balance::getAmount).orElse(BigDecimal.ZERO);
-            pending = new PendingBalance(current, BigDecimal.ZERO);
+            pending = PendingBalance.unchanged(current);
         }
-        var adjusted = new PendingBalance(pending.amount().add(delta), pending.delta().add(delta));
+        var adjusted = pending.adjustedBy(delta);
         pendingBalances.put(key, adjusted);
         return adjusted.amount();
     }
@@ -81,11 +102,27 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     private void flushPendingBalances() {
         if (pendingBalances.isEmpty()) return;
         var snapshot = new HashMap<>(pendingBalances);
-        repository.adjustAll(snapshot.entrySet().stream()
+        var assignments = toAssignments(snapshot);
+        var adjustments = toAdjustments(snapshot);
+        if (!assignments.isEmpty()) repository.assignAll(assignments);
+        if (!adjustments.isEmpty()) repository.adjustAll(adjustments);
+        snapshot.forEach((k, v) -> pendingBalances.remove(k, v));
+    }
+
+    private static List<BalanceAssignment> toAssignments(Map<BalanceKey, PendingBalance> snapshot) {
+        return snapshot.entrySet().stream()
+                .filter(e -> e.getValue().assigned())
+                .map(e -> new BalanceAssignment(
+                        e.getKey().accountId(), e.getKey().worldName(), e.getKey().currency(), e.getValue().amount()))
+                .toList();
+    }
+
+    private static List<BalanceAdjustment> toAdjustments(Map<BalanceKey, PendingBalance> snapshot) {
+        return snapshot.entrySet().stream()
+                .filter(e -> !e.getValue().assigned())
                 .map(e -> new BalanceAdjustment(
                         e.getKey().accountId(), e.getKey().worldName(), e.getKey().currency(), e.getValue().delta()))
-                .toList());
-        snapshot.forEach((k, v) -> pendingBalances.remove(k, v));
+                .toList();
     }
 
     @Override

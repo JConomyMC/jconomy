@@ -219,6 +219,45 @@ class DefaultBalanceAccessTests {
                 List.copyOf(repository.lastAdjustAll));
     }
 
+    // --- set ---
+
+    @Test
+    void set_returns_assigned_amount() {
+        var id = UUID.randomUUID();
+
+        var result = access.set(id, "world", "gold", BigDecimal.valueOf(50));
+
+        assertEquals(BigDecimal.valueOf(50), result);
+    }
+
+    @Test
+    void flush_sends_set_balance_as_single_assignment() {
+        var id = UUID.randomUUID();
+        access.set(id, "world", "gold", BigDecimal.valueOf(50));
+
+        access.flush();
+
+        assertEquals(
+                List.of(new BalanceAssignment(id, "world", "gold", BigDecimal.valueOf(50))),
+                List.copyOf(repository.lastAssignAll));
+        assertNull(repository.lastAdjustAll);
+    }
+
+    @Test
+    void set_then_adjust_flushes_single_combined_assignment() {
+        var id = UUID.randomUUID();
+        access.set(id, "world", "gold", BigDecimal.valueOf(50));
+        var result = access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+
+        access.flush();
+
+        assertEquals(BigDecimal.valueOf(60), result);
+        assertEquals(
+                List.of(new BalanceAssignment(id, "world", "gold", BigDecimal.valueOf(60))),
+                List.copyOf(repository.lastAssignAll));
+        assertNull(repository.lastAdjustAll);
+    }
+
     @Test
     void evicted_dirty_balance_is_still_flushed() {
         var evictingCache = new EvictingBalanceCache();
@@ -401,6 +440,7 @@ class DefaultBalanceAccessTests {
         boolean getCalled = false;
         Set<Balance> lastUpsertAll = null;
         boolean failOnUpsertAll = false;
+        Collection<BalanceAssignment> lastAssignAll = null;
         Collection<BalanceAdjustment> lastAdjustAll = null;
         boolean deleteCalled = false;
         UUID lastDeletedId = null;
@@ -432,6 +472,7 @@ class DefaultBalanceAccessTests {
 
         @Override
         public void assignAll(Collection<BalanceAssignment> assignments) {
+            lastAssignAll = assignments;
         }
 
         @Override
