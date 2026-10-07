@@ -179,6 +179,47 @@ class DefaultBalanceAccessTests {
     }
 
     @Test
+    void adjust_loads_amount_from_repository_on_cache_miss() {
+        var id = UUID.randomUUID();
+        var balance = new Balance(id, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        repository.store(balance);
+
+        var result = access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+
+        assertEquals(BigDecimal.valueOf(110), result);
+    }
+
+    @Test
+    void repeated_adjusts_return_running_amount() {
+        var id = UUID.randomUUID();
+        var balance = new Balance(id, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        cache.put(balance);
+
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        var result = access.adjust(id, "world", "gold", BigDecimal.valueOf(20));
+
+        assertEquals(BigDecimal.valueOf(130), result);
+    }
+
+    @Test
+    void flush_sends_repeated_adjusts_as_single_combined_adjustment() {
+        var id = UUID.randomUUID();
+        var balance = new Balance(id, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        cache.put(balance);
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(20));
+
+        access.flush();
+
+        assertEquals(
+                List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(30))),
+                List.copyOf(repository.lastAdjustAll));
+    }
+
+    @Test
     void evicted_dirty_balance_is_still_flushed() {
         var evictingCache = new EvictingBalanceCache();
         var evictingAccess = new DefaultBalanceAccess(evictingCache, repository);
