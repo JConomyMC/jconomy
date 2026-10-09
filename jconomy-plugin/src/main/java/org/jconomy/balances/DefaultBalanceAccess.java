@@ -49,12 +49,9 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
 
     @Override
     public Optional<Balance> get(UUID accountId, String worldName, String currency) {
-        var pending = pendingBalances.get(new BalanceKey(accountId, worldName, currency));
-        if (pending != null) {
-            var balance = new Balance(accountId, worldName, currency);
-            balance.setAmount(pending.amount());
-            return Optional.of(balance);
-        }
+        var key = new BalanceKey(accountId, worldName, currency);
+        var pending = pendingBalances.get(key);
+        if (pending != null) return Optional.of(toBalance(key, pending.amount()));
         return cache.get(accountId, worldName, currency).or(() -> {
             var balance = repository.get(accountId, worldName, currency);
             balance.ifPresent(cache::put);
@@ -112,7 +109,24 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
         var adjustments = toAdjustments(snapshot);
         if (!assignments.isEmpty()) repository.assignAll(assignments);
         if (!adjustments.isEmpty()) repository.adjustAll(adjustments);
-        snapshot.forEach((k, v) -> pendingBalances.remove(k, v));
+        snapshot.forEach(this::reconcile);
+    }
+
+    private void reconcile(BalanceKey key, PendingBalance flushed) {
+        pendingBalances.computeIfPresent(key, (k, current) -> {
+            if (current.equals(flushed)) {
+                cache.put(toBalance(k, current.amount()));
+                return null;
+            }
+            if (current.assigned()) return current;
+            return new PendingBalance(current.amount(), current.delta().subtract(flushed.delta()), false);
+        });
+    }
+
+    private static Balance toBalance(BalanceKey key, BigDecimal amount) {
+        var balance = new Balance(key.accountId(), key.worldName(), key.currency());
+        balance.setAmount(amount);
+        return balance;
     }
 
     private static List<BalanceAssignment> toAssignments(Map<BalanceKey, PendingBalance> snapshot) {

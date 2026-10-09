@@ -282,6 +282,63 @@ class DefaultBalanceAccessTests {
         assertNull(repository.lastAdjustAll);
     }
 
+    // --- flush reconcile ---
+
+    @Test
+    void flush_caches_flushed_amount() {
+        var id = UUID.randomUUID();
+        var balance = new Balance(id, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        cache.put(balance);
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+
+        access.flush();
+
+        assertEquals(BigDecimal.valueOf(110), access.get(id, "world", "gold").orElseThrow().getAmount());
+        assertFalse(repository.getCalled);
+    }
+
+    @Test
+    void adjust_during_flush_leaves_only_remainder_pending() {
+        var id = UUID.randomUUID();
+        var balance = new Balance(id, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        cache.put(balance);
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        repository.duringAdjustAll = () -> {
+            repository.duringAdjustAll = () -> {};
+            access.adjust(id, "world", "gold", BigDecimal.valueOf(5));
+        };
+        access.flush();
+
+        access.flush();
+
+        assertEquals(
+                List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(5))),
+                List.copyOf(repository.lastAdjustAll));
+        assertEquals(BigDecimal.valueOf(115), access.get(id, "world", "gold").orElseThrow().getAmount());
+    }
+
+    @Test
+    void set_during_flush_stays_pending() {
+        var id = UUID.randomUUID();
+        var balance = new Balance(id, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        cache.put(balance);
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        repository.duringAdjustAll = () -> {
+            repository.duringAdjustAll = () -> {};
+            access.set(id, "world", "gold", BigDecimal.valueOf(50));
+        };
+        access.flush();
+
+        access.flush();
+
+        assertEquals(
+                List.of(new BalanceAssignment(id, "world", "gold", BigDecimal.valueOf(50))),
+                List.copyOf(repository.lastAssignAll));
+    }
+
     @Test
     void evicted_dirty_balance_is_still_flushed() {
         var evictingCache = new EvictingBalanceCache();
@@ -466,6 +523,7 @@ class DefaultBalanceAccessTests {
         boolean failOnUpsertAll = false;
         Collection<BalanceAssignment> lastAssignAll = null;
         Collection<BalanceAdjustment> lastAdjustAll = null;
+        Runnable duringAdjustAll = () -> {};
         boolean deleteCalled = false;
         UUID lastDeletedId = null;
         String lastDeletedWorld = null;
@@ -502,6 +560,7 @@ class DefaultBalanceAccessTests {
         @Override
         public void adjustAll(Collection<BalanceAdjustment> adjustments) {
             lastAdjustAll = adjustments;
+            duringAdjustAll.run();
         }
 
         @Override
