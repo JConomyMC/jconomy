@@ -49,6 +49,12 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
 
     @Override
     public Optional<Balance> get(UUID accountId, String worldName, String currency) {
+        var pending = pendingBalances.get(new BalanceKey(accountId, worldName, currency));
+        if (pending != null) {
+            var balance = new Balance(accountId, worldName, currency);
+            balance.setAmount(pending.amount());
+            return Optional.of(balance);
+        }
         return cache.get(accountId, worldName, currency).or(() -> {
             var balance = repository.get(accountId, worldName, currency);
             balance.ifPresent(cache::put);

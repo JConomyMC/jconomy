@@ -60,6 +60,30 @@ class DefaultBalanceAccessTests {
     }
 
     @Test
+    void get_returns_pending_adjusted_amount_over_cached_amount() {
+        var id = UUID.randomUUID();
+        var balance = new Balance(id, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        cache.put(balance);
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+
+        var result = access.get(id, "world", "gold");
+
+        assertEquals(BigDecimal.valueOf(110), result.orElseThrow().getAmount());
+    }
+
+    @Test
+    void get_returns_pending_assigned_amount_without_calling_repository() {
+        var id = UUID.randomUUID();
+        access.set(id, "world", "gold", BigDecimal.valueOf(50));
+
+        var result = access.get(id, "world", "gold");
+
+        assertEquals(BigDecimal.valueOf(50), result.orElseThrow().getAmount());
+        assertFalse(repository.getCalled);
+    }
+
+    @Test
     void get_returns_empty_when_not_in_cache_or_repository() {
         var result = access.get(UUID.randomUUID(), "world", "gold");
 
