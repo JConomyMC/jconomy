@@ -141,7 +141,9 @@ class EconomyImpTests {
 
         economy.set("plugin", id, "world", "gold", BigDecimal.valueOf(500));
 
-        assertSame(failure, logHandler.singleWarning().getThrown());
+        var warning = logHandler.singleWarning();
+        assertEquals("plugin called set but it failed", warning.getMessage());
+        assertSame(failure, warning.getThrown());
     }
 
     @Test
@@ -235,7 +237,23 @@ class EconomyImpTests {
 
         economy.deposit("plugin", id, "world", "gold", BigDecimal.valueOf(50));
 
-        assertSame(failure, logHandler.singleWarning().getThrown());
+        var warning = logHandler.singleWarning();
+        assertEquals("plugin called deposit but it failed", warning.getMessage());
+        assertSame(failure, warning.getThrown());
+    }
+
+    @Test
+    void withdraw_logs_warning_with_exception_when_adjust_throws() {
+        var id = UUID.randomUUID();
+        var failure = new RuntimeException("storage down");
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+        when(balanceAccess.adjust(any(), any(), any(), any())).thenThrow(failure);
+
+        economy.withdraw("plugin", id, "world", "gold", BigDecimal.valueOf(50));
+
+        var warning = logHandler.singleWarning();
+        assertEquals("plugin called withdraw but it failed", warning.getMessage());
+        assertSame(failure, warning.getThrown());
     }
 
     @Test

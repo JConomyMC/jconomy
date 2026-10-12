@@ -141,7 +141,9 @@ class DefaultBalanceAccessTests {
 
             access.flush();
 
-            assertTrue(handler.hasWarning());
+            var warning = handler.warning();
+            assertEquals("Failed to flush pending balances", warning.getMessage());
+            assertEquals("simulated failure", warning.getThrown().getMessage());
         } finally {
             logger.removeHandler(handler);
         }
@@ -418,17 +420,20 @@ class DefaultBalanceAccessTests {
     // --- fakes ---
 
     private static class CapturingLogHandler extends Handler {
-        private boolean warningSeen = false;
+        private LogRecord warning;
 
         @Override
         public void publish(LogRecord record) {
-            if (record.getLevel().intValue() >= Level.WARNING.intValue()) warningSeen = true;
+            if (record.getLevel().intValue() >= Level.WARNING.intValue()) warning = record;
         }
 
         @Override public void flush() {}
         @Override public void close() {}
 
-        boolean hasWarning() { return warningSeen; }
+        LogRecord warning() {
+            assertNotNull(warning);
+            return warning;
+        }
     }
 
     private static class TrackingBalanceCache implements BalanceCache {
