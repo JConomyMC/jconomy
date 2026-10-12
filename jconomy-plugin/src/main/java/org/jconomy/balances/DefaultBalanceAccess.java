@@ -42,15 +42,15 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     }
 
     @Override
-    public Optional<Balance> get(UUID accountId, String worldName, String currency) {
+    public Optional<BigDecimal> get(UUID accountId, String worldName, String currency) {
         var key = new BalanceKey(accountId, worldName, currency);
         var pending = pendingBalances.get(key);
-        if (pending != null) return Optional.of(toBalance(key, pending.amount()));
+        if (pending != null) return Optional.of(pending.amount());
         return cache.get(accountId, worldName, currency).or(() -> {
             var balance = repository.get(accountId, worldName, currency);
             balance.ifPresent(cache::put);
             return balance;
-        });
+        }).map(Balance::getAmount);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     @Override
     public BigDecimal adjust(UUID accountId, String worldName, String currency, BigDecimal delta) {
         var key = new BalanceKey(accountId, worldName, currency);
-        var loaded = get(accountId, worldName, currency).map(Balance::getAmount).orElse(BigDecimal.ZERO);
+        var loaded = get(accountId, worldName, currency).orElse(BigDecimal.ZERO);
         return pendingBalances.compute(key, (k, pending) -> {
             var base = pending != null ? pending : PendingBalance.unchanged(cachedAmount(k).orElse(loaded));
             return base.adjustedBy(delta);

@@ -3,6 +3,7 @@ package org.jconomy.listeners;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -17,7 +18,6 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.jconomy.balances.Balance;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.config.CacheConfig;
 import org.jconomy.config.economy.EconomyConfig;
@@ -78,7 +78,7 @@ class PlayerJoinListenerTests {
         when(config.getCurrencyOptions("gold")).thenReturn(goldOptions);
         when(config.getCurrencyOptions("tokens")).thenReturn(tokensOptions);
 
-        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.of(mock(Balance.class)));
+        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.of(BigDecimal.ONE));
 
         doAnswer(invocation -> {
             Runnable task = invocation.getArgument(1);
@@ -109,8 +109,8 @@ class PlayerJoinListenerTests {
         when(config.getAllCurrencyNames()).thenReturn(Set.of("gold"));
         when(config.getCurrencyOptions("gold")).thenReturn(currencyOptions);
 
-        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.of(mock(Balance.class)));
-        when(balanceAccess.get(playerId, "nether", "gold")).thenReturn(Optional.of(mock(Balance.class)));
+        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.of(BigDecimal.ONE));
+        when(balanceAccess.get(playerId, "nether", "gold")).thenReturn(Optional.of(BigDecimal.ONE));
 
         doAnswer(invocation -> {
             Runnable task = invocation.getArgument(1);
@@ -184,7 +184,7 @@ class PlayerJoinListenerTests {
         when(config.getAllCurrencyNames()).thenReturn(Set.of("gold"));
         when(config.getCurrencyOptions("gold")).thenReturn(options);
 
-        when(balanceAccess.get(playerId, "nether", "gold")).thenReturn(Optional.of(mock(Balance.class)));
+        when(balanceAccess.get(playerId, "nether", "gold")).thenReturn(Optional.of(BigDecimal.ONE));
 
         doAnswer(invocation -> {
             Runnable task = invocation.getArgument(1);
@@ -228,7 +228,7 @@ class PlayerJoinListenerTests {
         when(config.getCurrencyOptions("tokens")).thenReturn(tokensOptions);
 
         when(balanceAccess.get(playerId, "world", "gold")).thenThrow(new RuntimeException("balance resolution failure"));
-        when(balanceAccess.get(playerId, "world", "tokens")).thenReturn(Optional.of(mock(Balance.class)));
+        when(balanceAccess.get(playerId, "world", "tokens")).thenReturn(Optional.of(BigDecimal.ONE));
 
         doAnswer(invocation -> {
             Runnable task = invocation.getArgument(1);

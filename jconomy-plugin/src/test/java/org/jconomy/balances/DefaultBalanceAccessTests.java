@@ -73,7 +73,7 @@ class DefaultBalanceAccessTests {
 
         var result = access.get(id, "world", "gold");
 
-        assertEquals(BigDecimal.valueOf(110), result.orElseThrow().getAmount());
+        assertEquals(BigDecimal.valueOf(110), result.orElseThrow());
     }
 
     @Test
@@ -83,7 +83,7 @@ class DefaultBalanceAccessTests {
 
         var result = access.get(id, "world", "gold");
 
-        assertEquals(BigDecimal.valueOf(50), result.orElseThrow().getAmount());
+        assertEquals(BigDecimal.valueOf(50), result.orElseThrow());
         assertFalse(repository.getCalled);
     }
 
@@ -274,7 +274,7 @@ class DefaultBalanceAccessTests {
 
         access.flush();
 
-        assertEquals(BigDecimal.valueOf(110), access.get(id, "world", "gold").orElseThrow().getAmount());
+        assertEquals(BigDecimal.valueOf(110), access.get(id, "world", "gold").orElseThrow());
         assertFalse(repository.getCalled);
     }
 
@@ -296,7 +296,7 @@ class DefaultBalanceAccessTests {
         assertEquals(
                 List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(5))),
                 List.copyOf(repository.lastAdjustAll));
-        assertEquals(BigDecimal.valueOf(115), access.get(id, "world", "gold").orElseThrow().getAmount());
+        assertEquals(BigDecimal.valueOf(115), access.get(id, "world", "gold").orElseThrow());
     }
 
     @Test
@@ -337,7 +337,7 @@ class DefaultBalanceAccessTests {
             second.get(5, TimeUnit.SECONDS);
         }
 
-        assertEquals(BigDecimal.valueOf(130), access.get(id, "world", "gold").orElseThrow().getAmount());
+        assertEquals(BigDecimal.valueOf(130), access.get(id, "world", "gold").orElseThrow());
     }
 
     private static void awaitQuietly(CyclicBarrier barrier) {
