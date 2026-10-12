@@ -230,9 +230,7 @@ public class EconomyImp implements Economy {
             var newBalance = balanceAccess.set(accountID, resolvedWorld, resolvedCurrency, amount);
             return new EconomyResponse(newBalance, newBalance, ResponseType.SUCCESS, "");
         } catch (Exception ex) {
-            logger.log(Level.WARNING, String.format(
-                    "%s failed to set balance(accountId='%s',world='%s',currency='%s')",
-                    pluginName, accountID, resolvedWorld, resolvedCurrency), ex);
+            logger.log(Level.WARNING, String.format("%s called set but it failed", pluginName), ex);
             return new EconomyResponse(BigDecimal.ZERO, balance, ResponseType.FAILURE, ex.getMessage());
         }
     }
@@ -251,7 +249,7 @@ public class EconomyImp implements Economy {
     @Override
     public EconomyResponse withdraw(String pluginName, UUID accountId, String worldName,
             String currency, BigDecimal amount) {
-        return adjust(pluginName, accountId, worldName, currency, amount, amount.negate());
+        return adjust(pluginName, "withdraw", accountId, worldName, currency, amount, amount.negate());
     }
 
     @Override
@@ -268,11 +266,11 @@ public class EconomyImp implements Economy {
     @Override
     public EconomyResponse deposit(String pluginName, UUID accountId, String worldName,
             String currency, BigDecimal amount) {
-        return adjust(pluginName, accountId, worldName, currency, amount, amount);
+        return adjust(pluginName, "deposit", accountId, worldName, currency, amount, amount);
     }
 
-    private EconomyResponse adjust(String pluginName, UUID accountId, String worldName, String currency,
-            BigDecimal requestedAmount, BigDecimal delta) {
+    private EconomyResponse adjust(String pluginName, String calledMethod, UUID accountId, String worldName,
+            String currency, BigDecimal requestedAmount, BigDecimal delta) {
         var resolvedWorld = worldNameOrDefault(worldName);
         var resolvedCurrency = currencyOrDefault(currency);
         BigDecimal balance = null;
@@ -284,9 +282,7 @@ public class EconomyImp implements Economy {
             var newBalance = balanceAccess.adjust(accountId, resolvedWorld, resolvedCurrency, delta);
             return new EconomyResponse(requestedAmount, newBalance, ResponseType.SUCCESS, "");
         } catch (Exception ex) {
-            logger.log(Level.WARNING, String.format(
-                    "%s failed to adjust balance(accountId='%s',world='%s',currency='%s')",
-                    pluginName, accountId, resolvedWorld, resolvedCurrency), ex);
+            logger.log(Level.WARNING, String.format("%s called %s but it failed", pluginName, calledMethod), ex);
             return new EconomyResponse(BigDecimal.ZERO, balance, ResponseType.FAILURE, ex.getMessage());
         }
     }

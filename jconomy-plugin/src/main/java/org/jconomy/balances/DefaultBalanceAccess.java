@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jconomy.storage.Flushable;
 
 public class DefaultBalanceAccess implements BalanceAccess, Flushable {
@@ -78,7 +78,7 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
         try {
             flushPendingBalances();
         } catch (Exception e) {
-            logger.warning("Failed to flush dirty balances: " + ExceptionUtils.getStackTrace(e));
+            logger.log(Level.WARNING, "Failed to flush pending balances", e);
         }
     }
 
