@@ -152,6 +152,7 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
         repository.delete(accountId, worldName, currency);
         cache.remove(accountId, worldName, currency);
         dirtyRecords.remove(key);
+        pendingBalances.remove(key);
     }
 
     @Override
@@ -159,5 +160,6 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
         repository.deleteByAccount(accountId);
         cache.removeAll(accountId);
         dirtyRecords.keySet().removeIf(k -> k.accountId().equals(accountId));
+        pendingBalances.keySet().removeIf(k -> k.accountId().equals(accountId));
     }
 }
