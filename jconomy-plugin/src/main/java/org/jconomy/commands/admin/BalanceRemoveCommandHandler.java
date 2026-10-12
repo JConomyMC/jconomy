@@ -3,7 +3,6 @@ package org.jconomy.commands.admin;
 import org.bukkit.command.CommandSender;
 import org.incendo.cloud.context.CommandContext;
 
-import org.jconomy.balances.Balance;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.adapters.PlayerResolver;
 import org.jconomy.commands.CommandHandler;
@@ -39,13 +38,9 @@ public class BalanceRemoveCommandHandler implements CommandHandler {
         if (amount == null) return;
 
         var world = economyConfig.getDefaultWorldName();
-        var balance = balanceAccess.get(player.getUniqueId(), world, currency)
-                .orElse(new Balance(player.getUniqueId(), world, currency));
-        var newAmount = balance.getAmount().subtract(amount);
-        balance.setAmount(newAmount);
-        balanceAccess.save(balance);
+        var newAmount = balanceAccess.adjust(player.getUniqueId(), world, currency, amount.negate());
 
         sender.sendMessage("Removed " + amount.toPlainString() + " " + currency
-                + " from " + playerName + " (new balance: " + balance.getAmount().toPlainString() + ")");
+                + " from " + playerName + " (new balance: " + newAmount.toPlainString() + ")");
     }
 }

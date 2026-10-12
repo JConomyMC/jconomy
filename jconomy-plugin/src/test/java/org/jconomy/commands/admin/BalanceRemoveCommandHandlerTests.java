@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,7 +14,6 @@ import org.incendo.cloud.context.CommandContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.jconomy.balances.Balance;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.adapters.PlayerResolver;
 import org.jconomy.config.economy.EconomyConfig;
@@ -52,31 +50,13 @@ class BalanceRemoveCommandHandlerTests {
         when(context.get("player")).thenReturn("Steve");
         when(context.get("currency")).thenReturn("gold");
         when(context.get("amount")).thenReturn("30");
-
-        var existing = new Balance(playerId, "world", "gold");
-        existing.setAmount(BigDecimal.valueOf(100));
-        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.of(existing));
+        when(balanceAccess.adjust(playerId, "world", "gold", new BigDecimal("-30"))).thenReturn(BigDecimal.valueOf(70));
 
         handler.execute(context);
 
-        verify(balanceAccess).save(argThat(b -> b.getAmount().compareTo(BigDecimal.valueOf(70)) == 0));
+        verify(balanceAccess).adjust(playerId, "world", "gold", new BigDecimal("-30"));
+        verify(balanceAccess, never()).save(any());
         verify(sender).sendMessage(contains("70"));
-    }
-
-    @Test
-    void execute_subtracts_from_zero_when_no_existing_balance() {
-        var playerId = UUID.randomUUID();
-        var player = mock(OfflinePlayer.class);
-        when(player.getUniqueId()).thenReturn(playerId);
-        when(playerResolver.resolve("Steve")).thenReturn(player);
-        when(context.get("player")).thenReturn("Steve");
-        when(context.get("currency")).thenReturn("gold");
-        when(context.get("amount")).thenReturn("50");
-        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.empty());
-
-        handler.execute(context);
-
-        verify(balanceAccess).save(argThat(b -> b.getAmount().compareTo(BigDecimal.valueOf(-50)) == 0));
     }
 
     @Test
@@ -89,7 +69,7 @@ class BalanceRemoveCommandHandlerTests {
         handler.execute(context);
 
         verify(sender).sendMessage(anyString());
-        verify(balanceAccess, never()).save(any());
+        verify(balanceAccess, never()).adjust(any(), any(), any(), any());
     }
 
     @Test
@@ -104,7 +84,7 @@ class BalanceRemoveCommandHandlerTests {
         handler.execute(context);
 
         verify(sender).sendMessage(anyString());
-        verify(balanceAccess, never()).save(any());
+        verify(balanceAccess, never()).adjust(any(), any(), any(), any());
     }
 
     @Test
@@ -119,6 +99,6 @@ class BalanceRemoveCommandHandlerTests {
         handler.execute(context);
 
         verify(sender).sendMessage(anyString());
-        verify(balanceAccess, never()).save(any());
+        verify(balanceAccess, never()).adjust(any(), any(), any(), any());
     }
 }
