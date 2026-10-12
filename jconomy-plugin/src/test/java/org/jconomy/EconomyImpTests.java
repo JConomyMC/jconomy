@@ -164,6 +164,34 @@ class EconomyImpTests {
         verify(balanceAccess, never()).adjust(any(), any(), any(), any());
     }
 
+    @Test
+    void deposit_returns_failure_with_current_balance_when_adjust_throws() {
+        var id = UUID.randomUUID();
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+        when(balanceAccess.get(id, "world", "gold"))
+                .thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(100))));
+        when(balanceAccess.adjust(any(), any(), any(), any())).thenThrow(new RuntimeException("storage down"));
+
+        var response = economy.deposit("plugin", id, "world", "gold", BigDecimal.valueOf(50));
+
+        assertEquals(ResponseType.FAILURE, response.type);
+        assertEquals(BigDecimal.valueOf(100), response.balance);
+        assertEquals("storage down", response.errorMessage);
+    }
+
+    @Test
+    void deposit_returns_failure_with_unknown_balance_when_balance_read_throws() {
+        var id = UUID.randomUUID();
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+        when(balanceAccess.get(id, "world", "gold")).thenThrow(new RuntimeException("storage down"));
+
+        var response = economy.deposit("plugin", id, "world", "gold", BigDecimal.valueOf(50));
+
+        assertEquals(ResponseType.FAILURE, response.type);
+        assertNull(response.balance);
+        verify(balanceAccess, never()).adjust(any(), any(), any(), any());
+    }
+
     // --- withdraw ---
 
     @Test
