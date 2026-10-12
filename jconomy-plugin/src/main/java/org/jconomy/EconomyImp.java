@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.jconomy.accounts.Account;
-import org.jconomy.balances.Balance;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.accounts.AccountAccess;
@@ -188,7 +187,6 @@ public class EconomyImp implements Economy {
     @Override
     public BigDecimal getBalance(String pluginName, UUID accountId, String world, String currency) {
         return balanceAccess.get(accountId, worldNameOrDefault(world), currencyOrDefault(currency))
-                .map(Balance::getAmount)
                 .orElse(BigDecimal.ZERO);
     }
 

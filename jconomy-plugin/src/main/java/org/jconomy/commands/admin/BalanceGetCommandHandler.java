@@ -37,7 +37,6 @@ public class BalanceGetCommandHandler implements CommandHandler {
 
         var world = economyConfig.getDefaultWorldName();
         var balance = balanceAccess.get(player.getUniqueId(), world, currency)
-                .map(b -> b.getAmount())
                 .orElse(BigDecimal.ZERO);
 
         sender.sendMessage(playerName + "'s " + currency + " balance: " + balance.toPlainString());

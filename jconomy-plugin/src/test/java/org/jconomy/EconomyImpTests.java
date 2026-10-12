@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 
 import org.jconomy.accounts.Account;
 import org.jconomy.accounts.AccountAccess;
-import org.jconomy.balances.Balance;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.presentation.CurrencyFormatter;
@@ -49,7 +48,7 @@ class EconomyImpTests {
     @Test
     void getBalance_returns_balance_amount() {
         var id = UUID.randomUUID();
-        when(balanceAccess.get(id, "world", "gold")).thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(100))));
+        when(balanceAccess.get(id, "world", "gold")).thenReturn(Optional.of(BigDecimal.valueOf(100)));
 
         assertEquals(BigDecimal.valueOf(100), economy.getBalance("plugin", id, "world", "gold"));
     }
@@ -168,7 +167,7 @@ class EconomyImpTests {
         var id = UUID.randomUUID();
         when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
         when(balanceAccess.get(id, "world", "gold"))
-                .thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(100))));
+                .thenReturn(Optional.of(BigDecimal.valueOf(100)));
         when(balanceAccess.adjust(any(), any(), any(), any())).thenThrow(new RuntimeException("storage down"));
 
         var response = economy.deposit("plugin", id, "world", "gold", BigDecimal.valueOf(50));
@@ -224,7 +223,7 @@ class EconomyImpTests {
     void has_returns_true_when_balance_exceeds_amount() {
         var id = UUID.randomUUID();
         when(balanceAccess.get(id, "world", "gold"))
-                .thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(100))));
+                .thenReturn(Optional.of(BigDecimal.valueOf(100)));
 
         assertTrue(economy.has("plugin", id, "world", "gold", BigDecimal.valueOf(50)));
     }
@@ -233,7 +232,7 @@ class EconomyImpTests {
     void has_returns_true_when_balance_equals_amount() {
         var id = UUID.randomUUID();
         when(balanceAccess.get(id, "world", "gold"))
-                .thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(100))));
+                .thenReturn(Optional.of(BigDecimal.valueOf(100)));
 
         assertTrue(economy.has("plugin", id, "world", "gold", BigDecimal.valueOf(100)));
     }
@@ -242,7 +241,7 @@ class EconomyImpTests {
     void has_returns_false_when_balance_is_less_than_amount() {
         var id = UUID.randomUUID();
         when(balanceAccess.get(id, "world", "gold"))
-                .thenReturn(Optional.of(balanceOf(id, "world", "gold", BigDecimal.valueOf(50))));
+                .thenReturn(Optional.of(BigDecimal.valueOf(50)));
 
         assertFalse(economy.has("plugin", id, "world", "gold", BigDecimal.valueOf(100)));
     }
@@ -380,13 +379,5 @@ class EconomyImpTests {
         when(config.getAllCurrencyNames()).thenReturn(Set.of("gold", "silver"));
 
         assertFalse(economy.accountSupportsCurrency("plugin", UUID.randomUUID(), "diamonds", "world"));
-    }
-
-    // --- helpers ---
-
-    private static Balance balanceOf(UUID id, String world, String currency, BigDecimal amount) {
-        var balance = new Balance(id, world, currency);
-        balance.setAmount(amount);
-        return balance;
     }
 }

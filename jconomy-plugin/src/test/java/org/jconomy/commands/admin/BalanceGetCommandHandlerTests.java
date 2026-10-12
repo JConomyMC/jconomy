@@ -15,7 +15,6 @@ import org.incendo.cloud.context.CommandContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.jconomy.balances.Balance;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.adapters.PlayerResolver;
 import org.jconomy.config.economy.EconomyConfig;
@@ -52,9 +51,7 @@ class BalanceGetCommandHandlerTests {
         when(context.get("player")).thenReturn("Steve");
         when(context.get("currency")).thenReturn("gold");
 
-        var balance = new Balance(playerId, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.of(balance));
+        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.of(BigDecimal.valueOf(100)));
 
         handler.execute(context);
 
@@ -70,9 +67,7 @@ class BalanceGetCommandHandlerTests {
         when(context.get("player")).thenReturn("Steve");
         when(context.get("currency")).thenReturn("gold");
 
-        var balance = new Balance(playerId, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(50));
-        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.of(balance));
+        when(balanceAccess.get(playerId, "world", "gold")).thenReturn(Optional.of(BigDecimal.valueOf(50)));
 
         handler.execute(context);
 

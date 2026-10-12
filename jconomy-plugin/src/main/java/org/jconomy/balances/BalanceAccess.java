@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public interface BalanceAccess {
 
-    Optional<Balance> get(UUID accountId, String worldName, String currency);
+    Optional<BigDecimal> get(UUID accountId, String worldName, String currency);
 
     BigDecimal set(UUID accountId, String worldName, String currency, BigDecimal amount);
 
