@@ -173,7 +173,7 @@ class EconomyImpTests {
     // --- deposit ---
 
     @Test
-    void deposit_adjusts_balance_by_amount_and_returns_new_balance() {
+    void deposit_adjusts_balance_and_returns_requested_amount_with_new_balance() {
         var id = UUID.randomUUID();
         when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
         when(balanceAccess.adjust(id, "world", "gold", BigDecimal.valueOf(50))).thenReturn(BigDecimal.valueOf(150));
@@ -181,7 +181,7 @@ class EconomyImpTests {
         var response = economy.deposit("plugin", id, "world", "gold", BigDecimal.valueOf(50));
 
         assertEquals(ResponseType.SUCCESS, response.type);
-        assertEquals(BigDecimal.valueOf(150), response.amount);
+        assertEquals(BigDecimal.valueOf(50), response.amount);
         assertEquals(BigDecimal.valueOf(150), response.balance);
     }
 
@@ -254,7 +254,7 @@ class EconomyImpTests {
     // --- withdraw ---
 
     @Test
-    void withdraw_adjusts_balance_by_negated_amount_and_returns_new_balance() {
+    void withdraw_adjusts_balance_by_negated_amount_and_returns_requested_amount_with_new_balance() {
         var id = UUID.randomUUID();
         when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
         when(balanceAccess.adjust(id, "world", "gold", BigDecimal.valueOf(-30))).thenReturn(BigDecimal.valueOf(70));
@@ -262,7 +262,7 @@ class EconomyImpTests {
         var response = economy.withdraw("plugin", id, "world", "gold", BigDecimal.valueOf(30));
 
         assertEquals(ResponseType.SUCCESS, response.type);
-        assertEquals(BigDecimal.valueOf(70), response.amount);
+        assertEquals(BigDecimal.valueOf(30), response.amount);
         assertEquals(BigDecimal.valueOf(70), response.balance);
     }
 
