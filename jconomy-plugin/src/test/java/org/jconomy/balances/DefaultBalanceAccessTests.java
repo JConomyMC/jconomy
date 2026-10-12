@@ -426,6 +426,18 @@ class DefaultBalanceAccessTests {
         assertNull(repository.lastUpsertAll);
     }
 
+    @Test
+    void delete_discards_pending_balance() {
+        var id = UUID.randomUUID();
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+
+        access.delete(id, "world", "gold");
+        access.flush();
+
+        assertNull(repository.lastAdjustAll);
+        assertTrue(access.get(id, "world", "gold").isEmpty());
+    }
+
     // --- deleteByAccount ---
 
     @Test
@@ -464,6 +476,23 @@ class DefaultBalanceAccessTests {
         access.flush();
 
         assertNull(repository.lastUpsertAll);
+    }
+
+    @Test
+    void deleteByAccount_discards_pending_balances_for_account_only() {
+        var id = UUID.randomUUID();
+        var otherId = UUID.randomUUID();
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        access.set(id, "nether", "gold", BigDecimal.valueOf(20));
+        access.adjust(otherId, "world", "gold", BigDecimal.valueOf(30));
+
+        access.deleteByAccount(id);
+        access.flush();
+
+        assertNull(repository.lastAssignAll);
+        assertEquals(
+                List.of(new BalanceAdjustment(otherId, "world", "gold", BigDecimal.valueOf(30))),
+                List.copyOf(repository.lastAdjustAll));
     }
 
     // --- fakes ---
