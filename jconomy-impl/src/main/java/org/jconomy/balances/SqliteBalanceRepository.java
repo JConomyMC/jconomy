@@ -19,7 +19,7 @@ public class SqliteBalanceRepository implements BalanceRepository {
     }
 
     @Override
-    public Optional<Balance> get(UUID accountId, String worldName, String currency) {
+    public Optional<BigDecimal> get(UUID accountId, String worldName, String currency) {
         var sql = """
                 select amount from account_balances
                 where account_id = ? and world = ? and currency = ?
@@ -31,7 +31,7 @@ public class SqliteBalanceRepository implements BalanceRepository {
             stmt.setString(2, worldName);
             stmt.setString(3, currency);
             try (var rs = stmt.executeQuery()) {
-                return map(rs, accountId, worldName, currency);
+                return readAmount(rs);
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -147,12 +147,9 @@ public class SqliteBalanceRepository implements BalanceRepository {
         }
     }
 
-    private static Optional<Balance> map(ResultSet rs, UUID accountId, String worldName, String currency)
-            throws SQLException {
+    private static Optional<BigDecimal> readAmount(ResultSet rs) throws SQLException {
         if (!rs.next()) return Optional.empty();
-        var balance = new Balance(accountId, worldName, currency);
         BigDecimal amount = rs.getBigDecimal("amount");
-        balance.setAmount(amount != null ? amount : BigDecimal.ZERO);
-        return Optional.of(balance);
+        return Optional.of(amount != null ? amount : BigDecimal.ZERO);
     }
 }

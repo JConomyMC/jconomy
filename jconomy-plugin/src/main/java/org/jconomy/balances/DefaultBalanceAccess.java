@@ -47,7 +47,7 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
         var pending = pendingBalances.get(key);
         if (pending != null) return Optional.of(pending.amount());
         return cache.get(accountId, worldName, currency).or(() -> {
-            var amount = repository.get(accountId, worldName, currency).map(Balance::getAmount);
+            var amount = repository.get(accountId, worldName, currency);
             amount.ifPresent(a -> cache.put(accountId, worldName, currency, a));
             return amount;
         });

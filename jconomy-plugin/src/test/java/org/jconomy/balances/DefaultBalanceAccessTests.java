@@ -51,8 +51,7 @@ class DefaultBalanceAccessTests {
     @Test
     void get_calls_repository_on_cache_miss_and_caches_result() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        repository.store(balance);
+        repository.store(id, "world", "gold", BigDecimal.ZERO);
 
         var result = access.get(id, "world", "gold");
 
@@ -177,9 +176,7 @@ class DefaultBalanceAccessTests {
     @Test
     void adjust_loads_amount_from_repository_on_cache_miss() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        repository.store(balance);
+        repository.store(id, "world", "gold", BigDecimal.valueOf(100));
 
         var result = access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
 
@@ -306,9 +303,7 @@ class DefaultBalanceAccessTests {
     @Test
     void concurrent_adjusts_after_simultaneous_load_are_both_applied() throws Exception {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        repository.store(balance);
+        repository.store(id, "world", "gold", BigDecimal.valueOf(100));
         var bothLoading = new CyclicBarrier(2);
         repository.duringGet = () -> awaitQuietly(bothLoading);
 
@@ -466,7 +461,7 @@ class DefaultBalanceAccessTests {
     }
 
     private static class TrackingBalanceRepository implements BalanceRepository {
-        private final Map<String, Balance> store = new HashMap<>();
+        private final Map<String, BigDecimal> store = new HashMap<>();
         boolean getCalled = false;
         boolean failOnAdjustAll = false;
         Collection<BalanceAssignment> lastAssignAll = null;
@@ -480,12 +475,12 @@ class DefaultBalanceAccessTests {
         boolean deleteByAccountCalled = false;
         UUID lastDeleteByAccountId = null;
 
-        void store(Balance balance) {
-            store.put(key(balance.getAccountId(), balance.getWorldName(), balance.getCurrency()), balance);
+        void store(UUID accountId, String worldName, String currency, BigDecimal amount) {
+            store.put(key(accountId, worldName, currency), amount);
         }
 
         @Override
-        public Optional<Balance> get(UUID accountId, String worldName, String currency) {
+        public Optional<BigDecimal> get(UUID accountId, String worldName, String currency) {
             getCalled = true;
             duringGet.run();
             return Optional.ofNullable(store.get(key(accountId, worldName, currency)));
@@ -493,7 +488,7 @@ class DefaultBalanceAccessTests {
 
         @Override
         public void upsert(Balance balance) {
-            store.put(key(balance.getAccountId(), balance.getWorldName(), balance.getCurrency()), balance);
+            store.put(key(balance.getAccountId(), balance.getWorldName(), balance.getCurrency()), balance.getAmount());
         }
 
         @Override
