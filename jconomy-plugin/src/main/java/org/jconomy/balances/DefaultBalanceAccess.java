@@ -47,10 +47,10 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
         var pending = pendingBalances.get(key);
         if (pending != null) return Optional.of(pending.amount());
         return cache.get(accountId, worldName, currency).or(() -> {
-            var balance = repository.get(accountId, worldName, currency);
-            balance.ifPresent(cache::put);
-            return balance;
-        }).map(Balance::getAmount);
+            var amount = repository.get(accountId, worldName, currency).map(Balance::getAmount);
+            amount.ifPresent(a -> cache.put(accountId, worldName, currency, a));
+            return amount;
+        });
     }
 
     @Override
@@ -70,7 +70,7 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     }
 
     private Optional<BigDecimal> cachedAmount(BalanceKey key) {
-        return cache.get(key.accountId(), key.worldName(), key.currency()).map(Balance::getAmount);
+        return cache.get(key.accountId(), key.worldName(), key.currency());
     }
 
     @Override
@@ -95,18 +95,12 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     private void reconcile(BalanceKey key, PendingBalance flushed) {
         pendingBalances.computeIfPresent(key, (k, current) -> {
             if (current.equals(flushed)) {
-                cache.put(toBalance(k, current.amount()));
+                cache.put(k.accountId(), k.worldName(), k.currency(), current.amount());
                 return null;
             }
             if (current.assigned()) return current;
             return new PendingBalance(current.amount(), current.delta().subtract(flushed.delta()), false);
         });
-    }
-
-    private static Balance toBalance(BalanceKey key, BigDecimal amount) {
-        var balance = new Balance(key.accountId(), key.worldName(), key.currency());
-        balance.setAmount(amount);
-        return balance;
     }
 
     private static List<BalanceAssignment> toAssignments(Map<BalanceKey, PendingBalance> snapshot) {

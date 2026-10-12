@@ -14,7 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -41,8 +40,7 @@ class DefaultBalanceAccessTests {
     @Test
     void get_returns_from_cache_without_calling_repository() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        cache.put(balance);
+        cache.put(id, "world", "gold", BigDecimal.ZERO);
 
         var result = access.get(id, "world", "gold");
 
@@ -66,9 +64,7 @@ class DefaultBalanceAccessTests {
     @Test
     void get_returns_pending_adjusted_amount_over_cached_amount() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        cache.put(balance);
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
         access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
 
         var result = access.get(id, "world", "gold");
@@ -99,7 +95,7 @@ class DefaultBalanceAccessTests {
     @Test
     void flush_sends_only_pending_balances() {
         var id = UUID.randomUUID();
-        cache.put(new Balance(UUID.randomUUID(), "world", "gold"));
+        cache.put(UUID.randomUUID(), "world", "gold", BigDecimal.ZERO);
         access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
 
         access.flush();
@@ -158,9 +154,7 @@ class DefaultBalanceAccessTests {
     @Test
     void adjust_returns_cached_amount_plus_delta() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        cache.put(balance);
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
 
         var result = access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
 
@@ -170,9 +164,7 @@ class DefaultBalanceAccessTests {
     @Test
     void flush_sends_adjusted_balance_as_single_adjustment() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        cache.put(balance);
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
         access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
 
         access.flush();
@@ -197,9 +189,7 @@ class DefaultBalanceAccessTests {
     @Test
     void repeated_adjusts_return_running_amount() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        cache.put(balance);
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
 
         access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
         var result = access.adjust(id, "world", "gold", BigDecimal.valueOf(20));
@@ -210,9 +200,7 @@ class DefaultBalanceAccessTests {
     @Test
     void flush_sends_repeated_adjusts_as_single_combined_adjustment() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        cache.put(balance);
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
         access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
         access.adjust(id, "world", "gold", BigDecimal.valueOf(20));
 
@@ -267,9 +255,7 @@ class DefaultBalanceAccessTests {
     @Test
     void flush_caches_flushed_amount() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        cache.put(balance);
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
         access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
 
         access.flush();
@@ -281,9 +267,7 @@ class DefaultBalanceAccessTests {
     @Test
     void adjust_during_flush_leaves_only_remainder_pending() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        cache.put(balance);
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
         access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
         repository.duringAdjustAll = () -> {
             repository.duringAdjustAll = () -> {};
@@ -302,9 +286,7 @@ class DefaultBalanceAccessTests {
     @Test
     void set_during_flush_stays_pending() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        cache.put(balance);
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
         access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
         repository.duringAdjustAll = () -> {
             repository.duringAdjustAll = () -> {};
@@ -350,16 +332,12 @@ class DefaultBalanceAccessTests {
 
     @Test
     void evicted_pending_balance_is_still_flushed() {
-        var evictingCache = new EvictingBalanceCache();
-        var evictingAccess = new DefaultBalanceAccess(evictingCache, repository);
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(100));
-        evictingCache.put(balance);
-        evictingAccess.adjust(id, "world", "gold", BigDecimal.valueOf(10));
-        evictingCache.evict(balance);
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        cache.remove(id, "world", "gold");
 
-        evictingAccess.flush();
+        access.flush();
 
         assertEquals(
                 List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(10))),
@@ -383,7 +361,7 @@ class DefaultBalanceAccessTests {
     @Test
     void delete_evicts_from_cache() {
         var id = UUID.randomUUID();
-        cache.put(new Balance(id, "world", "gold"));
+        cache.put(id, "world", "gold", BigDecimal.ZERO);
 
         access.delete(id, "world", "gold");
 
@@ -417,8 +395,8 @@ class DefaultBalanceAccessTests {
     @Test
     void deleteByAccount_evicts_all_account_entries_from_cache() {
         var id = UUID.randomUUID();
-        cache.put(new Balance(id, "world", "gold"));
-        cache.put(new Balance(id, "nether", "gold"));
+        cache.put(id, "world", "gold", BigDecimal.ZERO);
+        cache.put(id, "nether", "gold", BigDecimal.ZERO);
 
         access.deleteByAccount(id);
 
@@ -460,16 +438,16 @@ class DefaultBalanceAccessTests {
     }
 
     private static class TrackingBalanceCache implements BalanceCache {
-        private final Map<String, Balance> store = new ConcurrentHashMap<>();
+        private final Map<String, BigDecimal> store = new ConcurrentHashMap<>();
 
         @Override
-        public Optional<Balance> get(UUID accountId, String worldName, String currency) {
+        public Optional<BigDecimal> get(UUID accountId, String worldName, String currency) {
             return Optional.ofNullable(store.get(key(accountId, worldName, currency)));
         }
 
         @Override
-        public void put(Balance balance) {
-            store.put(key(balance.getAccountId(), balance.getWorldName(), balance.getCurrency()), balance);
+        public void put(UUID accountId, String worldName, String currency, BigDecimal amount) {
+            store.put(key(accountId, worldName, currency), amount);
         }
 
         @Override
@@ -480,45 +458,6 @@ class DefaultBalanceAccessTests {
         @Override
         public void removeAll(UUID accountId) {
             store.keySet().removeIf(k -> k.startsWith(accountId + ":"));
-        }
-
-        private static String key(UUID id, String world, String currency) {
-            return id + ":" + world + ":" + currency;
-        }
-    }
-
-    private static class EvictingBalanceCache implements BalanceCache {
-        private final Map<String, Balance> store = new HashMap<>();
-        private Consumer<Balance> evictionListener = ignored -> {};
-
-        @Override
-        public Optional<Balance> get(UUID accountId, String worldName, String currency) {
-            return Optional.ofNullable(store.get(key(accountId, worldName, currency)));
-        }
-
-        @Override
-        public void put(Balance balance) {
-            store.put(key(balance.getAccountId(), balance.getWorldName(), balance.getCurrency()), balance);
-        }
-
-        @Override
-        public void remove(UUID accountId, String worldName, String currency) {
-            store.remove(key(accountId, worldName, currency));
-        }
-
-        @Override
-        public void removeAll(UUID accountId) {
-            store.keySet().removeIf(k -> k.startsWith(accountId + ":"));
-        }
-
-        @Override
-        public void setEvictionListener(Consumer<Balance> listener) {
-            this.evictionListener = listener;
-        }
-
-        void evict(Balance balance) {
-            store.remove(key(balance.getAccountId(), balance.getWorldName(), balance.getCurrency()));
-            evictionListener.accept(balance);
         }
 
         private static String key(UUID id, String world, String currency) {
