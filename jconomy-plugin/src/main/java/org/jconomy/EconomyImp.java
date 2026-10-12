@@ -226,11 +226,8 @@ public class EconomyImp implements Economy {
             }
             var resolvedWorld = worldNameOrDefault(worldName);
             var resolvedCurrency = currencyOrDefault(currency);
-            var balance = balanceAccess.get(accountID, resolvedWorld, resolvedCurrency)
-                    .orElse(new Balance(accountID, resolvedWorld, resolvedCurrency));
-            balance.setAmount(amount);
-            balanceAccess.save(balance);
-            return new EconomyResponse(amount, amount, ResponseType.SUCCESS, "");
+            var newBalance = balanceAccess.set(accountID, resolvedWorld, resolvedCurrency, amount);
+            return new EconomyResponse(newBalance, newBalance, ResponseType.SUCCESS, "");
         } catch (Exception ex) {
             return new EconomyResponse(BigDecimal.ZERO, null, ResponseType.FAILURE, ex.getMessage());
         }
