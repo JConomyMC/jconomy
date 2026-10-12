@@ -2,7 +2,6 @@ package org.jconomy.balances;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,16 +34,11 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
 
     private final BalanceCache cache;
     private final BalanceRepository repository;
-    private final ConcurrentHashMap<BalanceKey, Balance> dirtyRecords = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<BalanceKey, PendingBalance> pendingBalances = new ConcurrentHashMap<>();
 
     public DefaultBalanceAccess(BalanceCache cache, BalanceRepository repository) {
         this.cache = cache;
         this.repository = repository;
-        cache.setEvictionListener(evicted -> {
-            // dirtyRecords is independent of the cache; evicted entries remain
-            // dirty and will be persisted on the next flush.
-        });
     }
 
     @Override
@@ -57,13 +51,6 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
             balance.ifPresent(cache::put);
             return balance;
         });
-    }
-
-    @Override
-    public void save(Balance balance) {
-        var key = new BalanceKey(balance.getAccountId(), balance.getWorldName(), balance.getCurrency());
-        cache.put(balance);
-        dirtyRecords.put(key, balance);
     }
 
     @Override
@@ -89,18 +76,10 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     @Override
     public void flush() {
         try {
-            flushDirtyRecords();
             flushPendingBalances();
         } catch (Exception e) {
             logger.warning("Failed to flush dirty balances: " + ExceptionUtils.getStackTrace(e));
         }
-    }
-
-    private void flushDirtyRecords() {
-        if (dirtyRecords.isEmpty()) return;
-        var snapshot = new HashMap<>(dirtyRecords);
-        repository.upsertAll(new HashSet<>(snapshot.values()));
-        snapshot.forEach((k, v) -> dirtyRecords.remove(k, v));
     }
 
     private void flushPendingBalances() {
@@ -151,7 +130,6 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
         var key = new BalanceKey(accountId, worldName, currency);
         repository.delete(accountId, worldName, currency);
         cache.remove(accountId, worldName, currency);
-        dirtyRecords.remove(key);
         pendingBalances.remove(key);
     }
 
@@ -159,7 +137,6 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     public void deleteByAccount(UUID accountId) {
         repository.deleteByAccount(accountId);
         cache.removeAll(accountId);
-        dirtyRecords.keySet().removeIf(k -> k.accountId().equals(accountId));
         pendingBalances.keySet().removeIf(k -> k.accountId().equals(accountId));
     }
 }

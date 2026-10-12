@@ -55,7 +55,6 @@ class BalanceAddCommandHandlerTests {
         handler.execute(context);
 
         verify(balanceAccess).adjust(playerId, "world", "gold", new BigDecimal("50"));
-        verify(balanceAccess, never()).save(any());
         verify(sender).sendMessage(contains("150"));
     }
 

@@ -94,69 +94,46 @@ class DefaultBalanceAccessTests {
         assertFalse(result.isPresent());
     }
 
-    // --- save ---
+    // --- flush ---
 
     @Test
-    void save_puts_balance_into_cache_only() {
+    void flush_sends_only_pending_balances() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
+        cache.put(new Balance(UUID.randomUUID(), "world", "gold"));
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
 
-        access.save(balance);
+        access.flush();
 
-        assertTrue(cache.get(id, "world", "gold").isPresent());
-        assertNull(repository.lastUpsertAll);
+        assertEquals(
+                List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(10))),
+                List.copyOf(repository.lastAdjustAll));
     }
 
     @Test
-    void save_marks_balance_dirty() {
-        var balance = new Balance(UUID.randomUUID(), "world", "gold");
-
-        access.save(balance);
+    void flush_clears_pending_balances_on_success() {
+        access.adjust(UUID.randomUUID(), "world", "gold", BigDecimal.valueOf(10));
         access.flush();
 
-        assertNotNull(repository.lastUpsertAll);
-        assertTrue(repository.lastUpsertAll.contains(balance));
+        repository.lastAdjustAll = null;
+        access.flush();
+
+        assertNull(repository.lastAdjustAll);
     }
 
     @Test
-    void flush_persists_only_dirty_balances() {
-        var clean = new Balance(UUID.randomUUID(), "world", "gold");
-        var dirty = new Balance(UUID.randomUUID(), "world", "gold");
-        cache.put(clean);
-        access.save(dirty);
+    void flush_keeps_pending_balances_on_repository_failure() {
+        var id = UUID.randomUUID();
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        repository.failOnAdjustAll = true;
 
         access.flush();
 
-        assertTrue(repository.lastUpsertAll.contains(dirty));
-        assertFalse(repository.lastUpsertAll.contains(clean));
-    }
-
-    @Test
-    void flush_clears_dirty_records_on_success() {
-        var balance = new Balance(UUID.randomUUID(), "world", "gold");
-        access.save(balance);
+        repository.failOnAdjustAll = false;
         access.flush();
 
-        repository.lastUpsertAll = null;
-        access.flush();
-
-        assertNull(repository.lastUpsertAll);
-    }
-
-    @Test
-    void flush_leaves_dirty_records_intact_on_repository_failure() {
-        var balance = new Balance(UUID.randomUUID(), "world", "gold");
-        access.save(balance);
-        repository.failOnUpsertAll = true;
-
-        access.flush();
-
-        repository.failOnUpsertAll = false;
-        repository.lastUpsertAll = null;
-        access.flush();
-
-        assertNotNull(repository.lastUpsertAll);
-        assertTrue(repository.lastUpsertAll.contains(balance));
+        assertEquals(
+                List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(10))),
+                List.copyOf(repository.lastAdjustAll));
     }
 
     @Test
@@ -165,9 +142,8 @@ class DefaultBalanceAccessTests {
         var handler = new CapturingLogHandler();
         logger.addHandler(handler);
         try {
-            var balance = new Balance(UUID.randomUUID(), "world", "gold");
-            access.save(balance);
-            repository.failOnUpsertAll = true;
+            access.adjust(UUID.randomUUID(), "world", "gold", BigDecimal.valueOf(10));
+            repository.failOnAdjustAll = true;
 
             access.flush();
 
@@ -373,18 +349,21 @@ class DefaultBalanceAccessTests {
     }
 
     @Test
-    void evicted_dirty_balance_is_still_flushed() {
+    void evicted_pending_balance_is_still_flushed() {
         var evictingCache = new EvictingBalanceCache();
         var evictingAccess = new DefaultBalanceAccess(evictingCache, repository);
-
-        var balance = new Balance(UUID.randomUUID(), "world", "gold");
-        evictingAccess.save(balance);
+        var id = UUID.randomUUID();
+        var balance = new Balance(id, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        evictingCache.put(balance);
+        evictingAccess.adjust(id, "world", "gold", BigDecimal.valueOf(10));
         evictingCache.evict(balance);
 
         evictingAccess.flush();
 
-        assertNotNull(repository.lastUpsertAll);
-        assertTrue(repository.lastUpsertAll.contains(balance));
+        assertEquals(
+                List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(10))),
+                List.copyOf(repository.lastAdjustAll));
     }
 
     // --- delete ---
@@ -404,26 +383,11 @@ class DefaultBalanceAccessTests {
     @Test
     void delete_evicts_from_cache() {
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        access.save(balance);
+        cache.put(new Balance(id, "world", "gold"));
 
         access.delete(id, "world", "gold");
 
         assertFalse(cache.get(id, "world", "gold").isPresent());
-    }
-
-    @Test
-    void delete_removes_dirty_record() {
-        var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        access.save(balance);
-
-        access.delete(id, "world", "gold");
-
-        repository.lastUpsertAll = null;
-        access.flush();
-
-        assertNull(repository.lastUpsertAll);
     }
 
     @Test
@@ -460,22 +424,6 @@ class DefaultBalanceAccessTests {
 
         assertFalse(cache.get(id, "world", "gold").isPresent());
         assertFalse(cache.get(id, "nether", "gold").isPresent());
-    }
-
-    @Test
-    void deleteByAccount_removes_all_dirty_records_for_account() {
-        var id = UUID.randomUUID();
-        var b1 = new Balance(id, "world", "gold");
-        var b2 = new Balance(id, "nether", "gold");
-        access.save(b1);
-        access.save(b2);
-
-        access.deleteByAccount(id);
-
-        repository.lastUpsertAll = null;
-        access.flush();
-
-        assertNull(repository.lastUpsertAll);
     }
 
     @Test
@@ -581,8 +529,7 @@ class DefaultBalanceAccessTests {
     private static class TrackingBalanceRepository implements BalanceRepository {
         private final Map<String, Balance> store = new HashMap<>();
         boolean getCalled = false;
-        Set<Balance> lastUpsertAll = null;
-        boolean failOnUpsertAll = false;
+        boolean failOnAdjustAll = false;
         Collection<BalanceAssignment> lastAssignAll = null;
         Collection<BalanceAdjustment> lastAdjustAll = null;
         Runnable duringAdjustAll = () -> {};
@@ -612,8 +559,6 @@ class DefaultBalanceAccessTests {
 
         @Override
         public void upsertAll(Set<Balance> balances) {
-            if (failOnUpsertAll) throw new RuntimeException("simulated failure");
-            lastUpsertAll = balances;
         }
 
         @Override
@@ -623,6 +568,7 @@ class DefaultBalanceAccessTests {
 
         @Override
         public void adjustAll(Collection<BalanceAdjustment> adjustments) {
+            if (failOnAdjustAll) throw new RuntimeException("simulated failure");
             lastAdjustAll = adjustments;
             duringAdjustAll.run();
         }
