@@ -274,15 +274,16 @@ public class EconomyImp implements Economy {
             BigDecimal delta) {
         var resolvedWorld = worldNameOrDefault(worldName);
         var resolvedCurrency = currencyOrDefault(currency);
+        BigDecimal balance = null;
         try {
+            balance = getBalance(pluginName, accountId, resolvedWorld, resolvedCurrency);
             if (accountAccess.getAccount(accountId).isEmpty()) {
-                var balance = getBalance(pluginName, accountId, resolvedWorld, resolvedCurrency);
                 return new EconomyResponse(BigDecimal.ZERO, balance, ResponseType.FAILURE, "Account not found");
             }
             var newBalance = balanceAccess.adjust(accountId, resolvedWorld, resolvedCurrency, delta);
             return new EconomyResponse(newBalance, newBalance, ResponseType.SUCCESS, "");
         } catch (Exception ex) {
-            return new EconomyResponse(BigDecimal.ZERO, null, ResponseType.FAILURE, ex.getMessage());
+            return new EconomyResponse(BigDecimal.ZERO, balance, ResponseType.FAILURE, ex.getMessage());
         }
     }
 
