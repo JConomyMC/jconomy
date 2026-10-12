@@ -71,10 +71,10 @@ cache:
   # Preload player balances when they teleport to a different world.
   warm-on-teleport: true
 
-  # Periodically write dirty cache records to the storage backend.
+  # Periodically write pending balance changes to the storage backend.
   periodic-flush:
     # Disabling this turns off only background flushes.
-    # Dirty records are still flushed on clean shutdown.
+    # Pending balance changes are still flushed on clean shutdown.
     enabled: true
     # Flush interval in ticks (20 ticks = 1 second).
     interval-ticks: 1200
