@@ -86,16 +86,17 @@ class EconomyImpTests {
     // --- set ---
 
     @Test
-    void set_saves_balance_and_returns_success() {
+    void set_assigns_balance_and_returns_success() {
         var id = UUID.randomUUID();
         when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
-        when(balanceAccess.get(id, "world", "gold")).thenReturn(Optional.empty());
+        when(balanceAccess.set(id, "world", "gold", BigDecimal.valueOf(500))).thenReturn(BigDecimal.valueOf(500));
 
         var response = economy.set("plugin", id, "world", "gold", BigDecimal.valueOf(500));
 
         assertEquals(ResponseType.SUCCESS, response.type);
         assertEquals(BigDecimal.valueOf(500), response.amount);
-        verify(balanceAccess).save(any(Balance.class));
+        verify(balanceAccess).set(id, "world", "gold", BigDecimal.valueOf(500));
+        verify(balanceAccess, never()).save(any());
     }
 
     @Test
@@ -114,7 +115,7 @@ class EconomyImpTests {
         var id = UUID.randomUUID();
         when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
         when(config.getDefaultCurrency()).thenReturn("gold");
-        when(balanceAccess.get(id, "world", "gold")).thenReturn(Optional.empty());
+        when(balanceAccess.set(id, "world", "gold", BigDecimal.valueOf(250))).thenReturn(BigDecimal.valueOf(250));
 
         var response = economy.set("plugin", id, "world", null, BigDecimal.valueOf(250));
 
