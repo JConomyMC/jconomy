@@ -8,7 +8,11 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.UUID;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +30,7 @@ class EconomyImpTests {
 
     private PluginContext pluginContext;
     private Logger logger;
+    private CapturingLogHandler logHandler;
     private CurrencyFormatter currencyFormatter;
     private EconomyConfig config;
     private AccountAccess accountAccess;
@@ -35,7 +40,10 @@ class EconomyImpTests {
     @BeforeEach
     void setUp() {
         pluginContext = mock(PluginContext.class);
-        logger = Logger.getLogger("test");
+        logger = Logger.getAnonymousLogger();
+        logger.setUseParentHandlers(false);
+        logHandler = new CapturingLogHandler();
+        logger.addHandler(logHandler);
         currencyFormatter = mock(CurrencyFormatter.class);
         config = mock(EconomyConfig.class);
         accountAccess = mock(AccountAccess.class);
@@ -125,6 +133,18 @@ class EconomyImpTests {
     }
 
     @Test
+    void set_logs_warning_with_exception_when_set_throws() {
+        var id = UUID.randomUUID();
+        var failure = new RuntimeException("storage down");
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+        when(balanceAccess.set(any(), any(), any(), any())).thenThrow(failure);
+
+        economy.set("plugin", id, "world", "gold", BigDecimal.valueOf(500));
+
+        assertSame(failure, logHandler.singleWarning().getThrown());
+    }
+
+    @Test
     void set_returns_failure_with_unknown_balance_when_balance_read_throws() {
         var id = UUID.randomUUID();
         when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
@@ -204,6 +224,18 @@ class EconomyImpTests {
         assertEquals(ResponseType.FAILURE, response.type);
         assertEquals(BigDecimal.valueOf(100), response.balance);
         assertEquals("storage down", response.errorMessage);
+    }
+
+    @Test
+    void deposit_logs_warning_with_exception_when_adjust_throws() {
+        var id = UUID.randomUUID();
+        var failure = new RuntimeException("storage down");
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+        when(balanceAccess.adjust(any(), any(), any(), any())).thenThrow(failure);
+
+        economy.deposit("plugin", id, "world", "gold", BigDecimal.valueOf(50));
+
+        assertSame(failure, logHandler.singleWarning().getThrown());
     }
 
     @Test
@@ -408,5 +440,22 @@ class EconomyImpTests {
         when(config.getAllCurrencyNames()).thenReturn(Set.of("gold", "silver"));
 
         assertFalse(economy.accountSupportsCurrency("plugin", UUID.randomUUID(), "diamonds", "world"));
+    }
+
+    private static class CapturingLogHandler extends Handler {
+        private final List<LogRecord> warnings = new ArrayList<>();
+
+        @Override
+        public void publish(LogRecord record) {
+            if (record.getLevel().intValue() >= Level.WARNING.intValue()) warnings.add(record);
+        }
+
+        @Override public void flush() {}
+        @Override public void close() {}
+
+        LogRecord singleWarning() {
+            assertEquals(1, warnings.size());
+            return warnings.get(0);
+        }
     }
 }

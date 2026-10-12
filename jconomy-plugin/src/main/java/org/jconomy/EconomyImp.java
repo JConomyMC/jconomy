@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -229,6 +230,9 @@ public class EconomyImp implements Economy {
             var newBalance = balanceAccess.set(accountID, resolvedWorld, resolvedCurrency, amount);
             return new EconomyResponse(newBalance, newBalance, ResponseType.SUCCESS, "");
         } catch (Exception ex) {
+            logger.log(Level.WARNING, String.format(
+                    "%s failed to set balance(accountId='%s',world='%s',currency='%s')",
+                    pluginName, accountID, resolvedWorld, resolvedCurrency), ex);
             return new EconomyResponse(BigDecimal.ZERO, balance, ResponseType.FAILURE, ex.getMessage());
         }
     }
@@ -280,6 +284,9 @@ public class EconomyImp implements Economy {
             var newBalance = balanceAccess.adjust(accountId, resolvedWorld, resolvedCurrency, delta);
             return new EconomyResponse(newBalance, newBalance, ResponseType.SUCCESS, "");
         } catch (Exception ex) {
+            logger.log(Level.WARNING, String.format(
+                    "%s failed to adjust balance(accountId='%s',world='%s',currency='%s')",
+                    pluginName, accountId, resolvedWorld, resolvedCurrency), ex);
             return new EconomyResponse(BigDecimal.ZERO, balance, ResponseType.FAILURE, ex.getMessage());
         }
     }
