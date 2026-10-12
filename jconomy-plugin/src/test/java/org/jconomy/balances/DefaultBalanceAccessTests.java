@@ -10,6 +10,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -339,6 +343,35 @@ class DefaultBalanceAccessTests {
                 List.copyOf(repository.lastAssignAll));
     }
 
+    // --- concurrency ---
+
+    @Test
+    void concurrent_adjusts_after_simultaneous_load_are_both_applied() throws Exception {
+        var id = UUID.randomUUID();
+        var balance = new Balance(id, "world", "gold");
+        balance.setAmount(BigDecimal.valueOf(100));
+        repository.store(balance);
+        var bothLoading = new CyclicBarrier(2);
+        repository.duringGet = () -> awaitQuietly(bothLoading);
+
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var first = executor.submit(() -> access.adjust(id, "world", "gold", BigDecimal.valueOf(10)));
+            var second = executor.submit(() -> access.adjust(id, "world", "gold", BigDecimal.valueOf(20)));
+            first.get(5, TimeUnit.SECONDS);
+            second.get(5, TimeUnit.SECONDS);
+        }
+
+        assertEquals(BigDecimal.valueOf(130), access.get(id, "world", "gold").orElseThrow().getAmount());
+    }
+
+    private static void awaitQuietly(CyclicBarrier barrier) {
+        try {
+            barrier.await(5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
     void evicted_dirty_balance_is_still_flushed() {
         var evictingCache = new EvictingBalanceCache();
@@ -450,7 +483,7 @@ class DefaultBalanceAccessTests {
     }
 
     private static class TrackingBalanceCache implements BalanceCache {
-        private final Map<String, Balance> store = new HashMap<>();
+        private final Map<String, Balance> store = new ConcurrentHashMap<>();
 
         @Override
         public Optional<Balance> get(UUID accountId, String worldName, String currency) {
@@ -524,6 +557,7 @@ class DefaultBalanceAccessTests {
         Collection<BalanceAssignment> lastAssignAll = null;
         Collection<BalanceAdjustment> lastAdjustAll = null;
         Runnable duringAdjustAll = () -> {};
+        Runnable duringGet = () -> {};
         boolean deleteCalled = false;
         UUID lastDeletedId = null;
         String lastDeletedWorld = null;
@@ -538,6 +572,7 @@ class DefaultBalanceAccessTests {
         @Override
         public Optional<Balance> get(UUID accountId, String worldName, String currency) {
             getCalled = true;
+            duringGet.run();
             return Optional.ofNullable(store.get(key(accountId, worldName, currency)));
         }
 
