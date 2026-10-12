@@ -21,8 +21,8 @@ jobs:
           java-version: '21'
           distribution: temurin
           server-id: central
-          server-username: CENTRAL_USERNAME
-          server-password: CENTRAL_TOKEN
+          server-username: ${{ secrets.CENTRAL_USERNAME }}
+          server-password: ${{ secrets.CENTRAL_TOKEN }}
 
       - name: Resolve snapshot version
         id: version
