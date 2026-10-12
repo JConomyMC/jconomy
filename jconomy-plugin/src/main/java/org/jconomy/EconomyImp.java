@@ -250,14 +250,7 @@ public class EconomyImp implements Economy {
     @Override
     public EconomyResponse withdraw(String pluginName, UUID accountId, String worldName,
             String currency, BigDecimal amount) {
-        currency = currencyOrDefault(currency);
-
-        var balance = getBalance(pluginName, accountId, worldName, currency);
-        var response = set(pluginName, accountId, worldName, currency, balance.subtract(amount));
-
-        var newBalance = response.transactionSuccess() ? response.balance : balance;
-
-        return new EconomyResponse(response.amount, newBalance, response.type, response.errorMessage);
+        return adjust(pluginName, accountId, worldName, currency, amount.negate());
     }
 
     @Override
@@ -274,14 +267,23 @@ public class EconomyImp implements Economy {
     @Override
     public EconomyResponse deposit(String pluginName, UUID accountId, String worldName,
             String currency, BigDecimal amount) {
-        currency = currencyOrDefault(currency);
+        return adjust(pluginName, accountId, worldName, currency, amount);
+    }
 
-        var balance = getBalance(pluginName, accountId, worldName, currency);
-        var response = set(pluginName, accountId, worldName, currency, balance.add(amount));
-
-        var newBalance = response.transactionSuccess() ? response.balance : balance;
-
-        return new EconomyResponse(response.amount, newBalance, response.type, response.errorMessage);
+    private EconomyResponse adjust(String pluginName, UUID accountId, String worldName, String currency,
+            BigDecimal delta) {
+        var resolvedWorld = worldNameOrDefault(worldName);
+        var resolvedCurrency = currencyOrDefault(currency);
+        try {
+            if (accountAccess.getAccount(accountId).isEmpty()) {
+                var balance = getBalance(pluginName, accountId, resolvedWorld, resolvedCurrency);
+                return new EconomyResponse(BigDecimal.ZERO, balance, ResponseType.FAILURE, "Account not found");
+            }
+            var newBalance = balanceAccess.adjust(accountId, resolvedWorld, resolvedCurrency, delta);
+            return new EconomyResponse(newBalance, newBalance, ResponseType.SUCCESS, "");
+        } catch (Exception ex) {
+            return new EconomyResponse(BigDecimal.ZERO, null, ResponseType.FAILURE, ex.getMessage());
+        }
     }
 
     private boolean accountsNotSupported(String pluginName, String calledMethod) {
