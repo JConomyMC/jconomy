@@ -98,14 +98,43 @@ class EconomyImpTests {
     }
 
     @Test
-    void set_returns_failure_when_account_not_found() {
+    void set_returns_failure_with_current_balance_when_account_not_found() {
         var id = UUID.randomUUID();
         when(accountAccess.getAccount(id)).thenReturn(Optional.empty());
+        when(balanceAccess.get(id, "world", "gold")).thenReturn(Optional.empty());
 
         var response = economy.set("plugin", id, "world", "gold", BigDecimal.valueOf(100));
 
         assertEquals(ResponseType.FAILURE, response.type);
+        assertEquals(BigDecimal.ZERO, response.balance);
+        verify(balanceAccess, never()).set(any(), any(), any(), any());
+    }
+
+    @Test
+    void set_returns_failure_with_current_balance_when_set_throws() {
+        var id = UUID.randomUUID();
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+        when(balanceAccess.get(id, "world", "gold")).thenReturn(Optional.of(BigDecimal.valueOf(100)));
+        when(balanceAccess.set(any(), any(), any(), any())).thenThrow(new RuntimeException("storage down"));
+
+        var response = economy.set("plugin", id, "world", "gold", BigDecimal.valueOf(500));
+
+        assertEquals(ResponseType.FAILURE, response.type);
+        assertEquals(BigDecimal.valueOf(100), response.balance);
+        assertEquals("storage down", response.errorMessage);
+    }
+
+    @Test
+    void set_returns_failure_with_unknown_balance_when_balance_read_throws() {
+        var id = UUID.randomUUID();
+        when(accountAccess.getAccount(id)).thenReturn(Optional.of(new Account(id, "Alice")));
+        when(balanceAccess.get(id, "world", "gold")).thenThrow(new RuntimeException("storage down"));
+
+        var response = economy.set("plugin", id, "world", "gold", BigDecimal.valueOf(500));
+
+        assertEquals(ResponseType.FAILURE, response.type);
         assertNull(response.balance);
+        verify(balanceAccess, never()).set(any(), any(), any(), any());
     }
 
     @Test
