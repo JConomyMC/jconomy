@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -27,24 +26,20 @@ class LruBalanceCacheTests {
     }
 
     @Test
-    void get_returns_balance_after_put() {
+    void get_returns_amount_after_put() {
         var cache = cacheWithLimit(10);
         var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(50));
 
-        cache.put(balance);
+        cache.put(id, "world", "gold", BigDecimal.valueOf(50));
 
-        var result = cache.get(id, "world", "gold");
-        assertTrue(result.isPresent());
-        assertEquals(BigDecimal.valueOf(50), result.get().getAmount());
+        assertEquals(BigDecimal.valueOf(50), cache.get(id, "world", "gold").orElseThrow());
     }
 
     @Test
     void get_returns_empty_for_different_world() {
         var cache = cacheWithLimit(10);
         var id = UUID.randomUUID();
-        cache.put(new Balance(id, "world", "gold"));
+        cache.put(id, "world", "gold", BigDecimal.ZERO);
 
         assertFalse(cache.get(id, "nether", "gold").isPresent());
     }
@@ -53,7 +48,7 @@ class LruBalanceCacheTests {
     void get_returns_empty_for_different_currency() {
         var cache = cacheWithLimit(10);
         var id = UUID.randomUUID();
-        cache.put(new Balance(id, "world", "gold"));
+        cache.put(id, "world", "gold", BigDecimal.ZERO);
 
         assertFalse(cache.get(id, "world", "silver").isPresent());
     }
@@ -62,7 +57,7 @@ class LruBalanceCacheTests {
     void remove_evicts_the_matching_entry() {
         var cache = cacheWithLimit(10);
         var id = UUID.randomUUID();
-        cache.put(new Balance(id, "world", "gold"));
+        cache.put(id, "world", "gold", BigDecimal.ZERO);
 
         cache.remove(id, "world", "gold");
 
@@ -73,8 +68,8 @@ class LruBalanceCacheTests {
     void remove_does_not_affect_other_entries() {
         var cache = cacheWithLimit(10);
         var id = UUID.randomUUID();
-        cache.put(new Balance(id, "world", "gold"));
-        cache.put(new Balance(id, "world", "silver"));
+        cache.put(id, "world", "gold", BigDecimal.ZERO);
+        cache.put(id, "world", "silver", BigDecimal.ZERO);
 
         cache.remove(id, "world", "gold");
 
@@ -85,9 +80,9 @@ class LruBalanceCacheTests {
     void removeAll_evicts_all_entries_for_account() {
         var cache = cacheWithLimit(10);
         var id = UUID.randomUUID();
-        cache.put(new Balance(id, "world", "gold"));
-        cache.put(new Balance(id, "nether", "gold"));
-        cache.put(new Balance(id, "world", "silver"));
+        cache.put(id, "world", "gold", BigDecimal.ZERO);
+        cache.put(id, "nether", "gold", BigDecimal.ZERO);
+        cache.put(id, "world", "silver", BigDecimal.ZERO);
 
         cache.removeAll(id);
 
@@ -101,8 +96,8 @@ class LruBalanceCacheTests {
         var cache = cacheWithLimit(10);
         var id1 = UUID.randomUUID();
         var id2 = UUID.randomUUID();
-        cache.put(new Balance(id1, "world", "gold"));
-        cache.put(new Balance(id2, "world", "gold"));
+        cache.put(id1, "world", "gold", BigDecimal.ZERO);
+        cache.put(id2, "world", "gold", BigDecimal.ZERO);
 
         cache.removeAll(id1);
 
@@ -113,32 +108,11 @@ class LruBalanceCacheTests {
     void evicts_eldest_entry_when_limit_is_exceeded() {
         var cache = cacheWithLimit(3);
         var id1 = UUID.randomUUID();
-        cache.put(new Balance(id1, "world", "gold"));
-        cache.put(new Balance(UUID.randomUUID(), "world", "gold"));
-        cache.put(new Balance(UUID.randomUUID(), "world", "gold"));
-        cache.put(new Balance(UUID.randomUUID(), "world", "gold")); // evicts id1
+        cache.put(id1, "world", "gold", BigDecimal.ZERO);
+        cache.put(UUID.randomUUID(), "world", "gold", BigDecimal.ZERO);
+        cache.put(UUID.randomUUID(), "world", "gold", BigDecimal.ZERO);
+        cache.put(UUID.randomUUID(), "world", "gold", BigDecimal.ZERO);
 
         assertFalse(cache.get(id1, "world", "gold").isPresent());
-    }
-
-    @Test
-    void listener_is_notified_when_entry_is_evicted() {
-        var cache = cacheWithLimit(3);
-        var evicted = new ArrayList<Balance>();
-        cache.setEvictionListener(evicted::add);
-
-        var oldest = balanceIn(cache);
-        balanceIn(cache);
-        balanceIn(cache);
-        balanceIn(cache); // triggers eviction of oldest
-
-        assertEquals(1, evicted.size());
-        assertEquals(oldest, evicted.get(0));
-    }
-
-    private static Balance balanceIn(LruBalanceCache cache) {
-        var balance = new Balance(UUID.randomUUID(), "world", "gold");
-        cache.put(balance);
-        return balance;
     }
 }
