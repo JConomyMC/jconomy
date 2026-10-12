@@ -3,7 +3,6 @@ package org.jconomy.commands.admin;
 import org.bukkit.command.CommandSender;
 import org.incendo.cloud.context.CommandContext;
 
-import org.jconomy.balances.Balance;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.adapters.PlayerResolver;
 import org.jconomy.commands.CommandHandler;
@@ -39,10 +38,7 @@ public class BalanceSetCommandHandler implements CommandHandler {
         if (amount == null) return;
 
         var world = economyConfig.getDefaultWorldName();
-        var balance = balanceAccess.get(player.getUniqueId(), world, currency)
-                .orElse(new Balance(player.getUniqueId(), world, currency));
-        balance.setAmount(amount);
-        balanceAccess.save(balance);
+        balanceAccess.set(player.getUniqueId(), world, currency, amount);
 
         sender.sendMessage("Set " + playerName + "'s " + currency + " balance to " + amount.toPlainString());
     }
