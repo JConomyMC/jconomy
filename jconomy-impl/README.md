@@ -17,11 +17,11 @@ The plugin module (`jconomy-plugin`) delegates to this module's bootstrap regist
 ### Storage & Caching
 - `SqliteConnectionFactory`, `SqliteMigrator` — SQLite schema management and connections
 - `SqliteAccountRepository`, `SqliteBalanceRepository` — persistent storage
-- `LruAccountCache`, `LruBalanceCache` — configurable LRU eviction with dirty-balance tracking
+- `LruAccountCache`, `LruBalanceCache` — configurable LRU eviction
 
 ### Data Access
 - `DefaultAccountAccess` — cache-aside account reads, write-through updates
-- `DefaultBalanceAccess` — cache-aside reads, write-behind with automatic flush on dirty records
+- `DefaultBalanceAccess` — cache-aside reads; pending set and adjust changes flushed to the repository as assignments and atomic adjustments
 
 ### Configuration
 - `DefaultCacheConfig` — LRU limit and periodic flush settings
