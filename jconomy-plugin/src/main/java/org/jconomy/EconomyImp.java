@@ -251,7 +251,7 @@ public class EconomyImp implements Economy {
     @Override
     public EconomyResponse withdraw(String pluginName, UUID accountId, String worldName,
             String currency, BigDecimal amount) {
-        return adjust(pluginName, accountId, worldName, currency, amount.negate());
+        return adjust(pluginName, accountId, worldName, currency, amount, amount.negate());
     }
 
     @Override
@@ -268,11 +268,11 @@ public class EconomyImp implements Economy {
     @Override
     public EconomyResponse deposit(String pluginName, UUID accountId, String worldName,
             String currency, BigDecimal amount) {
-        return adjust(pluginName, accountId, worldName, currency, amount);
+        return adjust(pluginName, accountId, worldName, currency, amount, amount);
     }
 
     private EconomyResponse adjust(String pluginName, UUID accountId, String worldName, String currency,
-            BigDecimal delta) {
+            BigDecimal requestedAmount, BigDecimal delta) {
         var resolvedWorld = worldNameOrDefault(worldName);
         var resolvedCurrency = currencyOrDefault(currency);
         BigDecimal balance = null;
@@ -282,7 +282,7 @@ public class EconomyImp implements Economy {
                 return new EconomyResponse(BigDecimal.ZERO, balance, ResponseType.FAILURE, "Account not found");
             }
             var newBalance = balanceAccess.adjust(accountId, resolvedWorld, resolvedCurrency, delta);
-            return new EconomyResponse(newBalance, newBalance, ResponseType.SUCCESS, "");
+            return new EconomyResponse(requestedAmount, newBalance, ResponseType.SUCCESS, "");
         } catch (Exception ex) {
             logger.log(Level.WARNING, String.format(
                     "%s failed to adjust balance(accountId='%s',world='%s',currency='%s')",
