@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CyclicBarrier;
@@ -484,15 +483,6 @@ class DefaultBalanceAccessTests {
             getCalled = true;
             duringGet.run();
             return Optional.ofNullable(store.get(key(accountId, worldName, currency)));
-        }
-
-        @Override
-        public void upsert(Balance balance) {
-            store.put(key(balance.getAccountId(), balance.getWorldName(), balance.getCurrency()), balance.getAmount());
-        }
-
-        @Override
-        public void upsertAll(Set<Balance> balances) {
         }
 
         @Override

@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.jconomy.storage.SqlConnectionFactory;
@@ -33,36 +32,6 @@ public class SqliteBalanceRepository implements BalanceRepository {
             try (var rs = stmt.executeQuery()) {
                 return readAmount(rs);
             }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    @Override
-    public void upsert(Balance balance) {
-        upsertAll(Set.of(balance));
-    }
-
-    @Override
-    public void upsertAll(Set<Balance> balances) {
-        if (balances.isEmpty()) return;
-        var sql = """
-                insert into account_balances (account_id, world, currency, amount)
-                values (?, ?, ?, ?)
-                on conflict (account_id, world, currency)
-                do update set amount = excluded.amount
-                """;
-        try (
-                var connection = connectionFactory.createConnection();
-                var stmt = connection.prepareStatement(sql)) {
-            for (var balance : balances) {
-                stmt.setString(1, balance.getAccountId().toString());
-                stmt.setString(2, balance.getWorldName());
-                stmt.setString(3, balance.getCurrency());
-                stmt.setBigDecimal(4, balance.getAmount());
-                stmt.addBatch();
-            }
-            stmt.executeBatch();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

@@ -7,7 +7,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.AfterEach;
@@ -78,57 +77,6 @@ class SqliteBalanceRepositoryTests {
         var result = repository.get(id, "world", "silver");
 
         assertFalse(result.isPresent());
-    }
-
-    // --- upsert ---
-
-    @Test
-    void upsert_inserts_new_row() {
-        var id = UUID.randomUUID();
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(50));
-
-        repository.upsert(balance);
-
-        var result = repository.get(id, "world", "gold");
-        assertTrue(result.isPresent());
-        assertEquals(BigDecimal.valueOf(50), result.get());
-    }
-
-    @Test
-    void upsert_updates_existing_row() throws Exception {
-        var id = UUID.randomUUID();
-        insert(id, "world", "gold", BigDecimal.valueOf(50));
-
-        var balance = new Balance(id, "world", "gold");
-        balance.setAmount(BigDecimal.valueOf(200));
-        repository.upsert(balance);
-
-        var result = repository.get(id, "world", "gold");
-        assertTrue(result.isPresent());
-        assertEquals(BigDecimal.valueOf(200), result.get());
-    }
-
-    // --- upsertAll ---
-
-    @Test
-    void upsertAll_inserts_multiple_rows() {
-        var id1 = UUID.randomUUID();
-        var id2 = UUID.randomUUID();
-        var b1 = new Balance(id1, "world", "gold");
-        b1.setAmount(BigDecimal.valueOf(10));
-        var b2 = new Balance(id2, "world", "silver");
-        b2.setAmount(BigDecimal.valueOf(20));
-
-        repository.upsertAll(Set.of(b1, b2));
-
-        assertEquals(BigDecimal.valueOf(10), repository.get(id1, "world", "gold").get());
-        assertEquals(BigDecimal.valueOf(20), repository.get(id2, "world", "silver").get());
-    }
-
-    @Test
-    void upsertAll_with_empty_set_is_a_no_op() {
-        assertDoesNotThrow(() -> repository.upsertAll(Set.of()));
     }
 
     // --- assignAll ---
