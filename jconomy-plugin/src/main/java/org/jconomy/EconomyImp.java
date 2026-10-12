@@ -218,16 +218,18 @@ public class EconomyImp implements Economy {
     
     @Override
     public EconomyResponse set(String pluginName, UUID accountID, String worldName, String currency, BigDecimal amount) {
+        var resolvedWorld = worldNameOrDefault(worldName);
+        var resolvedCurrency = currencyOrDefault(currency);
+        BigDecimal balance = null;
         try {
+            balance = getBalance(pluginName, accountID, resolvedWorld, resolvedCurrency);
             if (accountAccess.getAccount(accountID).isEmpty()) {
-                return new EconomyResponse(BigDecimal.ZERO, null, ResponseType.FAILURE, "Account not found");
+                return new EconomyResponse(BigDecimal.ZERO, balance, ResponseType.FAILURE, "Account not found");
             }
-            var resolvedWorld = worldNameOrDefault(worldName);
-            var resolvedCurrency = currencyOrDefault(currency);
             var newBalance = balanceAccess.set(accountID, resolvedWorld, resolvedCurrency, amount);
             return new EconomyResponse(newBalance, newBalance, ResponseType.SUCCESS, "");
         } catch (Exception ex) {
-            return new EconomyResponse(BigDecimal.ZERO, null, ResponseType.FAILURE, ex.getMessage());
+            return new EconomyResponse(BigDecimal.ZERO, balance, ResponseType.FAILURE, ex.getMessage());
         }
     }
 
