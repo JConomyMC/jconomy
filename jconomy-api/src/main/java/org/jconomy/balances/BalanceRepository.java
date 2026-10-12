@@ -1,5 +1,6 @@
 package org.jconomy.balances;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -7,7 +8,7 @@ import java.util.UUID;
 
 public interface BalanceRepository {
 
-    Optional<Balance> get(UUID accountId, String worldName, String currency);
+    Optional<BigDecimal> get(UUID accountId, String worldName, String currency);
 
     void upsert(Balance balance);
 

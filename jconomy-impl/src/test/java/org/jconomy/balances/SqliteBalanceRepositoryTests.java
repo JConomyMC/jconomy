@@ -50,14 +50,14 @@ class SqliteBalanceRepositoryTests {
     }
 
     @Test
-    void get_returns_balance_with_stored_amount() throws Exception {
+    void get_returns_stored_amount() throws Exception {
         var id = UUID.randomUUID();
         insert(id, "world", "gold", BigDecimal.valueOf(150));
 
         var result = repository.get(id, "world", "gold");
 
         assertTrue(result.isPresent());
-        assertEquals(BigDecimal.valueOf(150), result.get().getAmount());
+        assertEquals(BigDecimal.valueOf(150), result.get());
     }
 
     @Test
@@ -92,7 +92,7 @@ class SqliteBalanceRepositoryTests {
 
         var result = repository.get(id, "world", "gold");
         assertTrue(result.isPresent());
-        assertEquals(BigDecimal.valueOf(50), result.get().getAmount());
+        assertEquals(BigDecimal.valueOf(50), result.get());
     }
 
     @Test
@@ -106,7 +106,7 @@ class SqliteBalanceRepositoryTests {
 
         var result = repository.get(id, "world", "gold");
         assertTrue(result.isPresent());
-        assertEquals(BigDecimal.valueOf(200), result.get().getAmount());
+        assertEquals(BigDecimal.valueOf(200), result.get());
     }
 
     // --- upsertAll ---
@@ -122,8 +122,8 @@ class SqliteBalanceRepositoryTests {
 
         repository.upsertAll(Set.of(b1, b2));
 
-        assertEquals(BigDecimal.valueOf(10), repository.get(id1, "world", "gold").get().getAmount());
-        assertEquals(BigDecimal.valueOf(20), repository.get(id2, "world", "silver").get().getAmount());
+        assertEquals(BigDecimal.valueOf(10), repository.get(id1, "world", "gold").get());
+        assertEquals(BigDecimal.valueOf(20), repository.get(id2, "world", "silver").get());
     }
 
     @Test
@@ -140,7 +140,7 @@ class SqliteBalanceRepositoryTests {
 
         repository.assignAll(List.of(new BalanceAssignment(id, "world", "gold", BigDecimal.valueOf(40))));
 
-        assertEquals(0, BigDecimal.valueOf(40).compareTo(repository.get(id, "world", "gold").get().getAmount()));
+        assertEquals(0, BigDecimal.valueOf(40).compareTo(repository.get(id, "world", "gold").get()));
     }
 
     @Test
@@ -151,7 +151,7 @@ class SqliteBalanceRepositoryTests {
 
         var result = repository.get(id, "world", "gold");
         assertTrue(result.isPresent());
-        assertEquals(0, BigDecimal.valueOf(40).compareTo(result.get().getAmount()));
+        assertEquals(0, BigDecimal.valueOf(40).compareTo(result.get()));
     }
 
     // --- adjustAll ---
@@ -163,7 +163,7 @@ class SqliteBalanceRepositoryTests {
 
         repository.adjustAll(List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(10))));
 
-        assertEquals(0, BigDecimal.valueOf(110).compareTo(repository.get(id, "world", "gold").get().getAmount()));
+        assertEquals(0, BigDecimal.valueOf(110).compareTo(repository.get(id, "world", "gold").get()));
     }
 
     @Test
@@ -174,7 +174,7 @@ class SqliteBalanceRepositoryTests {
 
         var result = repository.get(id, "world", "gold");
         assertTrue(result.isPresent());
-        assertEquals(0, BigDecimal.valueOf(25).compareTo(result.get().getAmount()));
+        assertEquals(0, BigDecimal.valueOf(25).compareTo(result.get()));
     }
 
     @Test
@@ -185,7 +185,7 @@ class SqliteBalanceRepositoryTests {
         repository.adjustAll(List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(10))));
         repository.adjustAll(List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(20))));
 
-        assertEquals(0, BigDecimal.valueOf(130).compareTo(repository.get(id, "world", "gold").get().getAmount()));
+        assertEquals(0, BigDecimal.valueOf(130).compareTo(repository.get(id, "world", "gold").get()));
     }
 
     // --- delete ---
