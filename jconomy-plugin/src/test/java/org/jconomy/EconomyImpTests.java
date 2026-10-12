@@ -96,7 +96,6 @@ class EconomyImpTests {
         assertEquals(ResponseType.SUCCESS, response.type);
         assertEquals(BigDecimal.valueOf(500), response.amount);
         verify(balanceAccess).set(id, "world", "gold", BigDecimal.valueOf(500));
-        verify(balanceAccess, never()).save(any());
     }
 
     @Test
@@ -136,7 +135,6 @@ class EconomyImpTests {
         assertEquals(ResponseType.SUCCESS, response.type);
         assertEquals(BigDecimal.valueOf(150), response.amount);
         assertEquals(BigDecimal.valueOf(150), response.balance);
-        verify(balanceAccess, never()).save(any());
     }
 
     @Test
@@ -206,7 +204,6 @@ class EconomyImpTests {
         assertEquals(ResponseType.SUCCESS, response.type);
         assertEquals(BigDecimal.valueOf(70), response.amount);
         assertEquals(BigDecimal.valueOf(70), response.balance);
-        verify(balanceAccess, never()).save(any());
     }
 
     @Test

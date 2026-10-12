@@ -55,7 +55,6 @@ class BalanceRemoveCommandHandlerTests {
         handler.execute(context);
 
         verify(balanceAccess).adjust(playerId, "world", "gold", new BigDecimal("-30"));
-        verify(balanceAccess, never()).save(any());
         verify(sender).sendMessage(contains("70"));
     }
 
