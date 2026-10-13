@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -299,7 +300,98 @@ class DefaultBalanceAccessTests {
                 List.copyOf(repository.lastAssignAll));
     }
 
+    @Test
+    void set_during_assignment_flush_stays_pending() {
+        var id = UUID.randomUUID();
+        access.set(id, "world", "gold", BigDecimal.valueOf(100));
+        repository.duringAssignAll = () -> {
+            repository.duringAssignAll = () -> {};
+            access.set(id, "world", "gold", BigDecimal.valueOf(150));
+        };
+        access.flush();
+
+        access.flush();
+
+        assertEquals(
+                List.of(new BalanceAssignment(id, "world", "gold", BigDecimal.valueOf(150))),
+                List.copyOf(repository.lastAssignAll));
+        assertEquals(BigDecimal.valueOf(150), access.get(id, "world", "gold").orElseThrow());
+    }
+
+    @Test
+    void adjust_during_assignment_flush_flushes_combined_assignment() {
+        var id = UUID.randomUUID();
+        access.set(id, "world", "gold", BigDecimal.valueOf(100));
+        repository.duringAssignAll = () -> {
+            repository.duringAssignAll = () -> {};
+            access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        };
+        access.flush();
+
+        access.flush();
+
+        assertEquals(
+                List.of(new BalanceAssignment(id, "world", "gold", BigDecimal.valueOf(110))),
+                List.copyOf(repository.lastAssignAll));
+        assertNull(repository.lastAdjustAll);
+    }
+
+    @Test
+    void offsetting_adjusts_during_flush_leave_nothing_pending() {
+        var id = UUID.randomUUID();
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        repository.duringAdjustAll = () -> {
+            repository.duringAdjustAll = () -> {};
+            access.adjust(id, "world", "gold", BigDecimal.valueOf(5));
+            access.adjust(id, "world", "gold", BigDecimal.valueOf(-5));
+        };
+        access.flush();
+        repository.lastAdjustAll = null;
+
+        access.flush();
+
+        assertNull(repository.lastAdjustAll);
+        assertEquals(BigDecimal.valueOf(110), access.get(id, "world", "gold").orElseThrow());
+    }
+
     // --- concurrency ---
+
+    @Test
+    void adjust_from_another_thread_during_flush_stays_pending() throws Exception {
+        var id = UUID.randomUUID();
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        var flushing = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        repository.duringAdjustAll = () -> {
+            repository.duringAdjustAll = () -> {};
+            flushing.countDown();
+            awaitQuietly(release);
+        };
+
+        try (var executor = Executors.newSingleThreadExecutor()) {
+            var flush = executor.submit(access::flush);
+            assertTrue(flushing.await(5, TimeUnit.SECONDS));
+            access.adjust(id, "world", "gold", BigDecimal.valueOf(5));
+            release.countDown();
+            flush.get(5, TimeUnit.SECONDS);
+        }
+        access.flush();
+
+        assertEquals(
+                List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(5))),
+                List.copyOf(repository.lastAdjustAll));
+        assertEquals(BigDecimal.valueOf(115), access.get(id, "world", "gold").orElseThrow());
+    }
+
+    private static void awaitQuietly(CountDownLatch latch) {
+        try {
+            assertTrue(latch.await(5, TimeUnit.SECONDS));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Test
     void concurrent_adjusts_after_simultaneous_load_are_both_applied() throws Exception {
@@ -470,6 +562,7 @@ class DefaultBalanceAccessTests {
         boolean failOnAdjustAll = false;
         Collection<BalanceAssignment> lastAssignAll = null;
         Collection<BalanceAdjustment> lastAdjustAll = null;
+        Runnable duringAssignAll = () -> {};
         Runnable duringAdjustAll = () -> {};
         Runnable duringGet = () -> {};
         boolean deleteCalled = false;
@@ -493,6 +586,7 @@ class DefaultBalanceAccessTests {
         @Override
         public void assignAll(Collection<BalanceAssignment> assignments) {
             lastAssignAll = assignments;
+            duringAssignAll.run();
         }
 
         @Override
