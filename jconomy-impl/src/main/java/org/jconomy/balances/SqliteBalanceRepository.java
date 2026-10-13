@@ -79,7 +79,14 @@ public class SqliteBalanceRepository implements BalanceRepository {
                 stmt.setBigDecimal(4, adjustment.delta());
                 stmt.addBatch();
             }
-            stmt.executeBatch();
+            connection.setAutoCommit(false);
+            try {
+                stmt.executeBatch();
+                connection.commit();
+            } catch (Exception ex) {
+                connection.rollback();
+                throw ex;
+            }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

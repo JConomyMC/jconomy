@@ -136,6 +136,22 @@ class SqliteBalanceRepositoryTests {
         assertEquals(0, BigDecimal.valueOf(130).compareTo(repository.get(id, "world", "gold").get()));
     }
 
+    @Test
+    void adjustAll_failure_mid_batch_commits_nothing() throws Exception {
+        var existingId = UUID.randomUUID();
+        var newId = UUID.randomUUID();
+        insert(existingId, "world", "gold", BigDecimal.valueOf(100));
+        failInsertsForCurrency("boom");
+
+        assertThrows(RuntimeException.class, () -> repository.adjustAll(List.of(
+                new BalanceAdjustment(existingId, "world", "gold", BigDecimal.valueOf(10)),
+                new BalanceAdjustment(newId, "world", "gold", BigDecimal.valueOf(25)),
+                new BalanceAdjustment(newId, "world", "boom", BigDecimal.ONE))));
+
+        assertEquals(0, BigDecimal.valueOf(100).compareTo(repository.get(existingId, "world", "gold").get()));
+        assertFalse(repository.get(newId, "world", "gold").isPresent());
+    }
+
     // --- delete ---
 
     @Test
@@ -202,6 +218,16 @@ class SqliteBalanceRepositoryTests {
             stmt.executeUpdate(String.format(
                     "insert into account_balances (account_id, world, currency, amount) values ('%s', '%s', '%s', %s)",
                     id, world, currency, amount.toPlainString()));
+        }
+    }
+
+    private void failInsertsForCurrency(String currency) throws Exception {
+        try (Statement stmt = anchor.createStatement()) {
+            stmt.executeUpdate(String.format("""
+                    create trigger fail_%1$s before insert on account_balances
+                    when new.currency = '%1$s'
+                    begin select raise(abort, '%1$s'); end
+                    """, currency));
         }
     }
 }
