@@ -14,6 +14,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -393,6 +394,18 @@ class DefaultBalanceAccessTests {
         }
     }
 
+    // Returns once the action has finished (unguarded: the bug) or is waiting on a lock (guarded: the fix).
+    private static Thread startAndAwaitBlockedOrDone(Runnable action) {
+        var thread = new Thread(action);
+        thread.start();
+        while (thread.isAlive()
+                && thread.getState() != Thread.State.BLOCKED
+                && thread.getState() != Thread.State.WAITING) {
+            Thread.onSpinWait();
+        }
+        return thread;
+    }
+
     @Test
     void concurrent_adjusts_after_simultaneous_load_are_both_applied() throws Exception {
         var id = UUID.randomUUID();
@@ -466,6 +479,31 @@ class DefaultBalanceAccessTests {
 
         assertNull(repository.lastAdjustAll);
         assertTrue(access.get(id, "world", "gold").isEmpty());
+    }
+
+    @Test
+    void delete_during_flush_keeps_balance_deleted() throws Exception {
+        var id = UUID.randomUUID();
+        repository.store(id, "world", "gold", BigDecimal.valueOf(100));
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        var deleter = new AtomicReference<Thread>();
+        // Fires once, after the flush captured +10 but before the fake repository stores it.
+        repository.duringAdjustAll = () -> {
+            repository.duringAdjustAll = () -> {};
+            deleter.set(startAndAwaitBlockedOrDone(() -> access.delete(id, "world", "gold")));
+        };
+
+        access.flush();
+        // The delete was held back by the flush; let it finish now.
+        deleter.get().join(5000);
+        // A second flush must find nothing stale left to write.
+        repository.lastAdjustAll = null;
+        access.flush();
+
+        assertTrue(repository.stored(id, "world", "gold").isEmpty());
+        assertTrue(access.get(id, "world", "gold").isEmpty());
+        assertNull(repository.lastAdjustAll);
     }
 
     // --- deleteByAccount ---
@@ -587,6 +625,7 @@ class DefaultBalanceAccessTests {
         public void assignAll(Collection<BalanceAssignment> assignments) {
             lastAssignAll = assignments;
             duringAssignAll.run();
+            assignments.forEach(a -> store(a.accountId(), a.worldName(), a.currency(), a.amount()));
         }
 
         @Override
@@ -594,6 +633,8 @@ class DefaultBalanceAccessTests {
             if (failOnAdjustAll) throw new RuntimeException("simulated failure");
             lastAdjustAll = adjustments;
             duringAdjustAll.run();
+            adjustments.forEach(a ->
+                    store.merge(key(a.accountId(), a.worldName(), a.currency()), a.delta(), BigDecimal::add));
         }
 
         @Override
@@ -602,12 +643,18 @@ class DefaultBalanceAccessTests {
             lastDeletedId = accountId;
             lastDeletedWorld = worldName;
             lastDeletedCurrency = currency;
+            store.remove(key(accountId, worldName, currency));
         }
 
         @Override
         public void deleteByAccount(UUID accountId) {
             deleteByAccountCalled = true;
             lastDeleteByAccountId = accountId;
+            store.keySet().removeIf(k -> k.startsWith(accountId + ":"));
+        }
+
+        Optional<BigDecimal> stored(UUID accountId, String worldName, String currency) {
+            return Optional.ofNullable(store.get(key(accountId, worldName, currency)));
         }
 
         private static String key(UUID id, String world, String currency) {

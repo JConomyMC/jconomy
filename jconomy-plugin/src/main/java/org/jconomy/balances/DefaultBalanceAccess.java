@@ -35,6 +35,7 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     private final BalanceCache cache;
     private final BalanceRepository repository;
     private final ConcurrentHashMap<BalanceKey, PendingBalance> pendingBalances = new ConcurrentHashMap<>();
+    private final Object writeLock = new Object();
 
     public DefaultBalanceAccess(BalanceCache cache, BalanceRepository repository) {
         this.cache = cache;
@@ -83,13 +84,15 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     }
 
     private void flushPendingBalances() {
-        if (pendingBalances.isEmpty()) return;
-        var snapshot = new HashMap<>(pendingBalances);
-        var assignments = toAssignments(snapshot);
-        var adjustments = toAdjustments(snapshot);
-        if (!assignments.isEmpty()) repository.assignAll(assignments);
-        if (!adjustments.isEmpty()) repository.adjustAll(adjustments);
-        snapshot.forEach(this::reconcile);
+        synchronized (writeLock) {
+            if (pendingBalances.isEmpty()) return;
+            var snapshot = new HashMap<>(pendingBalances);
+            var assignments = toAssignments(snapshot);
+            var adjustments = toAdjustments(snapshot);
+            if (!assignments.isEmpty()) repository.assignAll(assignments);
+            if (!adjustments.isEmpty()) repository.adjustAll(adjustments);
+            snapshot.forEach(this::reconcile);
+        }
     }
 
     private void reconcile(BalanceKey key, PendingBalance flushed) {
@@ -122,9 +125,11 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     @Override
     public void delete(UUID accountId, String worldName, String currency) {
         var key = new BalanceKey(accountId, worldName, currency);
-        repository.delete(accountId, worldName, currency);
-        cache.remove(accountId, worldName, currency);
-        pendingBalances.remove(key);
+        synchronized (writeLock) {
+            repository.delete(accountId, worldName, currency);
+            cache.remove(accountId, worldName, currency);
+            pendingBalances.remove(key);
+        }
     }
 
     @Override
