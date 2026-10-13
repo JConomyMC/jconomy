@@ -99,7 +99,7 @@ public class EconomyImp implements Economy {
 
     @Override
     public boolean hasCurrency(String currency) {
-        return currencies().stream().anyMatch(c -> c == currency);
+        return currencies().stream().anyMatch(c -> c.equals(currency));
     }
 
     @Override

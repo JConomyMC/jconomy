@@ -325,6 +325,32 @@ class EconomyImpTests {
         assertFalse(economy.has("plugin", id, "world", "gold", BigDecimal.valueOf(100)));
     }
 
+    // --- hasCurrency ---
+
+    @Test
+    void hasCurrency_matches_equal_name_from_different_instance() {
+        var configured = "coins";
+        var requested = new String("coins");
+        assertNotSame(configured, requested);
+        when(config.getAllCurrencyNames()).thenReturn(Set.of(configured));
+
+        assertTrue(economy.hasCurrency(requested));
+    }
+
+    @Test
+    void hasCurrency_returns_false_for_unknown_currency() {
+        when(config.getAllCurrencyNames()).thenReturn(Set.of("coins"));
+
+        assertFalse(economy.hasCurrency("gems"));
+    }
+
+    @Test
+    void hasCurrency_is_case_sensitive() {
+        when(config.getAllCurrencyNames()).thenReturn(Set.of("coins"));
+
+        assertFalse(economy.hasCurrency("Coins"));
+    }
+
     // --- createAccount ---
 
     @Test
