@@ -2,9 +2,12 @@ package org.jconomy.balances;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.UUID;
@@ -168,6 +171,19 @@ class SqliteBalanceRepositoryTests {
         assertFalse(repository.get(newId, "world", "gold").isPresent());
     }
 
+    @Test
+    void adjustAll_reports_batch_failure_when_rollback_also_fails() throws Exception {
+        failInsertsForCurrency("boom");
+        var failingRollbackRepository = new SqliteBalanceRepository(
+                () -> withFailingRollback(connectionFactory.createConnection()));
+
+        var thrown = assertThrows(RuntimeException.class, () -> failingRollbackRepository.adjustAll(List.of(
+                new BalanceAdjustment(UUID.randomUUID(), "world", "boom", BigDecimal.ONE))));
+
+        assertTrue(thrown.getCause().getMessage().contains("boom"));
+        assertEquals("rollback failed", thrown.getCause().getSuppressed()[0].getMessage());
+    }
+
     // --- delete ---
 
     @Test
@@ -235,6 +251,20 @@ class SqliteBalanceRepositoryTests {
                     "insert into account_balances (account_id, world, currency, amount) values ('%s', '%s', '%s', %s)",
                     id, world, currency, amount.toPlainString()));
         }
+    }
+
+    private static Connection withFailingRollback(Connection connection) {
+        return (Connection) Proxy.newProxyInstance(
+                Connection.class.getClassLoader(),
+                new Class<?>[] { Connection.class },
+                (proxy, method, args) -> {
+                    if (method.getName().equals("rollback")) throw new SQLException("rollback failed");
+                    try {
+                        return method.invoke(connection, args);
+                    } catch (InvocationTargetException e) {
+                        throw e.getCause();
+                    }
+                });
     }
 
     private void failInsertsForCurrency(String currency) throws Exception {
