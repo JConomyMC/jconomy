@@ -547,6 +547,35 @@ class DefaultBalanceAccessTests {
                 List.copyOf(repository.lastAdjustAll));
     }
 
+    @Test
+    void deleteByAccount_during_flush_keeps_account_balances_deleted() throws Exception {
+        var id = UUID.randomUUID();
+        var otherId = UUID.randomUUID();
+        repository.store(id, "world", "gold", BigDecimal.valueOf(100));
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
+        repository.store(otherId, "world", "gold", BigDecimal.valueOf(50));
+        cache.put(otherId, "world", "gold", BigDecimal.valueOf(50));
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        access.set(id, "nether", "gold", BigDecimal.valueOf(20));
+        access.adjust(otherId, "world", "gold", BigDecimal.valueOf(30));
+        var deleter = new AtomicReference<Thread>();
+        // Fires once, after the flush captured every change but before the fake repository stores any.
+        repository.duringAssignAll = () -> {
+            repository.duringAssignAll = () -> {};
+            deleter.set(startAndAwaitBlockedOrDone(() -> access.deleteByAccount(id)));
+        };
+
+        access.flush();
+        // The delete was held back by the flush; let it finish now.
+        deleter.get().join(5000);
+
+        assertTrue(repository.stored(id, "world", "gold").isEmpty());
+        assertTrue(repository.stored(id, "nether", "gold").isEmpty());
+        assertTrue(access.get(id, "world", "gold").isEmpty());
+        assertTrue(access.get(id, "nether", "gold").isEmpty());
+        assertEquals(BigDecimal.valueOf(80), repository.stored(otherId, "world", "gold").orElseThrow());
+    }
+
     // --- fakes ---
 
     private static class CapturingLogHandler extends Handler {
