@@ -124,7 +124,11 @@ public class SqliteBalanceRepository implements BalanceRepository {
             stmt.executeBatch();
             connection.commit();
         } catch (SQLException ex) {
-            connection.rollback();
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackFailure) {
+                ex.addSuppressed(rollbackFailure);
+            }
             throw ex;
         }
     }
