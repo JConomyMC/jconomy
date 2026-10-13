@@ -102,6 +102,22 @@ class SqliteBalanceRepositoryTests {
         assertEquals(0, BigDecimal.valueOf(40).compareTo(result.get()));
     }
 
+    @Test
+    void assignAll_failure_mid_batch_commits_nothing() throws Exception {
+        var existingId = UUID.randomUUID();
+        var newId = UUID.randomUUID();
+        insert(existingId, "world", "gold", BigDecimal.valueOf(100));
+        failInsertsForCurrency("boom");
+
+        assertThrows(RuntimeException.class, () -> repository.assignAll(List.of(
+                new BalanceAssignment(existingId, "world", "gold", BigDecimal.valueOf(40)),
+                new BalanceAssignment(newId, "world", "gold", BigDecimal.valueOf(25)),
+                new BalanceAssignment(newId, "world", "boom", BigDecimal.ONE))));
+
+        assertEquals(0, BigDecimal.valueOf(100).compareTo(repository.get(existingId, "world", "gold").get()));
+        assertFalse(repository.get(newId, "world", "gold").isPresent());
+    }
+
     // --- adjustAll ---
 
     @Test

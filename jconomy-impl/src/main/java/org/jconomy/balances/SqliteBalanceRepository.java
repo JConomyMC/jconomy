@@ -1,6 +1,8 @@
 package org.jconomy.balances;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -55,7 +57,7 @@ public class SqliteBalanceRepository implements BalanceRepository {
                 stmt.setBigDecimal(4, assignment.amount());
                 stmt.addBatch();
             }
-            stmt.executeBatch();
+            executeBatchAtomically(connection, stmt);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -79,14 +81,7 @@ public class SqliteBalanceRepository implements BalanceRepository {
                 stmt.setBigDecimal(4, adjustment.delta());
                 stmt.addBatch();
             }
-            connection.setAutoCommit(false);
-            try {
-                stmt.executeBatch();
-                connection.commit();
-            } catch (Exception ex) {
-                connection.rollback();
-                throw ex;
-            }
+            executeBatchAtomically(connection, stmt);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -120,6 +115,17 @@ public class SqliteBalanceRepository implements BalanceRepository {
             stmt.executeUpdate();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    private static void executeBatchAtomically(Connection connection, PreparedStatement stmt) throws SQLException {
+        connection.setAutoCommit(false);
+        try {
+            stmt.executeBatch();
+            connection.commit();
+        } catch (SQLException ex) {
+            connection.rollback();
+            throw ex;
         }
     }
 
