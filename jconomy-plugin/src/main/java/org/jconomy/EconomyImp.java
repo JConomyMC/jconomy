@@ -13,6 +13,7 @@ import org.jconomy.accounts.Account;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.accounts.AccountAccess;
+import org.jconomy.accounts.AccountDeleter;
 import org.jconomy.presentation.CurrencyFormatter;
 
 import net.milkbowl.vault2.economy.EconomyResponse.ResponseType;
@@ -27,15 +28,17 @@ public class EconomyImp implements Economy {
     private final EconomyConfig config;
     private final AccountAccess accountAccess;
     private final BalanceAccess balanceAccess;
+    private final AccountDeleter accountDeleter;
 
     public EconomyImp(PluginContext plugin, Logger logger, CurrencyFormatter currencyFormatter, EconomyConfig config,
-            AccountAccess accountAccess, BalanceAccess balanceAccess) {
+            AccountAccess accountAccess, BalanceAccess balanceAccess, AccountDeleter accountDeleter) {
         this.plugin = plugin;
         this.logger = logger;
         this.currencyFormatter = currencyFormatter;
         this.config = config;
         this.accountAccess = accountAccess;
         this.balanceAccess = balanceAccess;
+        this.accountDeleter = accountDeleter;
     }
 
     private String currencyOrDefault(String currency) {
@@ -301,11 +304,10 @@ public class EconomyImp implements Economy {
     @Override
     public boolean deleteAccount(String pluginName, UUID accountId) {
         try {
-            accountAccess.deleteAccount(accountId);
-            balanceAccess.deleteByAccount(accountId);
+            accountDeleter.delete(accountId);
             return true;
         } catch (Exception ex) {
-            logger.warning(String.format("%s called deleteAccount but it failed: %s", pluginName, ex.getMessage()));
+            logger.log(Level.WARNING, String.format("%s called deleteAccount but it failed", pluginName), ex);
             return false;
         }
     }
