@@ -105,19 +105,6 @@ public class SqliteBalanceRepository implements BalanceRepository {
         }
     }
 
-    @Override
-    public void deleteByAccount(UUID accountId) {
-        var sql = "delete from account_balances where account_id = ?";
-        try (
-                var connection = connectionFactory.createConnection();
-                var stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, accountId.toString());
-            stmt.executeUpdate();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
     private static void executeBatchAtomically(Connection connection, PreparedStatement stmt) throws SQLException {
         connection.setAutoCommit(false);
         try {

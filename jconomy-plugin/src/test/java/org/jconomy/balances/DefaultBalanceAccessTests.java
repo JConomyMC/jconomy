@@ -509,42 +509,15 @@ class DefaultBalanceAccessTests {
     // --- deleteByAccount ---
 
     @Test
-    void deleteByAccount_delegates_to_repository() {
-        var id = UUID.randomUUID();
-
-        access.deleteByAccount(id);
-
-        assertTrue(repository.deleteByAccountCalled);
-        assertEquals(id, repository.lastDeleteByAccountId);
-    }
-
-    @Test
     void deleteByAccount_evicts_all_account_entries_from_cache() {
         var id = UUID.randomUUID();
         cache.put(id, "world", "gold", BigDecimal.ZERO);
         cache.put(id, "nether", "gold", BigDecimal.ZERO);
 
-        access.deleteByAccount(id);
+        access.deleteByAccount(id, () -> {});
 
         assertFalse(cache.get(id, "world", "gold").isPresent());
         assertFalse(cache.get(id, "nether", "gold").isPresent());
-    }
-
-    @Test
-    void deleteByAccount_discards_pending_balances_for_account_only() {
-        var id = UUID.randomUUID();
-        var otherId = UUID.randomUUID();
-        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
-        access.set(id, "nether", "gold", BigDecimal.valueOf(20));
-        access.adjust(otherId, "world", "gold", BigDecimal.valueOf(30));
-
-        access.deleteByAccount(id);
-        access.flush();
-
-        assertNull(repository.lastAssignAll);
-        assertEquals(
-                List.of(new BalanceAdjustment(otherId, "world", "gold", BigDecimal.valueOf(30))),
-                List.copyOf(repository.lastAdjustAll));
     }
 
     @Test
@@ -562,7 +535,8 @@ class DefaultBalanceAccessTests {
         // Fires once, after the flush captured every change but before the fake repository stores any.
         repository.duringAssignAll = () -> {
             repository.duringAssignAll = () -> {};
-            deleter.set(startAndAwaitBlockedOrDone(() -> access.deleteByAccount(id)));
+            deleter.set(startAndAwaitBlockedOrDone(
+                    () -> access.deleteByAccount(id, () -> repository.removeStoredAccount(id))));
         };
 
         access.flush();
@@ -692,8 +666,6 @@ class DefaultBalanceAccessTests {
         UUID lastDeletedId = null;
         String lastDeletedWorld = null;
         String lastDeletedCurrency = null;
-        boolean deleteByAccountCalled = false;
-        UUID lastDeleteByAccountId = null;
 
         void store(UUID accountId, String worldName, String currency, BigDecimal amount) {
             store.put(key(accountId, worldName, currency), amount);
@@ -729,13 +701,6 @@ class DefaultBalanceAccessTests {
             lastDeletedWorld = worldName;
             lastDeletedCurrency = currency;
             store.remove(key(accountId, worldName, currency));
-        }
-
-        @Override
-        public void deleteByAccount(UUID accountId) {
-            deleteByAccountCalled = true;
-            lastDeleteByAccountId = accountId;
-            store.keySet().removeIf(k -> k.startsWith(accountId + ":"));
         }
 
         void removeStoredAccount(UUID accountId) {

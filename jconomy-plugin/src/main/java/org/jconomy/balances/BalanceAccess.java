@@ -14,7 +14,5 @@ public interface BalanceAccess {
 
     void delete(UUID accountId, String worldName, String currency);
 
-    void deleteByAccount(UUID accountId);
-
     void deleteByAccount(UUID accountId, Runnable durableDeletion);
 }

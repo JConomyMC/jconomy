@@ -133,15 +133,6 @@ public class DefaultBalanceAccess implements BalanceAccess, Flushable {
     }
 
     @Override
-    public void deleteByAccount(UUID accountId) {
-        synchronized (writeLock) {
-            repository.deleteByAccount(accountId);
-            cache.removeAll(accountId);
-            pendingBalances.keySet().removeIf(k -> k.accountId().equals(accountId));
-        }
-    }
-
-    @Override
     public void deleteByAccount(UUID accountId, Runnable durableDeletion) {
         synchronized (writeLock) {
             durableDeletion.run();
