@@ -3,7 +3,11 @@ package org.jconomy.impl.bootstrap;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -11,7 +15,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import org.jconomy.dependencyinjection.JConomyServiceRegistrar;
 import org.jconomy.dependencyinjection.JConomyServiceProvider;
@@ -76,7 +82,22 @@ class JConomyImplRegistrarTests {
 
         JConomyImplRegistrar.registerServices(builder);
 
-        assertTrue(builder.singletonImplementations.containsKey(SqlConnectionFactory.class));
+        assertTrue(builder.factories.containsKey(SqlConnectionFactory.class));
+    }
+
+    @Test
+    void registerServices_places_database_in_plugin_data_folder(@TempDir Path dataFolder) throws Exception {
+        var builder = new NoopBuilder();
+        var plugin = mock(JavaPlugin.class);
+        when(plugin.getDataFolder()).thenReturn(dataFolder.toFile());
+        var services = mock(JConomyServiceProvider.class);
+        when(services.getRequiredService(JavaPlugin.class)).thenReturn(plugin);
+
+        JConomyImplRegistrar.registerServices(builder);
+        var connectionFactory = (SqlConnectionFactory) builder.factories.get(SqlConnectionFactory.class).apply(services);
+        connectionFactory.createConnection().close();
+
+        assertTrue(Files.exists(dataFolder.resolve("jconomy.db")));
     }
 
     @Test
@@ -109,6 +130,7 @@ class JConomyImplRegistrarTests {
     private static final class NoopBuilder implements JConomyServiceRegistrar {
         private final Map<Class<?>, Class<?>> singletonImplementations = new HashMap<>();
         private final Set<Class<?>> selfRegistrations = new HashSet<>();
+        private final Map<Class<?>, Function<JConomyServiceProvider, ?>> factories = new HashMap<>();
 
         @Override
         public <T> JConomyServiceRegistrar addSingleton(Class<T> type) {
@@ -131,6 +153,7 @@ class JConomyImplRegistrarTests {
         public <T> JConomyServiceRegistrar addSingletonFactory(
                 Class<T> type,
                 Function<JConomyServiceProvider, T> factory) {
+            factories.put(type, factory);
             return this;
         }
 
