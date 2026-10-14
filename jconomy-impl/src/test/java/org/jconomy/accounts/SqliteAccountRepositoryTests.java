@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.jconomy.storage.FailingRollbackConnection;
 import org.jconomy.storage.SqlConnectionFactory;
 import org.jconomy.storage.TableBootstrapper;
 
@@ -32,6 +33,7 @@ class SqliteAccountRepositoryTests {
     @AfterEach
     void tearDown() throws Exception {
         try (var stmt = anchor.createStatement()) {
+            stmt.executeUpdate("drop trigger if exists fail_account_delete");
             stmt.executeUpdate("delete from account_balances");
             stmt.executeUpdate("delete from accounts");
         }
@@ -120,8 +122,55 @@ class SqliteAccountRepositoryTests {
     }
 
     @Test
+    void deleteAccount_removes_all_balance_rows_for_the_account_only() throws Exception {
+        var id = UUID.randomUUID();
+        var otherId = UUID.randomUUID();
+        insertAccount(id, "Player");
+        insertAccount(otherId, "Other");
+        insertBalance(id, "world", "gold");
+        insertBalance(id, "nether", "silver");
+        insertBalance(otherId, "world", "gold");
+
+        repository.deleteAccount(id);
+
+        assertFalse(balanceExists(id, "world", "gold"));
+        assertFalse(balanceExists(id, "nether", "silver"));
+        assertTrue(balanceExists(otherId, "world", "gold"));
+        assertTrue(accountEntityExists(otherId));
+    }
+
+    @Test
     void deleteAccount_is_a_no_op_when_account_does_not_exist() {
         assertDoesNotThrow(() -> repository.deleteAccount(UUID.randomUUID()));
+    }
+
+    @Test
+    void deleteAccount_failure_keeps_account_and_balances() throws Exception {
+        var id = UUID.randomUUID();
+        insertAccount(id, "Player");
+        insertBalance(id, "world", "gold");
+        insertBalance(id, "nether", "silver");
+        failAccountDeletes();
+
+        assertThrows(RuntimeException.class, () -> repository.deleteAccount(id));
+
+        assertTrue(accountEntityExists(id));
+        assertTrue(balanceExists(id, "world", "gold"));
+        assertTrue(balanceExists(id, "nether", "silver"));
+    }
+
+    @Test
+    void deleteAccount_reports_failure_when_rollback_also_fails() throws Exception {
+        var id = UUID.randomUUID();
+        insertAccount(id, "Player");
+        failAccountDeletes();
+        var failingRollbackRepository = new SqliteAccountRepository(
+                () -> FailingRollbackConnection.wrap(connectionFactory.createConnection()));
+
+        var thrown = assertThrows(RuntimeException.class, () -> failingRollbackRepository.deleteAccount(id));
+
+        assertTrue(thrown.getCause().getMessage().contains("boom"));
+        assertEquals("rollback failed", thrown.getCause().getSuppressed()[0].getMessage());
     }
 
     // --- helpers ---
@@ -139,6 +188,15 @@ class SqliteAccountRepositoryTests {
             stmt.executeUpdate(String.format(
                     "insert into account_balances (account_id, world, currency, amount) values ('%s', '%s', '%s', 0)",
                     id, world, currency));
+        }
+    }
+
+    private void failAccountDeletes() throws Exception {
+        try (Statement stmt = anchor.createStatement()) {
+            stmt.executeUpdate("""
+                    create trigger fail_account_delete before delete on accounts
+                    begin select raise(abort, 'boom'); end
+                    """);
         }
     }
 

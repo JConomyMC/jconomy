@@ -79,7 +79,11 @@ public class SqliteAccountRepository implements AccountRepository {
                 accountStmt.executeUpdate();
                 connection.commit();
             } catch (Exception ex) {
-                connection.rollback();
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackFailure) {
+                    ex.addSuppressed(rollbackFailure);
+                }
                 throw ex;
             }
         } catch (Exception ex) {
