@@ -17,9 +17,11 @@ import java.util.logging.Logger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import org.jconomy.accounts.Account;
 import org.jconomy.accounts.AccountAccess;
+import org.jconomy.accounts.AccountDeleter;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.config.economy.EconomyConfig;
 import org.jconomy.presentation.CurrencyFormatter;
@@ -48,7 +50,8 @@ class EconomyImpTests {
         config = mock(EconomyConfig.class);
         accountAccess = mock(AccountAccess.class);
         balanceAccess = mock(BalanceAccess.class);
-        economy = new EconomyImp(pluginContext, logger, currencyFormatter, config, accountAccess, balanceAccess);
+        economy = new EconomyImp(pluginContext, logger, currencyFormatter, config, accountAccess, balanceAccess,
+                new AccountDeleter(accountAccess, balanceAccess));
     }
 
     // --- getBalance ---
@@ -416,10 +419,25 @@ class EconomyImpTests {
     @Test
     void deleteAccount_removes_account_and_all_balances() {
         var id = UUID.randomUUID();
+        var durableDeletion = ArgumentCaptor.forClass(Runnable.class);
 
         assertTrue(economy.deleteAccount("plugin", id));
+        verify(balanceAccess).deleteByAccount(eq(id), durableDeletion.capture());
+        durableDeletion.getValue().run();
         verify(accountAccess).deleteAccount(id);
-        verify(balanceAccess).deleteByAccount(id);
+    }
+
+    @Test
+    void deleteAccount_returns_false_and_logs_warning_when_deletion_fails() {
+        var id = UUID.randomUUID();
+        var failure = new RuntimeException("storage down");
+        doThrow(failure).when(balanceAccess).deleteByAccount(eq(id), any());
+
+        assertFalse(economy.deleteAccount("plugin", id));
+
+        var warning = logHandler.singleWarning();
+        assertEquals("plugin called deleteAccount but it failed", warning.getMessage());
+        assertSame(failure, warning.getThrown());
     }
 
     // --- getUUIDNameMap ---

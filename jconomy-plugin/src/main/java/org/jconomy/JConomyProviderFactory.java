@@ -20,6 +20,7 @@ import org.jconomy.commands.admin.BalanceRemoveCommandHandler;
 import org.jconomy.commands.admin.BalanceSetCommandHandler;
 import org.jconomy.commands.CommandManagerFactory;
 import org.jconomy.accounts.AccountAccess;
+import org.jconomy.accounts.AccountDeleter;
 import org.jconomy.accounts.AccountCache;
 import org.jconomy.accounts.DefaultAccountAccess;
 import org.jconomy.accounts.LruAccountCache;
@@ -70,6 +71,7 @@ public class JConomyProviderFactory {
         builder.addSingleton(BalanceCache.class, LruBalanceCache.class);
         builder.addSingleton(AccountAccess.class, DefaultAccountAccess.class);
         builder.addSingleton(BalanceAccess.class, DefaultBalanceAccess.class);
+        builder.addSingleton(AccountDeleter.class);
         builder.addSingleton(Economy.class, EconomyImp.class);
         builder.addSingleton(EconomyResponseMapper.class, DefaultResponseMapper.class);
         builder.addSingleton(PlayerResolver.class, BukkitPlayerResolver.class);
