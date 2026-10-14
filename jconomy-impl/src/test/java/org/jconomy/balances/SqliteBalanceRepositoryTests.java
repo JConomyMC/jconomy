@@ -210,37 +210,6 @@ class SqliteBalanceRepositoryTests {
         assertTrue(repository.get(id, "world", "silver").isPresent());
     }
 
-    // --- deleteByAccount ---
-
-    @Test
-    void deleteByAccount_removes_all_rows_for_account() throws Exception {
-        var id = UUID.randomUUID();
-        insert(id, "world", "gold", BigDecimal.valueOf(100));
-        insert(id, "nether", "gold", BigDecimal.valueOf(50));
-
-        repository.deleteByAccount(id);
-
-        assertFalse(repository.get(id, "world", "gold").isPresent());
-        assertFalse(repository.get(id, "nether", "gold").isPresent());
-    }
-
-    @Test
-    void deleteByAccount_does_not_affect_other_accounts() throws Exception {
-        var id1 = UUID.randomUUID();
-        var id2 = UUID.randomUUID();
-        insert(id1, "world", "gold", BigDecimal.valueOf(100));
-        insert(id2, "world", "gold", BigDecimal.valueOf(200));
-
-        repository.deleteByAccount(id1);
-
-        assertTrue(repository.get(id2, "world", "gold").isPresent());
-    }
-
-    @Test
-    void deleteByAccount_is_a_no_op_when_account_has_no_rows() {
-        assertDoesNotThrow(() -> repository.deleteByAccount(UUID.randomUUID()));
-    }
-
     // --- helper ---
 
     private void insert(UUID id, String world, String currency, BigDecimal amount) throws Exception {

@@ -44,5 +44,4 @@ public interface BalanceRepository {
 
     void delete(UUID accountId, String worldName, String currency);
 
-    void deleteByAccount(UUID accountId);
 }
