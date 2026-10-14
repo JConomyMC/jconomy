@@ -40,7 +40,6 @@ import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.storage.DefaultFlushRegistry;
 import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.PeriodicFlushScheduler;
-import org.jconomy.storage.SqliteMigrator;
 
 import com.jellyrekt.storage.configuration.file.FileConfigurationProvider;
 import com.jellyrekt.storage.configuration.file.javaplugin.JavaPluginConfigurationProvider;
@@ -107,7 +106,6 @@ public class JConomyProviderFactory {
                 throw new RuntimeException("Failed to create config provider", e);
             }
         });
-        builder.addSingleton(SqliteMigrator.class);
         extensionManager.configureServices(builder);
     }
 

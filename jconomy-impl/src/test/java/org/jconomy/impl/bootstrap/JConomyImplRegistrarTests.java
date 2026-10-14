@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import org.jconomy.accounts.SqliteAccountRepository;
 import org.jconomy.balances.BalanceRepository;
 import org.jconomy.balances.SqliteBalanceRepository;
 import org.jconomy.storage.SqlConnectionFactory;
+import org.jconomy.storage.SqliteMigrator;
 import org.jconomy.FeatureManager;
 import org.jconomy.config.DefaultVaultLegacyAdapterConfig;
 import org.jconomy.config.VaultLegacyAdapterConfig;
@@ -77,6 +80,15 @@ class JConomyImplRegistrarTests {
     }
 
     @Test
+    void registerServices_registers_migrator() {
+        var builder = new NoopBuilder();
+
+        JConomyImplRegistrar.registerServices(builder);
+
+        assertTrue(builder.selfRegistrations.contains(SqliteMigrator.class));
+    }
+
+    @Test
     void registerServices_registers_config_implementations() {
         var builder = new NoopBuilder();
 
@@ -96,9 +108,11 @@ class JConomyImplRegistrarTests {
 
     private static final class NoopBuilder implements JConomyServiceRegistrar {
         private final Map<Class<?>, Class<?>> singletonImplementations = new HashMap<>();
+        private final Set<Class<?>> selfRegistrations = new HashSet<>();
 
         @Override
         public <T> JConomyServiceRegistrar addSingleton(Class<T> type) {
+            selfRegistrations.add(type);
             return this;
         }
 
