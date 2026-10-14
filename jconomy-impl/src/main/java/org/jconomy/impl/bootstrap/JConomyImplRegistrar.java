@@ -1,5 +1,6 @@
 package org.jconomy.impl.bootstrap;
 
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jconomy.dependencyinjection.JConomyServiceRegistrar;
 import org.jconomy.storage.SqlConnectionFactory;
 import org.jconomy.storage.SqliteConnectionFactory;
@@ -31,7 +32,8 @@ public final class JConomyImplRegistrar {
 
         builder.addSingleton(AccountRepository.class, SqliteAccountRepository.class);
         builder.addSingleton(BalanceRepository.class, SqliteBalanceRepository.class);
-        builder.addSingleton(SqlConnectionFactory.class, SqliteConnectionFactory.class);
+        builder.addSingletonFactory(SqlConnectionFactory.class, sp -> new SqliteConnectionFactory(
+                sp.getRequiredService(JavaPlugin.class).getDataFolder().toPath().resolve("jconomy.db")));
         builder.addSingleton(SqliteMigrator.class);
         builder.addSingleton(FeatureManager.class, DefaultFeatureManager.class);
         builder.addSingleton(VaultLegacyAdapterConfig.class, DefaultVaultLegacyAdapterConfig.class);
