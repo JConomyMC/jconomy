@@ -576,6 +576,62 @@ class DefaultBalanceAccessTests {
         assertEquals(BigDecimal.valueOf(80), repository.stored(otherId, "world", "gold").orElseThrow());
     }
 
+    @Test
+    void deleteByAccount_runs_durable_deletion_before_evicting_cache_and_pending() {
+        var id = UUID.randomUUID();
+        var otherId = UUID.randomUUID();
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
+        cache.put(otherId, "world", "gold", BigDecimal.valueOf(50));
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        access.set(id, "nether", "gold", BigDecimal.valueOf(20));
+        access.adjust(otherId, "world", "gold", BigDecimal.valueOf(30));
+        var cachedDuringDeletion = new AtomicReference<Optional<BigDecimal>>();
+
+        access.deleteByAccount(id, () -> cachedDuringDeletion.set(cache.get(id, "world", "gold")));
+        access.flush();
+
+        assertTrue(cachedDuringDeletion.get().isPresent());
+        assertFalse(cache.get(id, "world", "gold").isPresent());
+        assertNull(repository.lastAssignAll);
+        assertEquals(
+                List.of(new BalanceAdjustment(otherId, "world", "gold", BigDecimal.valueOf(30))),
+                List.copyOf(repository.lastAdjustAll));
+    }
+
+    @Test
+    void deleteByAccount_keeps_cache_and_pending_when_durable_deletion_fails() {
+        var id = UUID.randomUUID();
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+
+        assertThrows(RuntimeException.class,
+                () -> access.deleteByAccount(id, () -> { throw new RuntimeException("boom"); }));
+        access.flush();
+
+        assertTrue(cache.get(id, "world", "gold").isPresent());
+        assertEquals(
+                List.of(new BalanceAdjustment(id, "world", "gold", BigDecimal.valueOf(10))),
+                List.copyOf(repository.lastAdjustAll));
+    }
+
+    @Test
+    void flush_during_durable_account_deletion_cannot_resurrect_balances() throws Exception {
+        var id = UUID.randomUUID();
+        repository.store(id, "world", "gold", BigDecimal.valueOf(100));
+        cache.put(id, "world", "gold", BigDecimal.valueOf(100));
+        access.adjust(id, "world", "gold", BigDecimal.valueOf(10));
+        var flusher = new AtomicReference<Thread>();
+
+        access.deleteByAccount(id, () -> {
+            repository.removeStoredAccount(id);
+            flusher.set(startAndAwaitBlockedOrDone(access::flush));
+        });
+        flusher.get().join(5000);
+
+        assertTrue(repository.stored(id, "world", "gold").isEmpty());
+        assertTrue(access.get(id, "world", "gold").isEmpty());
+    }
+
     // --- fakes ---
 
     private static class CapturingLogHandler extends Handler {
@@ -679,6 +735,10 @@ class DefaultBalanceAccessTests {
         public void deleteByAccount(UUID accountId) {
             deleteByAccountCalled = true;
             lastDeleteByAccountId = accountId;
+            store.keySet().removeIf(k -> k.startsWith(accountId + ":"));
+        }
+
+        void removeStoredAccount(UUID accountId) {
             store.keySet().removeIf(k -> k.startsWith(accountId + ":"));
         }
 
