@@ -11,8 +11,10 @@ import org.bukkit.command.CommandSender;
 import org.incendo.cloud.context.CommandContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import org.jconomy.accounts.AccountAccess;
+import org.jconomy.accounts.AccountDeleter;
 import org.jconomy.balances.BalanceAccess;
 import org.jconomy.adapters.PlayerResolver;
 
@@ -34,7 +36,7 @@ class AccountDeleteCommandHandlerTests {
         sender = mock(CommandSender.class);
         context = mock(CommandContext.class);
         when(context.sender()).thenReturn(sender);
-        handler = new AccountDeleteCommandHandler(accountAccess, balanceAccess, playerResolver);
+        handler = new AccountDeleteCommandHandler(new AccountDeleter(accountAccess, balanceAccess), playerResolver);
     }
 
     @Test
@@ -46,26 +48,14 @@ class AccountDeleteCommandHandlerTests {
         when(playerResolver.resolve("Steve")).thenReturn(player);
         when(context.get("player")).thenReturn("Steve");
 
+        var durableDeletion = ArgumentCaptor.forClass(Runnable.class);
+
         handler.execute(context);
 
+        verify(balanceAccess).deleteByAccount(eq(playerId), durableDeletion.capture());
+        durableDeletion.getValue().run();
         verify(accountAccess).deleteAccount(playerId);
-        verify(balanceAccess).deleteByAccount(playerId);
         verify(sender).sendMessage(contains("Steve"));
-    }
-
-    @Test
-    void execute_deletes_balances_before_account() {
-        var playerId = UUID.randomUUID();
-        var player = mock(OfflinePlayer.class);
-        when(player.getUniqueId()).thenReturn(playerId);
-        when(player.getName()).thenReturn("Steve");
-        when(playerResolver.resolve("Steve")).thenReturn(player);
-        when(context.get("player")).thenReturn("Steve");
-
-        var order = inOrder(balanceAccess, accountAccess);
-        handler.execute(context);
-        order.verify(balanceAccess).deleteByAccount(playerId);
-        order.verify(accountAccess).deleteAccount(playerId);
     }
 
     @Test
@@ -77,6 +67,6 @@ class AccountDeleteCommandHandlerTests {
 
         verify(sender).sendMessage(anyString());
         verify(accountAccess, never()).deleteAccount(any());
-        verify(balanceAccess, never()).deleteByAccount(any());
+        verify(balanceAccess, never()).deleteByAccount(any(), any());
     }
 }

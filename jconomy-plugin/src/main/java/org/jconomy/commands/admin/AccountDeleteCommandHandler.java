@@ -3,20 +3,17 @@ package org.jconomy.commands.admin;
 import org.bukkit.command.CommandSender;
 import org.incendo.cloud.context.CommandContext;
 
-import org.jconomy.accounts.AccountAccess;
-import org.jconomy.balances.BalanceAccess;
+import org.jconomy.accounts.AccountDeleter;
 import org.jconomy.adapters.PlayerResolver;
 import org.jconomy.commands.CommandHandler;
 
 public class AccountDeleteCommandHandler implements CommandHandler {
 
-    private final AccountAccess accountAccess;
-    private final BalanceAccess balanceAccess;
+    private final AccountDeleter accountDeleter;
     private final PlayerResolver playerResolver;
 
-    public AccountDeleteCommandHandler(AccountAccess accountAccess, BalanceAccess balanceAccess, PlayerResolver playerResolver) {
-        this.accountAccess = accountAccess;
-        this.balanceAccess = balanceAccess;
+    public AccountDeleteCommandHandler(AccountDeleter accountDeleter, PlayerResolver playerResolver) {
+        this.accountDeleter = accountDeleter;
         this.playerResolver = playerResolver;
     }
 
@@ -27,9 +24,7 @@ public class AccountDeleteCommandHandler implements CommandHandler {
         var player = AdminCommandUtil.resolvePlayer(sender, playerName, playerResolver);
         if (player == null) return;
 
-        var playerId = player.getUniqueId();
-        balanceAccess.deleteByAccount(playerId);
-        accountAccess.deleteAccount(playerId);
+        accountDeleter.delete(player.getUniqueId());
         sender.sendMessage("Deleted account for " + playerName);
     }
 }
