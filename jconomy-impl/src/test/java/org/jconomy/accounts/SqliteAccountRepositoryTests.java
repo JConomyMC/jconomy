@@ -93,6 +93,18 @@ class SqliteAccountRepositoryTests {
         assertEquals("Bob", repository.getAccount(id).get().getName());
     }
 
+    @Test
+    void upsert_updates_existing_account_without_duplicating_row() throws Exception {
+        var id = UUID.randomUUID();
+        insertAccount(id, "Alice");
+
+        repository.upsert(new Account(id, "Bob"));
+
+        var accounts = repository.getAllAccounts();
+        assertEquals(1, accounts.size());
+        assertEquals("Bob", accounts.get(0).getName());
+    }
+
     // --- deleteAccount ---
 
     @Test
