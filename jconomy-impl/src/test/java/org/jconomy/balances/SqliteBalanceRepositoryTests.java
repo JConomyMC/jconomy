@@ -101,6 +101,19 @@ class SqliteBalanceRepositoryTests {
     }
 
     @Test
+    void assignAll_inserts_new_and_updates_existing_rows_in_one_batch() throws Exception {
+        var id = UUID.randomUUID();
+        insert(id, "world", "gold", BigDecimal.valueOf(100));
+
+        repository.assignAll(List.of(
+                new BalanceAssignment(id, "world", "gold", BigDecimal.valueOf(40)),
+                new BalanceAssignment(id, "world", "silver", BigDecimal.valueOf(7))));
+
+        assertEquals(0, BigDecimal.valueOf(40).compareTo(repository.get(id, "world", "gold").get()));
+        assertEquals(0, BigDecimal.valueOf(7).compareTo(repository.get(id, "world", "silver").get()));
+    }
+
+    @Test
     void assignAll_failure_mid_batch_commits_nothing() throws Exception {
         var existingId = UUID.randomUUID();
         var newId = UUID.randomUUID();
