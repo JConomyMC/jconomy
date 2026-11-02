@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import org.jconomy.storage.FailingRollbackConnection;
 import org.jconomy.storage.SqlConnectionFactory;
-import org.jconomy.storage.TableBootstrapper;
+import org.jconomy.storage.SqliteMigrator;
 
 class SqliteAccountRepositoryTests {
 
@@ -23,20 +23,15 @@ class SqliteAccountRepositoryTests {
 
     @BeforeEach
     void setUp() throws Exception {
-        connectionFactory = () -> DriverManager.getConnection(
-                "jdbc:sqlite:file:accountrepotest?mode=memory&cache=shared");
+        var databaseUrl = "jdbc:sqlite:file:" + UUID.randomUUID() + "?mode=memory&cache=shared";
+        connectionFactory = () -> DriverManager.getConnection(databaseUrl);
         anchor = connectionFactory.createConnection();
-        TableBootstrapper.bootstrapTables(anchor);
+        new SqliteMigrator(connectionFactory).migrate();
         repository = new SqliteAccountRepository(connectionFactory);
     }
 
     @AfterEach
     void tearDown() throws Exception {
-        try (var stmt = anchor.createStatement()) {
-            stmt.executeUpdate("drop trigger if exists fail_account_delete");
-            stmt.executeUpdate("delete from account_balances");
-            stmt.executeUpdate("delete from accounts");
-        }
         anchor.close();
     }
 
