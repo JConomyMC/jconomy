@@ -56,7 +56,7 @@ public class SqliteMigrator {
                         account_id text not null,
                         world text not null,
                         currency text not null,
-                        amount numeric,
+                        amount text,
                         primary key(account_id, world, currency)
                     )
                     """);

@@ -12,6 +12,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import org.jconomy.storage.FailingRollbackConnection;
 import org.jconomy.storage.SqlConnectionFactory;
@@ -111,6 +113,39 @@ class SqliteBalanceRepositoryTests {
 
         assertEquals(0, BigDecimal.valueOf(40).compareTo(repository.get(id, "world", "gold").get()));
         assertEquals(0, BigDecimal.valueOf(7).compareTo(repository.get(id, "world", "silver").get()));
+    }
+
+    static List<String> preciseAmounts() {
+        return List.of(
+                "0", "1", "-1", "0.1", "0.01", "123.45",
+                "0.12345678901234567890123456789",
+                "12345678901234567890.123456789",
+                "999999999999999999.99",
+                "0.00000000000000000001");
+    }
+
+    @ParameterizedTest
+    @MethodSource("preciseAmounts")
+    void assignAll_preserves_amount_precision(String value) {
+        var amount = new BigDecimal(value);
+        var id = UUID.randomUUID();
+
+        repository.assignAll(List.of(new BalanceAssignment(id, "world", "gold", amount)));
+
+        assertEquals(0, amount.compareTo(repository.get(id, "world", "gold").get()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("preciseAmounts")
+    void assignAll_preserves_amount_precision_within_multi_row_batch(String value) {
+        var amount = new BigDecimal(value);
+        var id = UUID.randomUUID();
+
+        repository.assignAll(List.of(
+                new BalanceAssignment(id, "world", "silver", BigDecimal.ONE),
+                new BalanceAssignment(id, "world", "gold", amount)));
+
+        assertEquals(0, amount.compareTo(repository.get(id, "world", "gold").get()));
     }
 
     @Test
