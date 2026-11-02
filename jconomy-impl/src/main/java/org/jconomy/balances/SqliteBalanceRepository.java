@@ -19,21 +19,24 @@ public class SqliteBalanceRepository implements BalanceRepository {
         this.connectionFactory = connectionFactory;
     }
 
+    private static final String SELECT_AMOUNT_SQL = """
+            select amount from account_balances
+            where account_id = ? and world = ? and currency = ?
+            """;
+
+    private static final String ASSIGN_SQL = """
+            insert into account_balances (account_id, world, currency, amount)
+            values (?, ?, ?, ?)
+            on conflict (account_id, world, currency)
+            do update set amount = excluded.amount
+            """;
+
     @Override
     public Optional<BigDecimal> get(UUID accountId, String worldName, String currency) {
-        var sql = """
-                select amount from account_balances
-                where account_id = ? and world = ? and currency = ?
-                """;
         try (
                 var connection = connectionFactory.createConnection();
-                var stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, accountId.toString());
-            stmt.setString(2, worldName);
-            stmt.setString(3, currency);
-            try (var rs = stmt.executeQuery()) {
-                return readAmount(rs);
-            }
+                var stmt = connection.prepareStatement(SELECT_AMOUNT_SQL)) {
+            return selectAmount(stmt, accountId, worldName, currency);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -41,23 +44,15 @@ public class SqliteBalanceRepository implements BalanceRepository {
 
     @Override
     public void assignAll(Collection<BalanceAssignment> assignments) {
-        var sql = """
-                insert into account_balances (account_id, world, currency, amount)
-                values (?, ?, ?, ?)
-                on conflict (account_id, world, currency)
-                do update set amount = excluded.amount
-                """;
         try (
                 var connection = connectionFactory.createConnection();
-                var stmt = connection.prepareStatement(sql)) {
+                var stmt = connection.prepareStatement(ASSIGN_SQL)) {
             for (var assignment : assignments) {
-                stmt.setString(1, assignment.accountId().toString());
-                stmt.setString(2, assignment.worldName());
-                stmt.setString(3, assignment.currency());
-                stmt.setBigDecimal(4, assignment.amount());
+                bindAssignment(stmt, assignment.accountId(), assignment.worldName(), assignment.currency(),
+                        assignment.amount());
                 stmt.addBatch();
             }
-            executeBatchAtomically(connection, stmt);
+            runAtomically(connection, stmt::executeBatch);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -65,23 +60,19 @@ public class SqliteBalanceRepository implements BalanceRepository {
 
     @Override
     public void adjustAll(Collection<BalanceAdjustment> adjustments) {
-        var sql = """
-                insert into account_balances (account_id, world, currency, amount)
-                values (?, ?, ?, ?)
-                on conflict (account_id, world, currency)
-                do update set amount = amount + excluded.amount
-                """;
         try (
                 var connection = connectionFactory.createConnection();
-                var stmt = connection.prepareStatement(sql)) {
-            for (var adjustment : adjustments) {
-                stmt.setString(1, adjustment.accountId().toString());
-                stmt.setString(2, adjustment.worldName());
-                stmt.setString(3, adjustment.currency());
-                stmt.setBigDecimal(4, adjustment.delta());
-                stmt.addBatch();
-            }
-            executeBatchAtomically(connection, stmt);
+                var select = connection.prepareStatement(SELECT_AMOUNT_SQL);
+                var assign = connection.prepareStatement(ASSIGN_SQL)) {
+            runAtomically(connection, () -> {
+                for (var adjustment : adjustments) {
+                    var current = selectAmount(select, adjustment.accountId(), adjustment.worldName(),
+                            adjustment.currency()).orElse(BigDecimal.ZERO);
+                    bindAssignment(assign, adjustment.accountId(), adjustment.worldName(), adjustment.currency(),
+                            current.add(adjustment.delta()));
+                    assign.executeUpdate();
+                }
+            });
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -105,10 +96,14 @@ public class SqliteBalanceRepository implements BalanceRepository {
         }
     }
 
-    private static void executeBatchAtomically(Connection connection, PreparedStatement stmt) throws SQLException {
+    private interface SqlWork {
+        void run() throws SQLException;
+    }
+
+    private static void runAtomically(Connection connection, SqlWork work) throws SQLException {
         connection.setAutoCommit(false);
         try {
-            stmt.executeBatch();
+            work.run();
             connection.commit();
         } catch (SQLException ex) {
             try {
@@ -118,6 +113,25 @@ public class SqliteBalanceRepository implements BalanceRepository {
             }
             throw ex;
         }
+    }
+
+    private static Optional<BigDecimal> selectAmount(
+            PreparedStatement stmt, UUID accountId, String worldName, String currency) throws SQLException {
+        stmt.setString(1, accountId.toString());
+        stmt.setString(2, worldName);
+        stmt.setString(3, currency);
+        try (var rs = stmt.executeQuery()) {
+            return readAmount(rs);
+        }
+    }
+
+    private static void bindAssignment(
+            PreparedStatement stmt, UUID accountId, String worldName, String currency, BigDecimal amount)
+            throws SQLException {
+        stmt.setString(1, accountId.toString());
+        stmt.setString(2, worldName);
+        stmt.setString(3, currency);
+        stmt.setBigDecimal(4, amount);
     }
 
     private static Optional<BigDecimal> readAmount(ResultSet rs) throws SQLException {

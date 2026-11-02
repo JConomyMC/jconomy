@@ -187,6 +187,19 @@ class SqliteBalanceRepositoryTests {
         assertEquals(0, BigDecimal.valueOf(25).compareTo(result.get()));
     }
 
+    @ParameterizedTest
+    @MethodSource("preciseAmounts")
+    void adjustAll_adds_delta_exactly(String value) throws Exception {
+        var base = new BigDecimal("0.1");
+        var delta = new BigDecimal(value);
+        var id = UUID.randomUUID();
+        insert(id, "world", "gold", base);
+
+        repository.adjustAll(List.of(new BalanceAdjustment(id, "world", "gold", delta)));
+
+        assertEquals(0, base.add(delta).compareTo(repository.get(id, "world", "gold").get()));
+    }
+
     @Test
     void adjustAll_applies_successive_adjustments_cumulatively() throws Exception {
         var id = UUID.randomUUID();
