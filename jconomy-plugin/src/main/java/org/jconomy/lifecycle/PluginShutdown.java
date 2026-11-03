@@ -8,15 +8,21 @@ import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.PeriodicFlushScheduler;
 
 public class PluginShutdown {
+    private final PeriodicFlushScheduler scheduler;
+    private final FlushRegistry flushRegistry;
     private final ExtensionManager extensionManager;
     private final Logger logger;
 
-    public PluginShutdown(ExtensionManager extensionManager, Logger logger) {
+    public PluginShutdown(
+            PeriodicFlushScheduler scheduler, FlushRegistry flushRegistry,
+            ExtensionManager extensionManager, Logger logger) {
+        this.scheduler = scheduler;
+        this.flushRegistry = flushRegistry;
         this.extensionManager = extensionManager;
         this.logger = logger;
     }
 
-    public void run(PeriodicFlushScheduler scheduler, FlushRegistry flushRegistry) {
+    public void run() {
         if (scheduler != null) {
             runStep("Failed to stop periodic flush scheduler", scheduler::stop);
         }

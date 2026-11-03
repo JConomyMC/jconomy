@@ -104,7 +104,7 @@ public class JConomy extends JavaPlugin implements PluginContext {
 
     @Override
     public void onDisable() {
-        new PluginShutdown(extensionManager, getLogger()).run(periodicFlushScheduler, resolveFlushRegistry());
+        new PluginShutdown(periodicFlushScheduler, resolveFlushRegistry(), extensionManager, getLogger()).run();
     }
 
     private FlushRegistry resolveFlushRegistry() {
