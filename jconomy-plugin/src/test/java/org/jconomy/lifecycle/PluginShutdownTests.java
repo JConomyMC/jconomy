@@ -26,7 +26,6 @@ class PluginShutdownTests {
     private final FlushRegistry flushRegistry = mock(FlushRegistry.class);
     private final Logger logger = Logger.getAnonymousLogger();
     private final CapturingLogHandler handler = new CapturingLogHandler();
-    private final PluginShutdown shutdown = new PluginShutdown(extensionManager, logger);
 
     @BeforeEach
     void setUp() {
@@ -36,14 +35,14 @@ class PluginShutdownTests {
 
     @Test
     void run_with_nothing_initialized_closes_extensions_without_throwing() {
-        shutdown.run(null, null);
+        shutdown(null, null).run();
 
         verify(extensionManager).close();
     }
 
     @Test
     void run_with_everything_initialized_stops_scheduler_then_flushes_then_closes_extensions() {
-        shutdown.run(scheduler, flushRegistry);
+        shutdown(scheduler, flushRegistry).run();
 
         var order = inOrder(scheduler, flushRegistry, extensionManager);
         order.verify(scheduler).stop();
@@ -53,7 +52,7 @@ class PluginShutdownTests {
 
     @Test
     void run_without_scheduler_flushes_then_closes_extensions() {
-        shutdown.run(null, flushRegistry);
+        shutdown(null, flushRegistry).run();
 
         var order = inOrder(flushRegistry, extensionManager);
         order.verify(flushRegistry).flushAll();
@@ -65,7 +64,7 @@ class PluginShutdownTests {
         var failure = new IllegalStateException("simulated failure");
         doThrow(failure).when(scheduler).stop();
 
-        shutdown.run(scheduler, flushRegistry);
+        shutdown(scheduler, flushRegistry).run();
 
         verify(flushRegistry).flushAll();
         verify(extensionManager).close();
@@ -77,7 +76,7 @@ class PluginShutdownTests {
         var failure = new IllegalStateException("simulated failure");
         doThrow(failure).when(flushRegistry).flushAll();
 
-        shutdown.run(scheduler, flushRegistry);
+        shutdown(scheduler, flushRegistry).run();
 
         verify(extensionManager).close();
         assertEquals(List.of(failure), handler.thrownWarnings());
@@ -88,9 +87,13 @@ class PluginShutdownTests {
         var failure = new IllegalStateException("simulated failure");
         doThrow(failure).when(extensionManager).close();
 
-        shutdown.run(scheduler, flushRegistry);
+        shutdown(scheduler, flushRegistry).run();
 
         assertEquals(List.of(failure), handler.thrownWarnings());
+    }
+
+    private PluginShutdown shutdown(PeriodicFlushScheduler scheduler, FlushRegistry flushRegistry) {
+        return new PluginShutdown(scheduler, flushRegistry, extensionManager, logger);
     }
 
     private static class CapturingLogHandler extends Handler {
