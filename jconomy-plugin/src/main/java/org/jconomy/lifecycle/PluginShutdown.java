@@ -1,23 +1,36 @@
 package org.jconomy.lifecycle;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.jconomy.extensions.ExtensionManager;
 import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.PeriodicFlushScheduler;
 
 public class PluginShutdown {
     private final ExtensionManager extensionManager;
+    private final Logger logger;
 
-    public PluginShutdown(ExtensionManager extensionManager) {
+    public PluginShutdown(ExtensionManager extensionManager, Logger logger) {
         this.extensionManager = extensionManager;
+        this.logger = logger;
     }
 
     public void run(PeriodicFlushScheduler scheduler, FlushRegistry flushRegistry) {
         if (scheduler != null) {
-            scheduler.stop();
+            runStep("Failed to stop periodic flush scheduler", scheduler::stop);
         }
         if (flushRegistry != null) {
-            flushRegistry.flushAll();
+            runStep("Failed to flush pending changes", flushRegistry::flushAll);
         }
-        extensionManager.close();
+        runStep("Failed to close extensions", extensionManager::close);
+    }
+
+    private void runStep(String failureMessage, Runnable step) {
+        try {
+            step.run();
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, failureMessage, ex);
+        }
     }
 }
