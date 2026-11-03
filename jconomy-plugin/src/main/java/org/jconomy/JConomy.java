@@ -1,5 +1,7 @@
 package org.jconomy;
 
+import java.util.logging.Level;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,6 +19,7 @@ import org.jconomy.dependencyinjection.JConomyServiceProvider;
 import org.jconomy.extensions.DefaultExtensionLoader;
 import org.jconomy.extensions.DefaultExtensionManager;
 import org.jconomy.extensions.ExtensionManager;
+import org.jconomy.lifecycle.PluginShutdown;
 import org.jconomy.listeners.PlayerJoinListener;
 import org.jconomy.config.VaultLegacyAdapterConfig;
 import org.jconomy.config.migrations.*;
@@ -55,23 +58,21 @@ public class JConomy extends JavaPlugin implements PluginContext {
             services = JConomyProviderFactory.buildServiceProvider(this, this, extensionManager);
             // Create scheduler outside DI container to prevent extension access/override
             periodicFlushScheduler = JConomyProviderFactory.createPeriodicFlushScheduler(services);
+            saveDefaultConfig();
+            buildConfigMigrator().migrate(getConfig());
+            saveConfig();
+            services.getRequiredService(SqliteMigrator.class).migrate();
+            registerFlushables();
+            startPeriodicFlushIfEnabled();
+            extensionManager.notifyServicesReady(services);
+            registerServices();
+            registerEvents();
+            registerCommands();
         } catch (Exception ex) {
-            getLogger().severe("Some services could not be instantiated: " + ExceptionUtils.getStackTrace(ex));
+            getLogger().severe("JConomy failed to start: " + ExceptionUtils.getStackTrace(ex));
             getLogger().severe("Disabling plugin.");
             getServer().getPluginManager().disablePlugin(this);
-            return;
         }
-
-        saveDefaultConfig();
-        buildConfigMigrator().migrate(getConfig());
-        saveConfig();
-        services.getRequiredService(SqliteMigrator.class).migrate();
-        registerFlushables();
-        startPeriodicFlushIfEnabled();
-        extensionManager.notifyServicesReady(services);
-        registerServices();
-        registerEvents();
-        registerCommands();
     }
 
     private static ConfigMigrator buildConfigMigrator() {
@@ -103,12 +104,22 @@ public class JConomy extends JavaPlugin implements PluginContext {
 
     @Override
     public void onDisable() {
-        periodicFlushScheduler.stop();
-        services.getRequiredService(FlushRegistry.class).flushAll();
-
-        extensionManager.close();
+        new PluginShutdown(extensionManager, getLogger()).run(periodicFlushScheduler, resolveFlushRegistry());
     }
-    
+
+    private FlushRegistry resolveFlushRegistry() {
+        if (services == null) {
+            return null;
+        }
+        try {
+            return services.getRequiredService(FlushRegistry.class);
+        } catch (Exception ex) {
+            getLogger().log(Level.WARNING, "Failed to resolve flush registry", ex);
+            return null;
+        }
+    }
+
+
     private void registerServices() {
         getServer().getServicesManager().register(
                 Economy.class,
