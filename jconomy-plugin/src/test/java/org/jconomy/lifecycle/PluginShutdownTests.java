@@ -1,11 +1,14 @@
 package org.jconomy.lifecycle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
@@ -31,6 +34,7 @@ class PluginShutdownTests {
     void setUp() {
         logger.setUseParentHandlers(false);
         logger.addHandler(handler);
+        when(scheduler.awaitIdle(any(Duration.class))).thenReturn(true);
     }
 
     @Test
@@ -41,11 +45,12 @@ class PluginShutdownTests {
     }
 
     @Test
-    void run_with_everything_initialized_stops_scheduler_then_flushes_then_closes_extensions() {
+    void run_with_everything_initialized_stops_scheduler_then_awaits_idle_then_flushes_then_closes_extensions() {
         shutdown(scheduler, flushRegistry).run();
 
         var order = inOrder(scheduler, flushRegistry, extensionManager);
         order.verify(scheduler).stop();
+        order.verify(scheduler).awaitIdle(any(Duration.class));
         order.verify(flushRegistry).flushAll();
         order.verify(extensionManager).close();
     }

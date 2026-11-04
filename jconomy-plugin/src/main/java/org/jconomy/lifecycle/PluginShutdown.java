@@ -1,5 +1,6 @@
 package org.jconomy.lifecycle;
 
+import java.time.Duration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -8,6 +9,8 @@ import org.jconomy.storage.FlushRegistry;
 import org.jconomy.storage.PeriodicFlushScheduler;
 
 public class PluginShutdown {
+    private static final Duration SCHEDULED_FLUSH_WAIT = Duration.ofSeconds(30);
+
     private final PeriodicFlushScheduler scheduler;
     private final FlushRegistry flushRegistry;
     private final ExtensionManager extensionManager;
@@ -25,6 +28,7 @@ public class PluginShutdown {
     public void run() {
         if (scheduler != null) {
             runStep("Failed to stop periodic flush scheduler", scheduler::stop);
+            scheduler.awaitIdle(SCHEDULED_FLUSH_WAIT);
         }
         if (flushRegistry != null) {
             runStep("Failed to flush pending changes", flushRegistry::flushAll);
