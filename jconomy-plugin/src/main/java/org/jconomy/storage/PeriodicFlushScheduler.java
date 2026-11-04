@@ -1,5 +1,6 @@
 package org.jconomy.storage;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bukkit.plugin.java.JavaPlugin;
@@ -47,5 +48,9 @@ public class PeriodicFlushScheduler {
         if (task != null) {
             task.cancel();
         }
+    }
+
+    public boolean awaitIdle(Duration timeout) {
+        return true;
     }
 }

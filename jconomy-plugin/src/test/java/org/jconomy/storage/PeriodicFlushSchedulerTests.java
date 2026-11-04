@@ -1,7 +1,10 @@
 package org.jconomy.storage;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+
+import java.time.Duration;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -107,5 +110,12 @@ class PeriodicFlushSchedulerTests {
     @Test
     void stop_before_start_does_not_throw() {
         new PeriodicFlushScheduler(plugin, scheduler, registry, periodicFlushConfig).stop();
+    }
+
+    @Test
+    void awaitIdle_returns_true_when_no_flush_started() {
+        var flushScheduler = new PeriodicFlushScheduler(plugin, scheduler, registry, periodicFlushConfig);
+
+        assertTrue(flushScheduler.awaitIdle(Duration.ofMillis(50)));
     }
 }
