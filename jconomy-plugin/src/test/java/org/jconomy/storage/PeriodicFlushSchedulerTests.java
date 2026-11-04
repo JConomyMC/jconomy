@@ -1,10 +1,12 @@
 package org.jconomy.storage;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -117,5 +119,30 @@ class PeriodicFlushSchedulerTests {
         var flushScheduler = new PeriodicFlushScheduler(plugin, scheduler, registry, periodicFlushConfig);
 
         assertTrue(flushScheduler.awaitIdle(Duration.ofMillis(50)));
+    }
+
+    @Test
+    void awaitIdle_returns_false_while_scheduled_flush_is_in_progress() throws Exception {
+        var timerBody = ArgumentCaptor.forClass(Runnable.class);
+        when(scheduler.runTaskTimer(eq(plugin), timerBody.capture(), anyLong(), anyLong())).thenReturn(task);
+        var asyncBody = ArgumentCaptor.forClass(Runnable.class);
+        when(scheduler.runTaskAsynchronously(eq(plugin), asyncBody.capture())).thenReturn(task);
+        var release = new CountDownLatch(1);
+        doAnswer(inv -> {
+            release.await();
+            return null;
+        }).when(registry).flushAll();
+
+        var flushScheduler = new PeriodicFlushScheduler(plugin, scheduler, registry, periodicFlushConfig);
+        flushScheduler.start();
+        timerBody.getValue().run();
+        var flushThread = new Thread(asyncBody.getValue());
+        flushThread.start();
+        try {
+            assertFalse(flushScheduler.awaitIdle(Duration.ofMillis(50)));
+        } finally {
+            release.countDown();
+            flushThread.join();
+        }
     }
 }

@@ -1,7 +1,10 @@
 package org.jconomy.storage;
 
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -14,7 +17,7 @@ public class PeriodicFlushScheduler {
     private final BukkitScheduler scheduler;
     private final FlushRegistry registry;
     private final CacheConfig.PeriodicFlushConfig config;
-    private final AtomicBoolean flushing = new AtomicBoolean(false);
+    private volatile CompletableFuture<Void> activeFlush = CompletableFuture.completedFuture(null);
 
     private BukkitTask task;
 
@@ -32,12 +35,14 @@ public class PeriodicFlushScheduler {
     public void start() {
         long interval = config.getIntervalTicks();
         task = scheduler.runTaskTimer(plugin, () -> {
-            if (flushing.compareAndSet(false, true)) {
+            if (activeFlush.isDone()) {
+                var flush = new CompletableFuture<Void>();
+                activeFlush = flush;
                 scheduler.runTaskAsynchronously(plugin, () -> {
                     try {
                         registry.flushAll();
                     } finally {
-                        flushing.set(false);
+                        flush.complete(null);
                     }
                 });
             }
@@ -51,6 +56,14 @@ public class PeriodicFlushScheduler {
     }
 
     public boolean awaitIdle(Duration timeout) {
-        return true;
+        try {
+            activeFlush.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+            return true;
+        } catch (TimeoutException | ExecutionException ex) {
+            return false;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 }
