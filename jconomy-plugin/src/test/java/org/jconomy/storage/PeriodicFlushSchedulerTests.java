@@ -145,4 +145,46 @@ class PeriodicFlushSchedulerTests {
             flushThread.join();
         }
     }
+
+    @Test
+    void awaitIdle_returns_true_after_in_progress_flush_completes() throws Exception {
+        var timerBody = ArgumentCaptor.forClass(Runnable.class);
+        when(scheduler.runTaskTimer(eq(plugin), timerBody.capture(), anyLong(), anyLong())).thenReturn(task);
+        var asyncBody = ArgumentCaptor.forClass(Runnable.class);
+        when(scheduler.runTaskAsynchronously(eq(plugin), asyncBody.capture())).thenReturn(task);
+        var release = new CountDownLatch(1);
+        doAnswer(inv -> {
+            release.await();
+            return null;
+        }).when(registry).flushAll();
+
+        var flushScheduler = new PeriodicFlushScheduler(plugin, scheduler, registry, periodicFlushConfig);
+        flushScheduler.start();
+        timerBody.getValue().run();
+        var flushThread = new Thread(asyncBody.getValue());
+        flushThread.start();
+        release.countDown();
+
+        assertTrue(flushScheduler.awaitIdle(Duration.ofSeconds(5)));
+        flushThread.join();
+    }
+
+    @Test
+    void awaitIdle_returns_true_after_in_progress_flush_fails() throws Exception {
+        var timerBody = ArgumentCaptor.forClass(Runnable.class);
+        when(scheduler.runTaskTimer(eq(plugin), timerBody.capture(), anyLong(), anyLong())).thenReturn(task);
+        var asyncBody = ArgumentCaptor.forClass(Runnable.class);
+        when(scheduler.runTaskAsynchronously(eq(plugin), asyncBody.capture())).thenReturn(task);
+        doThrow(new IllegalStateException("simulated failure")).when(registry).flushAll();
+
+        var flushScheduler = new PeriodicFlushScheduler(plugin, scheduler, registry, periodicFlushConfig);
+        flushScheduler.start();
+        timerBody.getValue().run();
+        var flushThread = new Thread(asyncBody.getValue());
+        flushThread.setUncaughtExceptionHandler((thread, ex) -> {});
+        flushThread.start();
+
+        assertTrue(flushScheduler.awaitIdle(Duration.ofSeconds(5)));
+        flushThread.join();
+    }
 }
